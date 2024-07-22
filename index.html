@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>FalconWatch</title>
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <link href="https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.css" rel="stylesheet" />
+  <script src="https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.js"></script>
+  <link rel="stylesheet" href=".\cstyle\indexStyle.css">
+</head>
+<body>
+  <div id="header">
+    <img src=".\img\logoFW.png" alt="Logo" id="logo">
+    <div>
+      <button id="toggle-reporting">Report a Crime</button>
+      <button>Simulations</button>
+      <a href="report.html" id="view-reports">View Reports</a>
+      <button id="toggle-timeline">Toggle Timeline</button>
+    </div>
+  </div>
+  <div id="map"></div>
+  
+  <div id="reporting">
+    <h2>Report a Crime</h2>
+    <form id="crime-report-form">
+      <label for="crime-title">Title</label>
+      <input type="text" id="crime-title" name="crime-title" required>
+      <label for="crime-category">Category</label>
+      <select id="crime-category" name="crime-category" required>
+        <option value="Theft">Theft</option>
+        <option value="Assault">Assault</option>
+        <option value="Vandalism">Vandalism</option>
+        <option value="Burglary">Burglary</option>
+        <option value="Robbery">Robbery</option>
+        <option value="Fraud">Fraud</option>
+        <option value="Drug Offense">Drug Offense</option>
+        <option value="Other">Other</option>
+      </select>
+      <label for="crime-description">Description</label>
+      <textarea id="crime-description" name="crime-description" required></textarea>
+      <label for="crime-severity">Severity</label>
+      <select id="crime-severity" name="crime-severity" required>
+        <option value="Low">Low</option>
+        <option value="Medium">Medium</option>
+        <option value="High">High</option>
+      </select>
+      <label for="crime-coordinates">Coordinates</label>
+      <input type="text" id="crime-coordinates" name="crime-coordinates" placeholder="Enter coordinates (e.g., lng, lat)" required>
+      <label for="crime-picture">Picture</label>
+      <input type="file" id="crime-picture" name="crime-picture">
+      <button type="submit">Submit</button>
+    </form>
+  </div>
+
+  <div id="timeline-container">
+    <div id="timeline-header">
+      <h2>Timeline</h2>
+      <div id="filter-container">
+        <label for="severity-filter">Filter by Severity:</label>
+        <select id="severity-filter">
+          <option value="all">All</option>
+          <option value="low">Low</option>
+          <option value="medium">Medium</option>
+          <option value="high">High</option>
+        </select>
+      </div>
+    </div>
+    <div id="timeline"></div>
+  </div>
+
+  <script>
+    mapboxgl.accessToken = 'pk.eyJ1IjoiZmFsY29ud2F0Y2giLCJhIjoiY2x5ZWIwcDJhMDBxbTJqc2VnYWMxeWNvdCJ9.bijpr26vfErYoGhhlQnaFA';
+
+    const map = new mapboxgl.Map({
+      container: 'map',
+      style: 'mapbox://styles/mapbox/light-v11',
+      center: [55.132327, 25.080857],
+      zoom: 15,
+      bearing: -50,
+      minZoom: 14,
+      maxZoom: 18,
+    });
+
+    // Toggle the reporting form visibility
+    document.getElementById('toggle-reporting').addEventListener('click', function () {
+      const reportingDiv = document.getElementById('reporting');
+      if (reportingDiv.style.display === 'none' || reportingDiv.style.display === '') {
+        reportingDiv.style.display = 'block';
+      } else {
+        reportingDiv.style.display = 'none';
+      }
+    });
+
+    // Toggle the timeline visibility
+    document.getElementById('toggle-timeline').addEventListener('click', function () {
+      const timelineContainer = document.getElementById('timeline-container');
+      if (timelineContainer.style.display === 'none' || timelineContainer.style.display === '') {
+        timelineContainer.style.display = 'block';
+        fetchTimelineReports();
+      } else {
+        timelineContainer.style.display = 'none';
+      }
+    });
+
+    // Load map.geojson as a source
+    map.on('load', function () {
+      map.addSource('boundary', {
+        type: 'geojson',
+        data: 'map.geojson'
+      });
+
+      map.addLayer({
+        id: 'boundary-layer',
+        type: 'line',
+        source: 'boundary',
+        layout: {},
+        paint: {
+          'line-color': '#ff0000',
+          'line-width': 2
+        }
+      });
+
+      // Fetch and display existing reports
+      fetchReports();
+    });
+
+    // Function to fetch and display existing reports
+    async function fetchReports() {
+      try {
+        const response = await fetch('/reports');
+        const reports = await response.json();
+        reports.forEach(report => {
+          addReportToMap(report);
+          addReportToTimeline(report);
+        });
+      } catch (error) {
+        console.error('Error fetching reports:', error);
+      }
+    }
+
+    // Function to fetch and display reports for the timeline
+    async function fetchTimelineReports() {
+      try {
+        const response = await fetch('/reports');
+        const reports = await response.json();
+        const timeline = document.getElementById('timeline');
+        timeline.innerHTML = ''; // Clear existing timeline items
+        reports.forEach(report => {
+          addReportToTimeline(report);
+        });
+      } catch (error) {
+        console.error('Error fetching reports:', error);
+      }
+    }
+
+    // Function to get marker color based on severity
+    function getMarkerColor(severity) {
+      switch (severity) {
+        case 'Low': return '#00FF00'; // Green
+        case 'Medium': return '#FFFF00'; // Yellow
+        case 'High': return '#FF5733'; // Red
+        default: return '#FF5733'; // Default to red
+      }
+    }
+
+    // Function to add report to the map
+    function addReportToMap(report) {
+      const markerColor = getMarkerColor(report.severity);
+      const popupContent = `
+        <h3>${report.name}</h3>
+        <p><strong>Category:</strong> ${report.category}</p>
+        <p><strong>Description:</strong> ${report.description}</p>
+        <p><strong>Severity:</strong> ${report.severity}</p>
+        <p><strong>Date:</strong> ${formatDate(new Date(report.date))}</p>
+        ${report.picture ? `<img src="${report.picture}" alt="Crime Picture" style="max-width: 100%; height: auto;">` : ''}
+      `;
+      const popup = new mapboxgl.Popup().setHTML(popupContent);
+      new mapboxgl.Marker({ color: markerColor })
+        .setLngLat(report.coordinates)
+        .setPopup(popup)
+        .addTo(map);
+    }
+
+    // Function to add report to the timeline
+    function addReportToTimeline(report) {
+      const timeline = document.getElementById('timeline');
+      const timelineItem = document.createElement('div');
+      timelineItem.classList.add('timeline-item');
+      timelineItem.classList.add(report.severity.toLowerCase());
+      timelineItem.dataset.severity = report.severity.toLowerCase();
+      timelineItem.innerHTML = `
+        <p>${report.name}</p>
+        <p>${formatDate(new Date(report.date))}</p>
+      `;
+      timeline.appendChild(timelineItem);
+    }
+
+    // Crime reporting form submission
+    const form = document.getElementById('crime-report-form');
+    form.addEventListener('submit', async function(event) {
+      event.preventDefault();
+
+      const title = document.getElementById('crime-title').value;
+      const category = document.getElementById('crime-category').value;
+      const description = document.getElementById('crime-description').value;
+      const severity = document.getElementById('crime-severity').value;
+      const coordinates = document.getElementById('crime-coordinates').value;
+
+      const lngLat = coordinates.split(',');
+      const lng = parseFloat(lngLat[0].trim());
+      const lat = parseFloat(lngLat[1].trim());
+
+      const crimePicture = document.getElementById('crime-picture').files[0];
+      let pictureData = '';
+      if (crimePicture) {
+        pictureData = await toBase64(crimePicture);
+      }
+
+      const currentDate = new Date(); // Current date and time
+      const crimeReport = {
+        coordinates: [lng, lat],
+        name: title,
+        category: category,
+        description: description,
+        severity: severity,
+        picture: pictureData,
+        date: currentDate // Add current date and time to the report
+      };
+
+      fetch('/report', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(crimeReport)
+      }).then(response => {
+        if (response.ok) {
+          alert('Report submitted successfully');
+          fetchReports(); // Refresh the markers after submission
+        } else {
+          alert('Error submitting report');
+        }
+      });
+
+      addReportToMap(crimeReport);
+      addReportToTimeline(crimeReport);
+
+      form.reset();
+    });
+
+    // Function to convert file to Base64 format
+    function toBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+      });
+    }
+
+    // Function to format date
+    function formatDate(date) {
+      const options = { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' };
+      return new Intl.DateTimeFormat('en-US', options).format(date);
+    }
+
+    // Filter timeline items based on severity
+    document.getElementById('severity-filter').addEventListener('change', function () {
+      const filterValue = this.value;
+      const timelineItems = document.querySelectorAll('.timeline-item');
+      timelineItems.forEach(item => {
+        if (filterValue === 'all' || item.dataset.severity === filterValue) {
+          item.style.display = 'flex';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

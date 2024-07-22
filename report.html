@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FalconWatch Report History</title>
+  <link href="https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.css" rel="stylesheet" />
+  <style>
+    /* General Styles */
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #111;
+      color: #fff;
+    }
+    .container {
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 20px;
+      background-color: rgba(0, 0, 0, 0.5);
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+      color: #fff;
+    }
+    h1 {
+      text-align: center;
+      font-size: 24px;
+      margin-bottom: 20px;
+      color: #0f0;
+    }
+    /* Crime Card Styles */
+    .crime-card {
+      margin-bottom: 20px;
+      padding: 15px;
+      background-color: rgba(17, 17, 17, 0.7);
+      border-radius: 8px;
+      border: 1px solid #333;
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+    }
+    .crime-card h2 {
+      margin-top: 0;
+      font-size: 20px;
+      color: #0f0;
+    }
+    .crime-card p {
+      margin: 5px 0;
+    }
+    .crime-card .details {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .crime-card .details .priority {
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+    .crime-card .details .low {
+      background-color: #00cc00;
+      color: #000;
+    }
+    .crime-card .details .medium {
+      background-color: #ffff00;
+      color: #000;
+    }
+    .crime-card .details .high {
+      background-color: #ff3333;
+      color: #000;
+    }
+    .crime-card .image-placeholder {
+      display: none; /* Initially hidden */
+      max-height: 300px; /* Max height for images */
+      overflow: hidden;
+      margin-top: 10px;
+      border-radius: 8px;
+    }
+    .crime-card .image-placeholder img {
+      width: 100%;
+      height: auto;
+      object-fit: cover; /* Ensures images fit without stretching */
+    }
+    .view-picture-btn {
+      display: block;
+      text-align: center;
+      margin-top: 10px;
+      cursor: pointer;
+      color: #00cc00;
+      font-size: 14px;
+    }
+    .view-picture-btn:hover {
+      text-decoration: underline;
+    }
+    /* Back Button Styles */
+    .back-btn {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      background-color: #00cc00;
+      color: #000;
+      border: none;
+      border-radius: 4px;
+      text-align: center;
+      text-decoration: none;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      margin-top: 20px;
+    }
+    .back-btn:hover {
+      background-color: #00b300;
+    }
+    /* Map Styles */
+    #map {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 100%;
+      z-index: -1;
+    }
+    @media (max-width: 768px) {
+      .container {
+        padding: 10px;
+      }
+      .crime-card {
+        padding: 10px;
+      }
+      .back-btn {
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <div class="container">
+    <h1>Report History</h1>
+
+    <div id="report-container">
+      <!-- Crime Cards will be dynamically generated here -->
+    </div>
+
+    <!-- Back to Index button -->
+    <a href="index.html" class="back-btn">Back to Map</a>
+  </div>
+
+  <script src="https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.js"></script>
+  <script>
+    mapboxgl.accessToken = 'pk.eyJ1IjoiZmFsY29ud2F0Y2giLCJhIjoiY2x5ZWIwcDJhMDBxbTJqc2VnYWMxeWNvdCJ9.bijpr26vfErYoGhhlQnaFA';
+
+    function getMarkerColor(severity) {
+    switch (severity) {
+      case 'Low': return '#00FF00'; // Green
+      case 'Medium': return '#FFFF00'; // Yellow
+      case 'High': return '#FF5733'; // Red
+      default: return '#FF5733'; // Default to red
+    }
+  }
+
+    var map = new mapboxgl.Map({
+      container: 'map',
+      style: 'mapbox://styles/mapbox/dark-v11',
+      center: [55.132327, 25.080857],
+      zoom: 14
+    });
+    
+    // Add navigation control (zoom buttons)
+    map.addControl(new mapboxgl.NavigationControl());
+    
+    // Disable map rotation using right click + drag
+    map.dragRotate.disable();
+    
+    // Disable map rotation using touch rotation gesture
+    map.touchZoomRotate.disable();
+    
+    // Function to fetch and display crime reports
+    async function fetchCrimeReports() {
+      try {
+        const response = await fetch('/reports');
+        const reports = await response.json();
+        console.log(reports); // Log reports to inspect in browser console
+        renderCrimeCards(reports);
+      } catch (error) {
+        console.error('Error fetching reports:', error);
+      }
+    }
+    
+    // Function to create a crime card
+    function createCrimeCard(report) {
+      const card = document.createElement('div');
+      card.classList.add('crime-card');
+    
+      const priorityClass = getPriorityClass(report.severity);
+    
+      card.innerHTML = `
+        <h2>${report.name}</h2>
+        <p>Description: ${report.description}</p>
+        <div class="details">
+          <div>
+            <p>Date: ${formatDate(report.date)}</p>
+            <p>Coordinates: ${report.coordinates.join(', ')}</p>
+          </div>
+          <div class="priority ${priorityClass}">${report.severity} Priority</div>
+        </div>
+        <div class="image-placeholder">
+          <img src="${report.picture}" alt="Crime Image">
+        </div>
+        <div class="view-picture-btn" onclick="toggleImageVisibility(this)">View Picture</div>
+      `;
+    
+      return card;
+    }
+    
+    // Function to toggle image visibility
+    function toggleImageVisibility(btn) {
+      const imagePlaceholder = btn.previousElementSibling;
+      imagePlaceholder.style.display = imagePlaceholder.style.display === 'none' ? 'block' : 'none';
+    }
+    
+    // Function to add a marker to the map
+    function addMarkerToMap(report) {
+      new mapboxgl.Marker({ color: getMarkerColor(report.severity) })
+        .setLngLat(report.coordinates)
+        .setPopup(new mapboxgl.Popup().setHTML(`<h3>${report.name}</h3><p>Description: ${report.description}</p>`))
+        .addTo(map);
+    }
+    
+    // Function to get priority class based on severity
+    function getPriorityClass(severity) {
+      switch (severity) {
+        case 'Low':
+          return 'low';
+        case 'Medium':
+          return 'medium';
+        case 'High':
+          return 'high';
+        default:
+          return '';
+      }
+    }
+    
+    // Function to format date
+    function formatDate(dateStr) {
+      const options = { year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric' };
+      return new Date(dateStr).toLocaleDateString('en-US', options);
+    }
+    
+   // Function to render crime cards sorted by severity
+function renderCrimeCards(reports) {
+  // Sort reports by severity: High > Medium > Low
+  reports.sort((a, b) => {
+    // Assigning higher weights to severity levels
+    const severityOrder = { 'High': 3, 'Medium': 2, 'Low': 1 };
+    return severityOrder[b.severity] - severityOrder[a.severity];
+  });
+
+  const container = document.getElementById('report-container');
+  container.innerHTML = '';
+
+  reports.forEach(report => {
+    const card = createCrimeCard(report);
+    container.appendChild(card);
+    addMarkerToMap(report);
+  });
+}
+
+    
+    // Fetch crime reports when the page loads
+    fetchCrimeReports();
+    </script>
+    
+  
+  
+</body>
+</html>
