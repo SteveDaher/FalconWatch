@@ -171,7 +171,7 @@
       const timelineItem = document.createElement('div');
       timelineItem.classList.add('timeline-item');
       timelineItem.classList.add(report.severity.toLowerCase());
-      timelineItem.dataset.priority = report.severity.toLowerCase();
+      timelineItem.dataset.severity = report.severity.toLowerCase();
       timelineItem.innerHTML = `
         <p>${report.name}</p>
         <p>${formatDate(new Date(report.date))}</p>
