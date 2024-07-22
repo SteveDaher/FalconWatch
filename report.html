@@ -5,132 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FalconWatch Report History</title>
   <link href="https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.css" rel="stylesheet" />
-  <style>
-    /* General Styles */
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background-color: #111;
-      color: #fff;
-    }
-    .container {
-      max-width: 800px;
-      margin: 20px auto;
-      padding: 20px;
-      background-color: rgba(0, 0, 0, 0.5);
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
-      color: #fff;
-    }
-    h1 {
-      text-align: center;
-      font-size: 24px;
-      margin-bottom: 20px;
-      color: #0f0;
-    }
-    /* Crime Card Styles */
-    .crime-card {
-      margin-bottom: 20px;
-      padding: 15px;
-      background-color: rgba(17, 17, 17, 0.7);
-      border-radius: 8px;
-      border: 1px solid #333;
-      box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
-    }
-    .crime-card h2 {
-      margin-top: 0;
-      font-size: 20px;
-      color: #0f0;
-    }
-    .crime-card p {
-      margin: 5px 0;
-    }
-    .crime-card .details {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .crime-card .details .priority {
-      padding: 5px 10px;
-      border-radius: 4px;
-      font-weight: bold;
-    }
-    .crime-card .details .low {
-      background-color: #00cc00;
-      color: #000;
-    }
-    .crime-card .details .medium {
-      background-color: #ffff00;
-      color: #000;
-    }
-    .crime-card .details .high {
-      background-color: #ff3333;
-      color: #000;
-    }
-    .crime-card .image-placeholder {
-      display: none; /* Initially hidden */
-      max-height: 300px; /* Max height for images */
-      overflow: hidden;
-      margin-top: 10px;
-      border-radius: 8px;
-    }
-    .crime-card .image-placeholder img {
-      width: 100%;
-      height: auto;
-      object-fit: cover; /* Ensures images fit without stretching */
-    }
-    .view-picture-btn {
-      display: block;
-      text-align: center;
-      margin-top: 10px;
-      cursor: pointer;
-      color: #00cc00;
-      font-size: 14px;
-    }
-    .view-picture-btn:hover {
-      text-decoration: underline;
-    }
-    /* Back Button Styles */
-    .back-btn {
-      display: block;
-      width: 100%;
-      padding: 10px;
-      background-color: #00cc00;
-      color: #000;
-      border: none;
-      border-radius: 4px;
-      text-align: center;
-      text-decoration: none;
-      font-size: 16px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-      margin-top: 20px;
-    }
-    .back-btn:hover {
-      background-color: #00b300;
-    }
-    /* Map Styles */
-    #map {
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      width: 100%;
-      z-index: -1;
-    }
-    @media (max-width: 768px) {
-      .container {
-        padding: 10px;
-      }
-      .crime-card {
-        padding: 10px;
-      }
-      .back-btn {
-        font-size: 14px;
-      }
-    }
-  </style>
+  <link rel="stylesheet" href=".\cstyle\reportStyle.css">
 </head>
 <body>
+
+  <div id="header">
+    <img src=".\img\logoFW.png" alt="Logo">
+    <div>
+      <button>Simulations</button>
+      <a href="report.html" id="view-reports">View Reports</a>
+    </div>
+  </div>
+
   <div id="map"></div>
   <div class="container">
     <h1>Report History</h1>
@@ -149,9 +35,9 @@
 
     function getMarkerColor(severity) {
     switch (severity) {
-      case 'Low': return '#00FF00'; // Green
-      case 'Medium': return '#FFFF00'; // Yellow
-      case 'High': return '#FF5733'; // Red
+      case 'low': return '#00FF00'; // Green
+      case 'medium': return '#FFFF00'; // Yellow
+      case 'high': return '#FF5733'; // Red
       default: return '#FF5733'; // Default to red
     }
   }
@@ -184,31 +70,31 @@
       }
     }
     
-    // Function to create a crime card
     function createCrimeCard(report) {
-      const card = document.createElement('div');
-      card.classList.add('crime-card');
-    
-      const priorityClass = getPriorityClass(report.severity);
-    
-      card.innerHTML = `
-        <h2>${report.name}</h2>
-        <p>Description: ${report.description}</p>
-        <div class="details">
-          <div>
-            <p>Date: ${formatDate(report.date)}</p>
-            <p>Coordinates: ${report.coordinates.join(', ')}</p>
-          </div>
-          <div class="priority ${priorityClass}">${report.severity} Priority</div>
-        </div>
-        <div class="image-placeholder">
-          <img src="${report.picture}" alt="Crime Image">
-        </div>
-        <div class="view-picture-btn" onclick="toggleImageVisibility(this)">View Picture</div>
-      `;
-    
-      return card;
-    }
+  const card = document.createElement('div');
+  card.classList.add('crime-card');
+
+  const priorityClass = getPriorityClass(report.severity);
+
+  card.innerHTML = `
+    <h2>${report.name}</h2>
+    <p>Description: ${report.description}</p>
+    <div class="details">
+      <div>
+        <p>Date: ${formatDate(report.date)}</p>
+        <p>Coordinates: ${report.coordinates.join(', ')}</p>
+      </div>
+      <div class="priority ${priorityClass}">${report.severity} Severity</div>
+    </div>
+    <div class="image-placeholder">
+      <img src="${report.picture}" alt="Crime Image">
+    </div>
+    <div class="view-picture-btn" onclick="toggleImageVisibility(this)">View Picture</div>
+  `;
+
+  return card;
+}
+
     
     // Function to toggle image visibility
     function toggleImageVisibility(btn) {
@@ -227,11 +113,11 @@
     // Function to get priority class based on severity
     function getPriorityClass(severity) {
       switch (severity) {
-        case 'Low':
+        case 'low':
           return 'low';
-        case 'Medium':
+        case 'medium':
           return 'medium';
-        case 'High':
+        case 'high':
           return 'high';
         default:
           return '';
@@ -249,7 +135,7 @@ function renderCrimeCards(reports) {
   // Sort reports by severity: High > Medium > Low
   reports.sort((a, b) => {
     // Assigning higher weights to severity levels
-    const severityOrder = { 'High': 3, 'Medium': 2, 'Low': 1 };
+    const severityOrder = { 'high': 3, 'medium': 2, 'low': 1 };
     return severityOrder[b.severity] - severityOrder[a.severity];
   });
 

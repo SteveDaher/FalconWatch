@@ -40,9 +40,9 @@
       <textarea id="crime-description" name="crime-description" required></textarea>
       <label for="crime-severity">Severity</label>
       <select id="crime-severity" name="crime-severity" required>
-        <option value="Low">Low</option>
-        <option value="Medium">Medium</option>
-        <option value="High">High</option>
+        <option value="low">Low</option>
+        <option value="medium">Medium</option>
+        <option value="high">High</option>
       </select>
       <label for="crime-coordinates">Coordinates</label>
       <input type="text" id="crime-coordinates" name="crime-coordinates" placeholder="Enter coordinates (e.g., lng, lat)" required>
@@ -59,9 +59,9 @@
         <label for="severity-filter">Filter by Severity:</label>
         <select id="severity-filter">
           <option value="all">All</option>
-          <option value="low">Low</option>
-          <option value="medium">Medium</option>
-          <option value="high">High</option>
+          <option value="low">low</option>
+          <option value="medium">medium</option>
+          <option value="high">high</option>
         </select>
       </div>
     </div>
@@ -96,7 +96,6 @@
       const timelineContainer = document.getElementById('timeline-container');
       if (timelineContainer.style.display === 'none' || timelineContainer.style.display === '') {
         timelineContainer.style.display = 'block';
-        fetchTimelineReports();
       } else {
         timelineContainer.style.display = 'none';
       }
@@ -138,27 +137,12 @@
       }
     }
 
-    // Function to fetch and display reports for the timeline
-    async function fetchTimelineReports() {
-      try {
-        const response = await fetch('/reports');
-        const reports = await response.json();
-        const timeline = document.getElementById('timeline');
-        timeline.innerHTML = ''; // Clear existing timeline items
-        reports.forEach(report => {
-          addReportToTimeline(report);
-        });
-      } catch (error) {
-        console.error('Error fetching reports:', error);
-      }
-    }
-
     // Function to get marker color based on severity
     function getMarkerColor(severity) {
       switch (severity) {
-        case 'Low': return '#00FF00'; // Green
-        case 'Medium': return '#FFFF00'; // Yellow
-        case 'High': return '#FF5733'; // Red
+        case 'low': return '#00FF00'; // Green
+        case 'medium': return '#FFFF00'; // Yellow
+        case 'high': return '#FF5733'; // Red
         default: return '#FF5733'; // Default to red
       }
     }
@@ -187,7 +171,7 @@
       const timelineItem = document.createElement('div');
       timelineItem.classList.add('timeline-item');
       timelineItem.classList.add(report.severity.toLowerCase());
-      timelineItem.dataset.severity = report.severity.toLowerCase();
+      timelineItem.dataset.priority = report.severity.toLowerCase();
       timelineItem.innerHTML = `
         <p>${report.name}</p>
         <p>${formatDate(new Date(report.date))}</p>

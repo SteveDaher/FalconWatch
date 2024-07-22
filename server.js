@@ -2,15 +2,11 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const app = express();
-
 const port = 3000;
 
 app.use(bodyParser.json({ limit: '50mb' }));
 
-mongoose.connect('mongodb://localhost:27017/falconwatch', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
+mongoose.connect('mongodb://localhost:27017/falconwatch', {});
 
 const reportSchema = new mongoose.Schema({
   name: String,
@@ -19,19 +15,48 @@ const reportSchema = new mongoose.Schema({
   severity: String,
   coordinates: [Number],
   picture: String,
-  date: { type: Date, default: Date.now } // Add date field with default value
+  date: { type: Date, default: Date.now }
 });
 
 const Report = mongoose.model('Report', reportSchema);
 
+const { spawn } = require('child_process');
+const path = require('path');
+
+// Function to classify report priority using NLP
+async function classifySeverity(description) {
+  return new Promise((resolve, reject) => {
+    const pythonProcess = spawn('python', [path.join(__dirname, 'classify_severity.py'), description]);
+
+    let result = '';
+    pythonProcess.stdout.on('data', (data) => {
+      result += data.toString();
+    });
+
+    pythonProcess.stderr.on('data', (data) => {
+      console.error(`Python stderr: ${data}`);
+    });
+
+    pythonProcess.on('close', (code) => {
+      if (code !== 0) {
+        reject(`Python process exited with code ${code}`);
+      } else {
+        resolve(result.trim());
+      }
+    });
+  });
+}
+
 app.post('/report', async (req, res) => {
   try {
     const reportData = req.body;
+    const severity = await classifySeverity(reportData.description); // Classify severity using NLP
+    console.log(`Severity classified as: ${severity}`); // Log the severity for debugging
     const report = new Report({
       name: reportData.name,
       category: reportData.category,
       description: reportData.description,
-      severity: reportData.severity,
+      severity: severity,
       coordinates: reportData.coordinates,
       picture: reportData.picture,
       date: new Date() // Set current date and time
