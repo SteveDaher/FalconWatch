@@ -7,41 +7,45 @@ body {
     font-family: Arial, sans-serif;
   }
 
-  #logo{
+  #logo {
     filter: brightness(0) invert(1);
   }
-
+  
   #header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 20px;
-    background-color: #1e1e1e;
-    color: white;
+    padding: 15px 30px;
+    background-color: #1a1a1a;
+    color: #f0f0f0;
+    border-bottom: 2px solid #333;
     position: relative;
     z-index: 1000;
   }
-
+  
   #header img {
     height: 60px;
     margin-right: 20px;
   }
+  
   #header button, #header a {
-    background-color: #000000;
-    color: rgb(255, 255, 255);
+    background-color: #333;
+    color: #f0f0f0;
     border: none;
-    padding: 10px 20px;
+    padding: 12px 20px;
     text-align: center;
     text-decoration: none;
-    font-size: 14px;
+    font-size: 16px;
     cursor: pointer;
     border-radius: 4px;
     transition: background-color 0.3s ease;
     margin-left: 10px;
   }
+  
   #header button:hover, #header a:hover {
-    background-color: #45a049;
+    background-color: #555;
   }
+  
   #map {
     flex: 1;
     height: calc(100vh - 140px);
