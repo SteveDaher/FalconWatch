@@ -3,12 +3,17 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const app = express();
 const port = 3000;
+const { v4: uuidv4 } = require('uuid'); // For generating unique incident IDs
+const { spawn } = require('child_process');
+const path = require('path');
 
 app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ extended: true }));
 
-mongoose.connect('mongodb://localhost:27017/falconwatch', {});
+mongoose.connect('mongodb://localhost:27017/falconwatch', { useNewUrlParser: true, useUnifiedTopology: true });
 
 const reportSchema = new mongoose.Schema({
+  incidentId: { type: Number, required: true, unique: true },
   name: String,
   category: String,
   description: String,
@@ -19,9 +24,6 @@ const reportSchema = new mongoose.Schema({
 });
 
 const Report = mongoose.model('Report', reportSchema);
-
-const { spawn } = require('child_process');
-const path = require('path');
 
 // Function to classify report priority using NLP
 async function classifySeverity(description) {
@@ -47,13 +49,24 @@ async function classifySeverity(description) {
   });
 }
 
+// Function to get the next incident ID
+async function getNextIncidentId() {
+  const lastReport = await Report.findOne({}, 'incidentId').sort({ incidentId: -1 });
+  return lastReport ? lastReport.incidentId + 1 : 1;
+}
+
 app.post('/report', async (req, res) => {
   try {
     const reportData = req.body;
     const severity = await classifySeverity(reportData.description); // Classify severity using NLP
     console.log(`Severity classified as: ${severity}`); // Log the severity for debugging
+
+    // Get the next incident ID
+    const incidentId = await getNextIncidentId();
+
     const report = new Report({
-      name: reportData.name,
+      incidentId: incidentId,
+      name: reportData.name, // Ensure this field is handled correctly
       category: reportData.category,
       description: reportData.description,
       severity: severity,
@@ -61,31 +74,43 @@ app.post('/report', async (req, res) => {
       picture: reportData.picture,
       date: new Date() // Set current date and time
     });
+
     await report.save();
-    res.status(200).send('Report submitted successfully');
+    res.status(200).json({
+      incidentId: report.incidentId,
+      name: report.name,
+      category: report.category,
+      description: report.description,
+      severity: report.severity,
+      coordinates: report.coordinates,
+      picture: report.picture,
+      date: report.date
+    });
   } catch (error) {
     console.error('Error submitting report:', error);
-    res.status(500).send('Error submitting report');
+    res.status(500).json({ message: 'Error submitting report' });
   }
 });
+
+
 
 app.get('/reports', async (req, res) => {
   try {
     const reports = await Report.find({});
-    res.json(reports);
+    res.status(200).json(reports);
   } catch (error) {
     console.error('Error fetching reports:', error);
-    res.status(500).send('Error fetching reports');
+    res.status(500).json({ error: 'Error fetching reports' });
   }
 });
 
 app.delete('/report/:id', async (req, res) => {
   try {
-    await Report.findByIdAndDelete(req.params.id);
-    res.status(200).send('Report deleted successfully');
+    await Report.findOneAndDelete({ incidentId: req.params.id });
+    res.status(200).json({ message: 'Report deleted successfully' });
   } catch (error) {
     console.error('Error deleting report:', error);
-    res.status(500).send('Error deleting report');
+    res.status(500).json({ error: 'Error deleting report' });
   }
 });
 
