@@ -1,0 +1,245 @@
+body {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  font-family: Arial, sans-serif;
+}
+
+#logo {
+  filter: brightness(0) invert(1);
+}
+
+#header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 30px;
+  background-color: #1a1a1a;
+  color: #f0f0f0;
+  border-bottom: 2px solid #333;
+  position: relative;
+  z-index: 1000;
+}
+
+#header img {
+  height: 60px;
+  margin-right: 20px;
+}
+
+#header button, #header a {
+  background-color: #333;
+  color: #f0f0f0;
+  border: none;
+  padding: 12px 20px;
+  text-align: center;
+  text-decoration: none;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+  margin-left: 10px;
+}
+
+#header button:hover, #header a:hover {
+  background-color: #555;
+}
+
+#map {
+  flex: 1;
+  height: calc(100vh - 140px);
+}
+#reporting {
+  display: none;
+  width: 300px;
+  background-color: rgba(90, 90, 90, 0.5);
+  color: white;
+  padding: 20px;
+  box-sizing: border-box;
+  font-size: 14px;
+  overflow-y: auto;
+  position: absolute;
+  top: 100px;
+  left: 550px;
+  z-index: 1000;
+}
+
+
+#reporting h2 {
+  margin-top: 0;
+}
+#reporting form {
+  display: flex;
+  flex-direction: column;
+}
+#reporting label {
+  margin-bottom: 8px;
+}
+
+
+#reporting input,
+#reporting textarea,
+#reporting select {
+  margin-bottom: 12px;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+}
+#reporting button {
+  background-color: #5e9363;
+  color: rgb(255, 255, 255);
+  border: none;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 4px;
+  margin-top: 10px;
+  transition: background-color 0.3s ease;
+}
+#reporting button:hover {
+  background-color: #45a049;
+}
+
+#timeline-container {
+  display: none;
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  background-color: #1e1e1e;
+  color: white;
+  padding: 10px;
+  box-sizing: border-box;
+  font-size: 14px;
+  z-index: 1000;
+}
+#timeline {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  padding: 10px 0;
+}
+.timeline-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 5px;
+  margin-right: 10px;
+  border-radius: 4px;
+}
+.timeline-item.low {
+  background-color: #00FF00;
+}
+.timeline-item.medium {
+  background-color: #FFFF00;
+}
+.timeline-item.high {
+  background-color: #FF5733;
+}
+#filter-container {
+  display: flex;
+  align-items: center;
+}
+#filter-container label {
+  margin-right: 10px;
+}
+.custom-marker {
+  background-color: #000; /* Default color, will be overridden by JavaScript */
+  border-radius: 50%;
+  width: 20px; /* Marker size */
+  height: 20px; /* Marker size */
+  border: 2px solid #fff; /* Marker border */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Modal Background */
+.modal {
+display: none; 
+position: bottom; 
+z-index: 1; 
+left: 0;
+top: 0;
+width: 100%; 
+height: 100%; 
+overflow: auto; 
+background-color: rgba(0,0,0,0.6); /* Darker background for better contrast */
+}
+
+/* Modal Content */
+.modal-content {
+background-color: #1e1e1e; /* Darker background color */
+margin: 5% auto; 
+padding: 20px;
+border: 1px solid #444; /* Darker border color */
+width: 100%; 
+max-width: 600px;
+border-radius: 8px;
+box-shadow: 0 0 15px rgba(0,0,0,0.4); /* Enhanced shadow for depth */
+color: #f5f5f5; /* Light text color */
+text-align: center;
+}
+
+/* Close Button */
+.close {
+color: #f5f5f5;
+float: right;
+font-size: 28px;
+font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+color: #ff0000; /* Red color for close button on hover */
+text-decoration: none;
+cursor: pointer;
+}
+
+/* Modal Heading */
+.modal-content h2 {
+margin: 0;
+padding: 0;
+font-size: 24px;
+color: #00bfff; /* Light blue color for headings */
+font-family: 'Arial Black', Gadget, sans-serif; /* Bold font for headings */
+}
+
+/* Modal Message */
+.modal-content p {
+font-size: 16px;
+color: #e0e0e0; /* Slightly lighter text color */
+line-height: 1.5;
+}
+
+/* Modal Picture Container */
+.picture-modal-content {
+position: relative;
+padding: 0;
+}
+
+/* Modal Picture */
+#picture-img {
+width: 100%;
+height: auto;
+border-radius: 8px;
+box-shadow: 0 0 10px rgba(0,0,0,0.3);
+}
+
+/* Styling */
+.modal-content {
+border: 2px solid #07070715;
+background-color: #333; 
+}
+
+#picture-modal .modal-content {
+background-color: #1c1c1c; 
+}
+
+#picture-img {
+border: 2px solid #000000; 
+}

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FalconWatch | Sign Up</title>
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="./cstyle/registerStyle.css">
+</head>
+<body class="align">
+    <div class="grid align__item">
+        <div class="register">
+            <img src="img/logoFW.png" class="site__logo" alt="Logo">
+            <h2>Register</h2>
+            <form id="register-form" action="/register" method="post" class="form">
+                <div class="form__field">
+                    <label for="name">Name</label>
+                    <input type="text" id="name" name="name" placeholder="John Doe" required>
+                </div>
+                <div class="form__field">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" placeholder="info@mailaddress.com" required>
+                </div>
+                <div class="form__field">
+                    <label for="phone">UAE Phone Number</label>
+                    <input type="tel" id="phone" name="phone" placeholder="+971 50 123 4567" pattern="\+971\s\d{2}\s\d{3}\s\d{4}" required>
+                </div>
+                <div class="form__field">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="••••••••••••" required>
+                </div>
+                <div class="form__field">
+                    <input type="submit" value="Sign Up">
+                </div>
+            </form>
+            <p>Already have an account? <a href="login.html">Log in</a></p>
+        </div>
+    </div>
+    <script src="auth.js"></script>
+</body>
+</html>

@@ -40,7 +40,7 @@
     <div class="pagination" id="pagination-controls">
       <!-- Pagination controls will be dynamically generated here -->
     </div>
-    <a href="index.html" class="back-btn">Back to Map</a>
+    <a href="main.html" class="back-btn">Back to Map</a>
   </div>
 
   <script src="https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.js"></script>
@@ -114,7 +114,7 @@
           <td>${report.description}</td>
           <td>${formatDate(report.date)}</td>
           <td>${report.locationName || report.coordinates.join(', ')}</td>
-          <td><a href="index.html?showPin=${report.incidentId}" class="view-pin-btn">Show Pin</a></td>
+          <td><a href="main.html?showPin=${report.incidentId}" class="view-pin-btn">Show Pin</a></td>
         `;
         tbody.appendChild(row);
       });
