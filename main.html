@@ -18,6 +18,7 @@
       <button id="toggle-timeline">Toggle Timeline</button>
     </div>
   </div>
+
   <div id="map"></div>
   
   <div id="reporting">
@@ -62,7 +63,7 @@
       </div>
     </div>
     <div id="timeline"></div>
-  </div>
+  </div>   
 
   <!-- Success Modal HTML -->
   <div id="success-modal" class="modal">
@@ -83,272 +84,311 @@
   </div>
 
   <script>
-  // Mapbox access token
-  mapboxgl.accessToken = 'pk.eyJ1IjoiZmFsY29ud2F0Y2giLCJhIjoiY2x5ZWIwcDJhMDBxbTJqc2VnYWMxeWNvdCJ9.bijpr26vfErYoGhhlQnaFA';
-
-  const map = new mapboxgl.Map({
-    container: 'map',
-    style: 'mapbox://styles/mapbox/standard',
-    
-    center: [55.132327, 25.080857],
-    zoom: 15,
-    bearing: -50,
-    minZoom: 14,
-    maxZoom: 18,
-  });
-
-  let reportsCache = [];
-  const markers = {}; // To keep track of markers by their ID
-
-  // Toggle the reporting form visibility
-  document.getElementById('toggle-reporting').addEventListener('click', function () {
-    const reportingDiv = document.getElementById('reporting');
-    reportingDiv.style.display = reportingDiv.style.display === 'none' ? 'block' : 'none';
-  });
-
-  // Toggle the timeline visibility
-  document.getElementById('toggle-timeline').addEventListener('click', function () {
-    const timelineContainer = document.getElementById('timeline-container');
-    timelineContainer.style.display = timelineContainer.style.display === 'none' ? 'block' : 'none';
-  });
-
-  // Load map.geojson as a source
-  map.on('load', async function () {
-    map.addSource('boundary', {
-      type: 'geojson',
-      data: 'map.geojson'
+    // Mapbox access token
+    mapboxgl.accessToken = 'pk.eyJ1IjoiZmFsY29ud2F0Y2giLCJhIjoiY2x5ZWIwcDJhMDBxbTJqc2VnYWMxeWNvdCJ9.bijpr26vfErYoGhhlQnaFA';
+  
+    const map = new mapboxgl.Map({
+      container: 'map',
+      style: 'mapbox://styles/mapbox/standard',
+      center: [55.132327, 25.080857],
+      zoom: 15,
+      bearing: -50,
+      minZoom: 14,
+      maxZoom: 18,
     });
-
-    map.addLayer({
-      id: 'boundary-layer',
-      type: 'line',
-      source: 'boundary',
-      layout: {},
-      paint: {
-        'line-color': '#ff0000',
-        'line-width': 2
+  
+    let reportsCache = [];
+    const markers = {}; // To keep track of markers by their ID
+  
+    // Toggle the reporting form visibility
+    document.getElementById('toggle-reporting').addEventListener('click', function () {
+      const reportingDiv = document.getElementById('reporting');
+      reportingDiv.style.display = reportingDiv.style.display === 'none' ? 'block' : 'none';
+    });
+  
+    // Toggle the timeline visibility
+    document.getElementById('toggle-timeline').addEventListener('click', function () {
+      const timelineContainer = document.getElementById('timeline-container');
+      if (timelineContainer.classList.contains('show')) {
+        timelineContainer.classList.remove('show');
+        setTimeout(() => { timelineContainer.style.display = 'none'; }, 500); // Wait for animation to finish
+      } else {
+        timelineContainer.style.display = 'block';
+        setTimeout(() => { timelineContainer.classList.add('show'); }, 10); // Slight delay to allow display change to take effect
       }
     });
 
-    // Fetch and display existing reports
-    await fetchReports();
 
-    // Check URL for showPin parameter
-    const params = new URLSearchParams(window.location.search);
-    const showPinId = params.get('showPin');
-    if (showPinId) {
-      const marker = markers[showPinId];
-      if (marker) {
-        map.flyTo({ center: marker.getLngLat(), zoom: 17 });
-        marker.togglePopup();
+
+  
+    // Load map.geojson as a source
+    map.on('load', async function () {
+      map.addSource('boundary', {
+        type: 'geojson',
+        data: 'map.geojson'
+      });
+  
+      map.addLayer({
+        id: 'boundary-layer',
+        type: 'line',
+        source: 'boundary',
+        layout: {},
+        paint: {
+          'line-color': '#ff0000',
+          'line-width': 2
+        }
+      });
+  
+      // Fetch and display existing reports
+      await fetchReports();
+  
+      // Check URL for showPin parameter
+      const params = new URLSearchParams(window.location.search);
+      const showPinId = params.get('showPin');
+      if (showPinId) {
+        const marker = markers[showPinId];
+        if (marker) {
+          map.flyTo({ center: marker.getLngLat(), zoom: 17 });
+          marker.togglePopup();
+        }
+      }
+    });
+  
+    async function fetchReports() {
+      try {
+        const response = await fetch('/reports');
+        if (!response.ok) throw new Error('Network response was not ok');
+        const reports = await response.json();
+        reportsCache = reports;
+        reports.forEach(report => addReportToMap(report));
+        reports.forEach(report => addReportToTimeline(report));
+      } catch (error) {
+        console.error('Error fetching reports:', error);
       }
     }
-  });
-
-  async function fetchReports() {
-    try {
-      const response = await fetch('/reports');
-      if (!response.ok) throw new Error('Network response was not ok');
-      const reports = await response.json();
-      reportsCache = reports;
-      reports.forEach(report => addReportToMap(report));
-      reports.forEach(report => addReportToTimeline(report));
-    } catch (error) {
-      console.error('Error fetching reports:', error);
+  
+    function addReportToMap(report) {
+      if (!report.coordinates || !Array.isArray(report.coordinates) || report.coordinates.length !== 2) {
+        console.error('Invalid coordinates:', report.coordinates);
+        return;
+      }
+  
+      const markerColor = getMarkerColor(report.severity);
+      const popupContent = `
+        <h3>Incident ID: ${report.incidentId}</h3>
+        <h4>${report.name || 'No Title Provided'}</h4> <!-- Default to 'No Title Provided' if name is undefined -->
+        <p><strong>Category:</strong> ${report.category}</p>
+        <p><strong>Description:</strong> ${report.description}</p>
+        <p><strong>Severity:</strong> ${report.severity}</p>
+        <p><strong>Date:</strong> ${formatDate(new Date(report.date))}</p>
+        ${report.picture ? `<img src="${report.picture}" alt="Crime Picture" style="max-width: 100%; height: auto;">` : ''}
+      `;
+      const popup = new mapboxgl.Popup().setHTML(popupContent);
+  
+      const el = document.createElement('div');
+      el.className = 'custom-marker';
+      el.style.backgroundColor = markerColor;
+      el.dataset.incidentId = report.incidentId;
+      el.dataset.coordinates = report.coordinates.join(',');
+  
+      const marker = new mapboxgl.Marker(el)
+        .setLngLat(report.coordinates)
+        .setPopup(popup)
+        .addTo(map);
+  
+      markers[report.incidentId] = marker; // Save marker by ID
     }
-  }
+  
+    function addReportToTimeline(report) {
+      const timeline = document.getElementById('timeline');
+      const reportElement = document.createElement('div');
+      reportElement.className = 'timeline-item';
 
-  function addReportToMap(report) {
-  if (!report.coordinates || !Array.isArray(report.coordinates) || report.coordinates.length !== 2) {
-    console.error('Invalid coordinates:', report.coordinates);
-    return;
-  }
+      const severityColor = getSeverityColor(report.severity);
 
-  const markerColor = getMarkerColor(report.severity);
-  const popupContent = `
-    <h3>Incident ID: ${report.incidentId}</h3>
-    <h4>${report.name || 'No Title Provided'}</h4> <!-- Default to 'No Title Provided' if name is undefined -->
-    <p><strong>Category:</strong> ${report.category}</p>
-    <p><strong>Description:</strong> ${report.description}</p>
-    <p><strong>Severity:</strong> ${report.severity}</p>
-    <p><strong>Date:</strong> ${formatDate(new Date(report.date))}</p>
-    ${report.picture ? `<img src="${report.picture}" alt="Crime Picture" style="max-width: 100%; height: auto;">` : ''}
-  `;
-  const popup = new mapboxgl.Popup().setHTML(popupContent);
+      reportElement.innerHTML = `
+        <div class="severity-indicator" style="background-color: ${severityColor};"></div>
+        <p><strong>ID:</strong> ${report.incidentId}</p>
+        <p><strong>Name:</strong> ${report.name}</p>
+        <p><strong>Severity:</strong> ${report.severity}</p>
+        <p><strong>Date:</strong> ${formatDate(new Date(report.date))}</p>
+        ${report.picture ? `<img src="${report.picture}" alt="Crime Picture" style="max-width: 100%; height: auto;">` : ''}
+      `;
 
-  const el = document.createElement('div');
-  el.className = 'custom-marker';
-  el.style.backgroundColor = markerColor;
-  el.dataset.incidentId = report.incidentId;
-  el.dataset.coordinates = report.coordinates.join(',');
-
-  const marker = new mapboxgl.Marker(el)
-    .setLngLat(report.coordinates)
-    .setPopup(popup)
-    .addTo(map);
-
-  markers[report.incidentId] = marker; // Save marker by ID
-}
-
-
-  function addReportToTimeline(report) {
-    const timeline = document.getElementById('timeline');
-    const reportElement = document.createElement('div');
-    reportElement.className = 'timeline-item';
-
-    const severityClass = `severity-${report.severity.toLowerCase()}`;
-    reportElement.className += ` ${severityClass}`;
-
-    reportElement.innerHTML = `
-      <h3>Incident ID: ${report.incidentId}</h3>
-      <h4>${report.name}</h4>
-      <p><strong>Category:</strong> ${report.category}</p>
-      <p><strong>Description:</strong> ${report.description}</p>
-      <p><strong>Severity:</strong> ${report.severity}</p>
-      <p><strong>Date:</strong> ${formatDate(new Date(report.date))}</p>
-      ${report.picture ? `<button onclick="viewPicture('${report.picture}')">View Picture</button>` : ''}
-    `;
-
-    timeline.appendChild(reportElement);
-  }
-
-  function getMarkerColor(severity) {
-    switch (severity.toLowerCase()) {
-      case 'high': return 'red';
-      case 'medium': return 'orange';
-      case 'low': return 'green';
-      default: return 'gray';
-    }
-  }
-
-  function formatDate(date) {
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    });
-  }
-
-  document.getElementById('crime-report-form').addEventListener('submit', async function(event) {
-  event.preventDefault(); // Prevent the default form submission
-
-  const name = document.getElementById('crime-title').value; // Change `title` to `name`
-  const category = document.getElementById('crime-category').value;
-  const description = document.getElementById('crime-description').value;
-  const coordinates = document.getElementById('crime-coordinates').value;
-
-  const [lng, lat] = coordinates.split(',').map(Number);
-
-  if (isNaN(lng) || isNaN(lat)) {
-    alert('Please enter valid coordinates.');
-    return;
-  }
-
-  const crimePicture = document.getElementById('crime-picture').files[0];
-  let pictureData = '';
-  if (crimePicture) {
-    pictureData = await toBase64(crimePicture);
-  }
-
-  const crimeReport = {
-    name, // Updated field name here
-    category,
-    description,
-    coordinates: [lng, lat],
-    picture: pictureData
-  };
-
-  try {
-    const response = await fetch('/report', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(crimeReport),
-    });
-
-    if (!response.ok) throw new Error('Network response was not ok');
-
-    const result = await response.json();
-
-    reportsCache.push(result);
-    addReportToMap(result);
-    addReportToTimeline(result);
-
-    showModal('Report submitted successfully!', result.incidentId, formatDate(new Date(result.date)));
-
-    // Close the reporting form
-    document.getElementById('reporting').style.display = 'none';
-  } catch (error) {
-    console.error('Error submitting report:', error);
-    showModal('Failed to submit report.');
-  }
-
-  // Reset the form after submission
-  document.getElementById('crime-report-form').reset();
-});
-
-
-  // Function to convert file to base64
-  async function toBase64(file) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  }
-
-  // Function to show modal
-  function showModal(message, incidentId, timestamp) {
-    const successModal = document.getElementById('success-modal');
-    document.getElementById('modal-message').textContent = message;
-    if (incidentId) {
-      document.getElementById('incident-id').textContent = incidentId;
-    }
-    if (timestamp) {
-      document.getElementById('timestamp').textContent = timestamp;
+      reportElement.dataset.severity = report.severity.toLowerCase();
+      timeline.appendChild(reportElement);
     }
 
-    successModal.style.display = 'block';
+    document.getElementById('severity-filter').addEventListener('change', function() {
+      const selectedSeverity = this.value;
+      const timelineItems = document.querySelectorAll('.timeline-item');
 
-    // Close modal when user clicks on (x)
-    document.querySelector('.close').addEventListener('click', function() {
-      successModal.style.display = 'none';
+      timelineItems.forEach(item => {
+        if (selectedSeverity === 'all' || item.dataset.severity === selectedSeverity) {
+          item.style.display = 'flex';
+        } else {
+          item.style.display = 'none';
+        }
+      });
     });
 
-    // Close modal when user clicks anywhere outside of the modal
-    window.addEventListener('click', function(event) {
-      if (event.target === successModal) {
+  
+    function getMarkerColor(severity) {
+      switch (severity.toLowerCase()) {
+        case 'high': return '#df0000';
+        case 'medium': return '#FFFF00';
+        case 'low': return '#00FF00';
+        default: return 'gray';
+      }
+    }
+  
+    function getSeverityColor(severity) {
+      switch (severity.toLowerCase()) {
+        case 'high': return '#df0000';
+        case 'medium': return '#FFFF00';
+        case 'low': return '#00FF00';
+        default: return 'gray';
+      }
+    }
+  
+    function formatDate(date) {
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+    }
+  
+    document.getElementById('crime-report-form').addEventListener('submit', async function(event) {
+      event.preventDefault(); // Prevent the default form submission
+  
+      const name = document.getElementById('crime-title').value; // Change `title` to `name`
+      const category = document.getElementById('crime-category').value;
+      const description = document.getElementById('crime-description').value;
+      const coordinates = document.getElementById('crime-coordinates').value;
+  
+      const [lng, lat] = coordinates.split(',').map(Number);
+  
+      if (isNaN(lng) || isNaN(lat)) {
+        alert('Please enter valid coordinates.');
+        return;
+      }
+  
+      const crimePicture = document.getElementById('crime-picture').files[0];
+      let pictureData = '';
+      if (crimePicture) {
+        pictureData = await toBase64(crimePicture);
+      }
+  
+      const crimeReport = {
+        name, // Updated field name here
+        category,
+        description,
+        coordinates: [lng, lat],
+        picture: pictureData
+      };
+  
+      try {
+        const response = await fetch('/report', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(crimeReport),
+        });
+  
+        if (!response.ok) throw new Error('Network response was not ok');
+  
+        const result = await response.json();
+  
+        reportsCache.push(result);
+        addReportToMap(result);
+        addReportToTimeline(result);
+  
+        showModal('Report submitted successfully!', result.incidentId, formatDate(new Date(result.date)));
+  
+        // Close the reporting form
+        document.getElementById('reporting').style.display = 'none';
+      } catch (error) {
+        console.error('Error submitting report:', error);
+        showModal('Failed to submit report.');
+      }
+  
+      // Reset the form after submission
+      document.getElementById('crime-report-form').reset();
+    });
+  
+    // Function to convert file to base64
+    async function toBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+  
+    // Function to show modal
+    function showModal(message, incidentId, timestamp) {
+      const successModal = document.getElementById('success-modal');
+      document.getElementById('modal-message').textContent = message;
+      if (incidentId) {
+        document.getElementById('incident-id').textContent = incidentId;
+      }
+      if (timestamp) {
+        document.getElementById('timestamp').textContent = timestamp;
+      }
+  
+      successModal.style.display = 'block';
+  
+      // Close modal when user clicks on (x)
+      document.querySelector('.close').addEventListener('click', function() {
         successModal.style.display = 'none';
-      }
-    });
-  }
-
-  // Function to view picture in a modal
-  function viewPicture(pictureUrl) {
-    const pictureModal = document.getElementById('picture-modal');
-    document.getElementById('picture-img').src = pictureUrl;
-    pictureModal.style.display = 'block';
-
-    // Close modal when user clicks on (x)
-    document.querySelector('#picture-modal .close').addEventListener('click', function() {
-      pictureModal.style.display = 'none';
-    });
-
-    // Close modal when user clicks anywhere outside of the modal
-    window.addEventListener('click', function(event) {
-      if (event.target === pictureModal) {
+      });
+  
+      // Close modal when user clicks anywhere outside of the modal
+      window.addEventListener('click', function(event) {
+        if (event.target === successModal) {
+          successModal.style.display = 'none';
+        }
+      });
+    }
+  
+    // Function to view picture in a modal
+    function viewPicture(pictureUrl) {
+      const pictureModal = document.getElementById('picture-modal');
+      document.getElementById('picture-img').src = pictureUrl;
+      pictureModal.style.display = 'block';
+  
+      // Close modal when user clicks on (x)
+      document.querySelector('#picture-modal .close').addEventListener('click', function() {
         pictureModal.style.display = 'none';
-      }
+      });
+  
+      // Close modal when user clicks anywhere outside of the modal
+      window.addEventListener('click', function(event) {
+        if (event.target === pictureModal) {
+          pictureModal.style.display = 'none';
+        }
+      });
+    }
+  
+    document.getElementById('severity-filter').addEventListener('change', function() {
+      const selectedSeverity = this.value;
+      const timelineItems = document.querySelectorAll('.timeline-item');
+
+      timelineItems.forEach(item => {
+        if (selectedSeverity === 'all' || item.dataset.severity === selectedSeverity) {
+          item.style.display = 'flex';
+        } else {
+          item.style.display = 'none';
+        }
+      });
     });
-  }
-</script>
+  </script>  
 
-
-  </script>
 </body>
 </html>
