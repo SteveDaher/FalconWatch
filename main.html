@@ -27,15 +27,17 @@
       <input type="text" id="crime-title" name="crime-title" required>
       <label for="crime-category">Category</label>
       <select id="crime-category" name="crime-category" required>
-        <option value="Theft">Theft</option>
-        <option value="Assault">Assault</option>
-        <option value="Vandalism">Vandalism</option>
-        <option value="Burglary">Burglary</option>
+        <option value="Willful Murder">Willful Murder</option>
+        <option value="Aggravated Assault">Aggravated Assault</option>
+        <option value="Rape">Rape</option>
         <option value="Robbery">Robbery</option>
-        <option value="Fraud">Fraud</option>
-        <option value="Drug Offense">Drug Offense</option>
+        <option value="Theft">Theft</option>
+        <option value="Abduction">Abduction</option>
+        <option value="Burglary">Burglary</option>
+        <option value="Drugs">Drugs</option>
+        <option value="Human Trafficking">Human Trafficking</option>
         <option value="Other">Other</option>
-      </select>
+      </select>      
       <label for="crime-description">Description</label>
       <textarea id="crime-description" name="crime-description" required></textarea>
       <label for="crime-coordinates">Coordinates</label>
@@ -86,7 +88,8 @@
 
   const map = new mapboxgl.Map({
     container: 'map',
-    style: 'mapbox://styles/mapbox/light-v11',
+    style: 'mapbox://styles/mapbox/standard',
+    
     center: [55.132327, 25.080857],
     zoom: 15,
     bearing: -50,

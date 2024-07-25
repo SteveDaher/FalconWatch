@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FalconWatch Charts</title>
+  <link rel="stylesheet" href="./cstyle/chartstyle.css">
+</head>
+<body>
+  <div id="header">
+    <img src="logoFW.png" alt="Logo" id="logo">
+    <div>
+      <button>Simulations</button>
+      <a href="chart.html" id="view-reports">View Chart</a>
+    </div>
+  </div>
+
+  <div class="container">
+    <h1>Crime Severity Report</h1>
+    <div class="chart-container">
+      <canvas id="myBarChart"></canvas>
+    </div>
+    <a href="main.html" class="back-btn">Back to Map</a>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    async function fetchCrimeData() {
+      try {
+        const response = await fetch('/crime-summary');
+        const data = await response.json();
+        console.log('Fetched data:', data);
+
+        const monthlyData = {};
+        data.forEach(item => {
+          const month = `${item.year}-${item.month.toString().padStart(2, '0')}`;
+          if (!monthlyData[month]) {
+            monthlyData[month] = { low: 0, medium: 0, high: 0 };
+          }
+          monthlyData[month][item.severity] = item.count;
+        });
+
+        const labels = Object.keys(monthlyData);
+        const lowData = labels.map(month => monthlyData[month].low || 0);
+        const mediumData = labels.map(month => monthlyData[month].medium || 0);
+        const highData = labels.map(month => monthlyData[month].high || 0);
+
+        const ctx = document.getElementById('myBarChart').getContext('2d');
+        new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: 'Low Severity',
+                data: lowData,
+                backgroundColor: 'rgba(76, 175, 80, 0.5)',
+                borderColor: 'rgba(76, 175, 80, 1)',
+                borderWidth: 1,
+                barThickness: 10
+              },
+              {
+                label: 'Medium Severity',
+                data: mediumData,
+                backgroundColor: 'rgba(255, 235, 59, 0.5)',
+                borderColor: 'rgba(255, 235, 59, 1)',
+                borderWidth: 1,
+                barThickness: 10
+              },
+              {
+                label: 'High Severity',
+                data: highData,
+                backgroundColor: 'rgba(244, 67, 54, 0.5)',
+                borderColor: 'rgba(244, 67, 54, 1)',
+                borderWidth: 1,
+                barThickness: 10
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: {
+                position: 'top'
+              },
+              tooltip: {
+                callbacks: {
+                  label: function(tooltipItem) {
+                    return `${tooltipItem.dataset.label}: ${tooltipItem.raw}`;
+                  }
+                }
+              }
+            },
+            scales: {
+              x: {
+                title: {
+                  display: true,
+                  text: 'Month'
+                }
+              },
+              y: {
+                beginAtZero: true,
+                title: {
+                  display: true,
+                  text: 'Number of Crimes'
+                }
+              }
+            }
+          }
+        });
+
+        if (data.length === 0) {
+          document.querySelector('.chart-container').innerHTML = '<p>No crime data available for this period.</p>';
+        }
+      } catch (error) {
+        console.error('Error fetching crime data:', error);
+      }
+    }
+
+    fetchCrimeData();
+  </script>
+</body>
+</html>
