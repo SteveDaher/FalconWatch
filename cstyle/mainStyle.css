@@ -4,39 +4,44 @@ html, body {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  font-family: Arial, sans-serif;
-  background-color: #1e1e1e; 
+  font-family: Arial, sans-serif; 
 }
 
-#logo {
-  filter: brightness(0) invert(1);
-}
+
 
 #header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 15px 30px;
-  background: linear-gradient(to bottom, rgba(26, 26, 26, 1) 0%, rgba(26, 26, 26, 0) 100%);
-  color: #f0f0f0;
-  border-bottom: 2px solid #333;
+  background: #ffffff;
+  color: #ffffff;
+  border-bottom: 2px solid #40ac0e;
   position: relative;
   z-index: 1000;
+  box-shadow: 0 2px 3px #00000049;
 }
 
 #header img {
   height: 60px;
   margin-right: 20px;
+  width: 50%; /* Make it responsive to the container size */
+  max-width: 170px; /* Increase the maximum width */
+  height: auto; /* Maintain aspect ratio */
+  max-height: 150px; /* Increase the maximum height */
+  object-fit: contain; /* Ensure it fits within the dimensions */
+  display: block; /* Removes bottom space */
 }
 
 #header button, #header a {
-  background-color: #333;
+  background-color: #17820e;
   color: #f0f0f0;
   border: none;
   padding: 12px 20px;
   text-align: center;
   text-decoration: none;
   font-size: 16px;
+  font-weight: 400;
   cursor: pointer;
   border-radius: 4px;
   transition: background-color 0.3s ease;
@@ -44,7 +49,7 @@ html, body {
 }
 
 #header button:hover, #header a:hover {
-  background-color: #555;
+  background-color: #2fb63a;
 }
 
 #map {
@@ -56,14 +61,16 @@ html, body {
 #reporting {
   display: none;
   width: 300px;
-  background-color: rgba(90, 90, 90, 0.5);
-  color: white;
+  background-color: #ffffff;
+  color: rgb(0, 0, 0);
   padding: 20px;
   box-sizing: border-box;
   font-size: 14px;
   overflow-y: auto;
   position: absolute;
-  top: 100px;
+  border-radius: 3%;
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.3);
+  top: 150px;
   left: 550px;
   z-index: 1000;
 }
@@ -79,6 +86,7 @@ html, body {
 
 #reporting label {
   margin-bottom: 8px;
+  font-weight: 900;
 }
 
 #reporting input,
@@ -92,7 +100,7 @@ html, body {
 }
 
 #reporting button {
-  background-color: #5e9363;
+  background-color: #17820e;
   color: rgb(255, 255, 255);
   border: none;
   padding: 10px 20px;
@@ -115,10 +123,11 @@ html, body {
   position: absolute;
   bottom: 0;
   width: 100%;
-  background-color: #1e1e1e;
-  color: white;
+  background-color: #fff;
+  color: #000;
   padding: 10px;
   box-sizing: border-box;
+  box-shadow: 0 -2px 3px #00000049;
   font-size: 14px;
   z-index: 1000;
   transform: translateY(100%);
@@ -135,7 +144,7 @@ html, body {
   justify-content: space-between;
   align-items: center;
   padding-bottom: 10px;
-  border-bottom: 1px solid #444;
+  border-bottom: 1px solid #40ac0e;
 }
 
 #timeline {
@@ -149,15 +158,21 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 5px;
+  padding: 3px;
   margin-right: 10px;
   border-radius: 4px;
-  background-color: #333;
-  color: white;
+  background-color: #ececec;
+  color: #000;
   min-width: 100px; 
   max-width: 150px; 
   text-align: center;
   position: relative;
+  box-shadow: 2px 2px 4px #00000049;
+}
+
+.timeline-item p {
+  margin: 2px 0;
+  line-height: 1.5;
 }
 
 .timeline-item .severity-indicator {

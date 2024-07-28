@@ -95,9 +95,11 @@ input[type="password"] {
 }
 
 input[type="submit"] {
-    background-image: linear-gradient(160deg, #8ceabb 0%, #378f7b 100%);
+    background-image: linear-gradient(160deg, #378f7b 0%, #378f7b 100%);
     color: #fff;
+    margin-top: 2rem;
     margin-bottom: 6rem;
+    font-weight: 500;
     border: none;
     padding: .5rem 1rem;
     border-radius: 999px;
@@ -107,16 +109,14 @@ input[type="submit"] {
 }
 
 input[type="submit"]:hover {
-    background: linear-gradient(160deg, #a3f3cc 0%, #45a049 100%);
-    transform: scale(1.05);
+    background: linear-gradient(160deg, #45a049 0%, #45a049 100%);
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
 }
 
 h2 {
-    font-size: 2.75rem;
-    font-weight: 100;
+    font-size: 2rem;
+    font-weight: 500;
     margin: 0 0 1rem;
-    text-transform: uppercase;
 }
 
 svg {
@@ -127,6 +127,10 @@ svg {
 
 a {
     color: var(--link-color);
+}
+
+.register-form a{
+    margin-top: -600px;
 }
 
 /* Styling for the logo */

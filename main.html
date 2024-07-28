@@ -63,7 +63,7 @@
       </div>
     </div>
     <div id="timeline"></div>
-  </div>   
+  </div>  
 
   <!-- Success Modal HTML -->
   <div id="success-modal" class="modal">
@@ -111,16 +111,13 @@
       const timelineContainer = document.getElementById('timeline-container');
       if (timelineContainer.classList.contains('show')) {
         timelineContainer.classList.remove('show');
-        setTimeout(() => { timelineContainer.style.display = 'none'; }, 500); // Wait for animation to finish
+        setTimeout(() => { timelineContainer.style.display = 'none'; }, 500); 
       } else {
         timelineContainer.style.display = 'block';
-        setTimeout(() => { timelineContainer.classList.add('show'); }, 10); // Slight delay to allow display change to take effect
+        setTimeout(() => { timelineContainer.classList.add('show'); }, 10); 
       }
     });
 
-
-
-  
     // Load map.geojson as a source
     map.on('load', async function () {
       map.addSource('boundary', {
@@ -203,6 +200,7 @@
       const timeline = document.getElementById('timeline');
       const reportElement = document.createElement('div');
       reportElement.className = 'timeline-item';
+      reportElement.dataset.severity = report.severity.toLowerCase(); 
 
       const severityColor = getSeverityColor(report.severity);
 
@@ -215,7 +213,6 @@
         ${report.picture ? `<img src="${report.picture}" alt="Crime Picture" style="max-width: 100%; height: auto;">` : ''}
       `;
 
-      reportElement.dataset.severity = report.severity.toLowerCase();
       timeline.appendChild(reportElement);
     }
 
@@ -375,19 +372,6 @@
         }
       });
     }
-  
-    document.getElementById('severity-filter').addEventListener('change', function() {
-      const selectedSeverity = this.value;
-      const timelineItems = document.querySelectorAll('.timeline-item');
-
-      timelineItems.forEach(item => {
-        if (selectedSeverity === 'all' || item.dataset.severity === selectedSeverity) {
-          item.style.display = 'flex';
-        } else {
-          item.style.display = 'none';
-        }
-      });
-    });
   </script>  
 
 </body>

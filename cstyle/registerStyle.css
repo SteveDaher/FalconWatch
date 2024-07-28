@@ -24,9 +24,9 @@ html, body {
 
 body {
     background-image: url('../img/loginBackground.png');
-    background-size: cover; /* Cover the entire background */
-    background-position: center center; /* Center the image */
-    background-repeat: no-repeat; /* Prevent repeating */
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
     color: var(--base-color);
     font: var(--base-font-weight) var(--base-font-size) / var(--base-line-height) var(--base-font-family);
     display: flex;
@@ -44,17 +44,24 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    width: var(--grid-width);
-    max-width: var(--grid-max-width);
-    height: 100vh; /* Full viewport height */
+    width: 400px;
+    max-width: 400px;
 }
 
 .register {
     box-shadow: 0 0 250px #000;
     text-align: center;
-    padding: 0rem 2rem;
-    background-color: #fff; /* Added for better contrast */
-    border-radius: 10px; /* Optional for a polished look */
+    padding: 2rem 2rem;
+    background-color: #fff;
+    border-radius: 10px;
+    position: relative; /* Make positioning relative */
+}
+
+.top-message {
+    margin-top: -6rem; /* Adjust as needed */
+    margin-bottom: -1rem;
+    font-size: 1rem;
+    color: var(--link-color);
 }
 
 input {
@@ -63,7 +70,7 @@ input {
     border-radius: 999px;
     outline: 0;
     padding: .5rem 1rem;
-    width: 100%; /* Ensure full width for inputs */
+    width: 100%;
 }
 
 input::placeholder {
@@ -86,7 +93,6 @@ input[type="tel"] {
     background-position: 1rem 50%;
 }
 
-/* Background images for specific inputs */
 input[type="email"] {
     background-image: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20512%20512%22%20fill%3D%22%23242c37%22%3E%3Cpath%20d%3D%22M256.017%20273.436l-205.17-170.029h410.904l-205.734%20170.029zm-.034%2055.462l-205.983-170.654v250.349h412v-249.94l-206.017%20170.245z%22%2F%3E%3C%2Fsvg%3E');
 }
@@ -104,19 +110,26 @@ input[type="text"] {
 }
 
 input[type="submit"] {
-    background-image: linear-gradient(160deg, #8ceabb 0%, #378f7b 100%);
+    background-image: linear-gradient(160deg, #378f7b 0%, #378f7b 100%);
     color: #fff;
+    margin-top: 2rem;
     margin-bottom: 6rem;
+    font-weight: 500;
     border: none;
     padding: .5rem 1rem;
     border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
 }
-
+input[type="submit"]:hover {
+    background: linear-gradient(160deg, #45a049 0%, #45a049 100%);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
 h2 {
-    font-size: 2.75rem;
-    font-weight: 100;
+    font-size: 2rem;
+    font-weight: 500;
     margin: 0 0 1rem;
-    text-transform: uppercase;
 }
 
 svg {
@@ -129,13 +142,12 @@ a {
     color: var(--link-color);
 }
 
-/* Styling for the logo */
 .site__logo {
-    width: 100%; /* Make it responsive to the container size */
-    max-width: 689px; /* Maximum width */
-    height: auto; /* Maintain aspect ratio */
-    max-height: 362px; /* Maximum height */
-    object-fit: contain; /* Ensure it fits within the dimensions */
-    display: block; /* Removes bottom space */
-    margin: 0 auto; /* Center horizontally if needed */
+    width: 100%;
+    max-width: 689px;
+    height: auto;
+    max-height: 362px;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto;
 }
