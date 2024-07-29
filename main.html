@@ -11,13 +11,14 @@
 <body>
   <div id="header">
     <img src="./img/logoFW.png" alt="Logo" id="logo">
-    <div>
-      <button id="toggle-reporting">Report a Crime</button>
-      <button>Simulations</button>
+    <div id="nav-buttons">
+      <a href="main.html" class="active-link">Home</a>
+      <a href="#">Simulations</a>
       <a href="report.html" id="view-reports">View Reports</a>
-      <button id="toggle-timeline">Toggle Timeline</button>
+      <a href="#" id="toggle-timeline">Toggle Timeline</a>
+      <a href="#" id="toggle-reporting">Report a Crime</a>
     </div>
-  </div>
+  </div>  
 
   <div id="map"></div>
   
@@ -63,7 +64,7 @@
       </div>
     </div>
     <div id="timeline"></div>
-  </div>  
+  </div>   
 
   <!-- Success Modal HTML -->
   <div id="success-modal" class="modal">
@@ -111,10 +112,10 @@
       const timelineContainer = document.getElementById('timeline-container');
       if (timelineContainer.classList.contains('show')) {
         timelineContainer.classList.remove('show');
-        setTimeout(() => { timelineContainer.style.display = 'none'; }, 500); 
+        setTimeout(() => { timelineContainer.style.display = 'none'; }, 500); // Wait for animation to finish
       } else {
         timelineContainer.style.display = 'block';
-        setTimeout(() => { timelineContainer.classList.add('show'); }, 10); 
+        setTimeout(() => { timelineContainer.classList.add('show'); }, 10); // Slight delay to allow display change to take effect
       }
     });
 
@@ -210,11 +211,11 @@
         <p><strong>Name:</strong> ${report.name}</p>
         <p><strong>Severity:</strong> ${report.severity}</p>
         <p><strong>Date:</strong> ${formatDate(new Date(report.date))}</p>
-        ${report.picture ? `<img src="${report.picture}" alt="Crime Picture" style="max-width: 100%; height: auto;">` : ''}
       `;
 
       timeline.appendChild(reportElement);
     }
+
 
     document.getElementById('severity-filter').addEventListener('change', function() {
       const selectedSeverity = this.value;
@@ -372,6 +373,19 @@
         }
       });
     }
+
+    // Function to add pulse effect
+    function addPulseEffect() {
+      const pulseEffect = document.createElement('div');
+      pulseEffect.className = 'pulse-effect';
+      document.body.appendChild(pulseEffect);
+
+      // Remove the pulse effect after 5 seconds
+      setTimeout(() => {
+        document.body.removeChild(pulseEffect);
+      }, 5000);
+    }
+      
   </script>  
 
 </body>

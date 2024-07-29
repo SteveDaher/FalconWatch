@@ -9,10 +9,9 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 5px 15px;
-  background-color: #ffffff;
-  color: #17820e;
-  border-bottom: 2px solid #17820e;
+  padding: 15px 30px;
+  background: #ffffff;
+  border-bottom: 2px solid #40ac0e;
   position: relative;
   z-index: 1000;
   box-shadow: 0 2px 3px #00000049;
@@ -20,38 +19,44 @@ body {
 
 #header img {
   height: 60px;
-  margin-right: 20px;
-  width: 50%; /* Make it responsive to the container size */
-  max-width: 170px; /* Increase the maximum width */
-  height: auto; /* Maintain aspect ratio */
-  max-height: 150px; /* Increase the maximum height */
-  object-fit: contain; /* Ensure it fits within the dimensions */
-  display: block; /* Removes bottom space */
+  width: auto;
+  max-width: 170px;
+  max-height: 150px;
+  object-fit: contain;
+  display: block;
+  order: 1; 
 }
 
-#header button, #header a {
-  background-color: #17820e;
-  color: #f0f0f0;
-  border: none;
-  padding: 12px 20px;
-  text-align: center;
+#nav-buttons {
+  display: flex;
+  align-items: center;
+  order: 2; 
+}
+
+#nav-buttons a {
   text-decoration: none;
   font-size: 16px;
+  font-weight: 400;
   cursor: pointer;
-  border-radius: 4px;
-  transition: background-color 0.3s ease;
-  margin-left: 10px;
+  margin: 0 10px;
+  transition: color 0.3s ease, text-decoration 0.3s ease;
+  color: #17820e; 
 }
 
-#header button:hover, #header a:hover {
-  background-color: #40a919;
+#nav-buttons a:hover {
+  color: #2fb63a;
+  text-decoration: underline;
+}
+
+.active-link {
+  font-weight: bold !important;
 }
 
 .container {
   max-width: 1200px;
   margin: 30px auto;
   padding: 20px;
-  background-color: #d5d5d5;
+  background-color: #fcfcfc;
   border-radius: 8px;
 }
 
@@ -87,11 +92,11 @@ th, td {
 
 th {
   background-color: #0d4c07;
-  color: #f0f0f0;
+  color: #fdfdfd;
 }
 
 tr:nth-child(even) {
-  background-color: #c0c0c0;
+  background-color: #e0e0e0;
 }
 
 tr:hover {
@@ -105,9 +110,9 @@ tr:hover {
 }
 
 .pagination button {
-  background-color: #333;
+  background-color: #0f5b08;
   color: #e0e0e0;
-  border: 1px solid #444;
+  border: 1px solid #787878;
   padding: 10px 20px;
   cursor: pointer;
   border-radius: 4px;
@@ -116,7 +121,7 @@ tr:hover {
 }
 
 .pagination button:hover {
-  background-color: #555;
+  background-color: #17820e;
 }
 
 .back-btn {
