@@ -18,7 +18,7 @@ X = df['description']
 y = df['severity']
 
 # Split the data into training and testing sets
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.4, random_state=42)
 
 # Create a pipeline that vectorizes the text and then applies a Naive Bayes classifier
 model = make_pipeline(TfidfVectorizer(), MultinomialNB())
