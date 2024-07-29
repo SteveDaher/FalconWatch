@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FalconWatch | Login</title>
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="./cstyle/loginStyle.css">
+</head>
+<body class="align">
+    <div class="grid align__item">
+        <div class="register">
+            <img src="img/logoFW.png" class="site__logo" alt="Logo">
+            <h2>Login</h2>
+            <form id="login-form" action="/login" method="post" class="form">
+                <div class="form__field">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" placeholder="info@mailaddress.com" required>
+                </div>
+                <div class="form__field">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="••••••••••••" required>
+                </div>
+                <div class="form__field">
+                    <input type="submit" value="Login">
+                </div>
+            </form>
+            <p>Don't have an account? <a href="register.html">Sign up</a></p>
+        </div>
+    </div>
+    <script src="auth.js"></script>
+</body>
+</html>

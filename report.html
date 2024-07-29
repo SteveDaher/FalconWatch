@@ -5,156 +5,156 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FalconWatch Report History</title>
   <link href="https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.css" rel="stylesheet" />
-  <link rel="stylesheet" href=".\cstyle\reportStyle.css">
+  <link rel="stylesheet" href="./cstyle/reportstyle.css">
 </head>
 <body>
-
   <div id="header">
-    <img src=".\img\logoFW.png" alt="Logo">
-    <div>
-      <button>Simulations</button>
-      <a href="report.html" id="view-reports">View Reports</a>
+    <img src="./img/logoFW.png" alt="Logo" id="logo">
+    <div id="nav-buttons">
+      <a href="main.html">Home</a>
+      <a href="#">Simulations</a>
+      <a href="report.html" id="view-reports" class="active-link">View Reports</a>
+      <a href="chart.html" id="view-reports">View Chart</a>
     </div>
-  </div>
+  </div> 
 
-  <div id="map"></div>
   <div class="container">
     <h1>Report History</h1>
-
-    <div id="report-container">
-      <!-- Crime Cards will be dynamically generated here -->
+    <div class="table-container">
+      <table id="report-table">
+        <thead>
+          <tr>
+            <th>Incident Number</th>
+            <th>Name</th>
+            <th>Severity</th>
+            <th>Description</th>
+            <th>Date</th>
+            <th>Location</th>
+            <th>Pin</th>
+          </tr>
+        </thead>
+        <tbody id="report-body">
+          <!-- Report rows will be dynamically generated here -->
+        </tbody>
+      </table>
     </div>
-
-    <!-- Back to Index button -->
-    <a href="index.html" class="back-btn">Back to Map</a>
+    <div class="pagination" id="pagination-controls">
+      <!-- Pagination controls will be dynamically generated here -->
+    </div>
+    <a href="main.html" class="back-btn">Back to Map</a>
+    
   </div>
 
   <script src="https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.js"></script>
   <script>
-    mapboxgl.accessToken = 'pk.eyJ1IjoiZmFsY29ud2F0Y2giLCJhIjoiY2x5ZWIwcDJhMDBxbTJqc2VnYWMxeWNvdCJ9.bijpr26vfErYoGhhlQnaFA';
+    const reportsPerPage = 15;
+    let currentPage = 1;
 
-    function getMarkerColor(severity) {
-    switch (severity) {
-      case 'low': return '#00FF00'; // Green
-      case 'medium': return '#FFFF00'; // Yellow
-      case 'high': return '#FF5733'; // Red
-      default: return '#FF5733'; // Default to red
-    }
-  }
-
-    var map = new mapboxgl.Map({
-      container: 'map',
-      style: 'mapbox://styles/mapbox/dark-v11',
-      center: [55.132327, 25.080857],
-      zoom: 14
-    });
-    
-    // Add navigation control (zoom buttons)
-    map.addControl(new mapboxgl.NavigationControl());
-    
-    // Disable map rotation using right click + drag
-    map.dragRotate.disable();
-    
-    // Disable map rotation using touch rotation gesture
-    map.touchZoomRotate.disable();
-    
-    // Function to fetch and display crime reports
-    async function fetchCrimeReports() {
+    async function fetchCrimeReports(page = 1) {
       try {
-        const response = await fetch('/reports');
+        const response = await fetch(`/reports`);
         const reports = await response.json();
-        console.log(reports); // Log reports to inspect in browser console
-        renderCrimeCards(reports);
+        
+        // Handle pagination if reports are more than the reportsPerPage
+        const totalReports = reports.length;
+        const totalPages = Math.ceil(totalReports / reportsPerPage);
+        
+        // Slice reports for the current page
+        const start = (page - 1) * reportsPerPage;
+        const end = start + reportsPerPage;
+        const paginatedReports = reports.slice(start, end);
+
+        // Get location names for all reports
+        await addLocationNamesToReports(paginatedReports);
+        
+        renderCrimeTable(paginatedReports);
+        renderPaginationControls(totalPages);
       } catch (error) {
         console.error('Error fetching reports:', error);
       }
     }
-    
-    function createCrimeCard(report) {
-  const card = document.createElement('div');
-  card.classList.add('crime-card');
 
-  const priorityClass = getPriorityClass(report.severity);
-
-  card.innerHTML = `
-    <h2>${report.name}</h2>
-    <p>Description: ${report.description}</p>
-    <div class="details">
-      <div>
-        <p>Date: ${formatDate(report.date)}</p>
-        <p>Coordinates: ${report.coordinates.join(', ')}</p>
-      </div>
-      <div class="priority ${priorityClass}">${report.severity} Severity</div>
-    </div>
-    <div class="image-placeholder">
-      <img src="${report.picture}" alt="Crime Image">
-    </div>
-    <div class="view-picture-btn" onclick="toggleImageVisibility(this)">View Picture</div>
-  `;
-
-  return card;
-}
-
-    
-    // Function to toggle image visibility
-    function toggleImageVisibility(btn) {
-      const imagePlaceholder = btn.previousElementSibling;
-      imagePlaceholder.style.display = imagePlaceholder.style.display === 'none' ? 'block' : 'none';
-    }
-    
-    // Function to add a marker to the map
-    function addMarkerToMap(report) {
-      new mapboxgl.Marker({ color: getMarkerColor(report.severity) })
-        .setLngLat(report.coordinates)
-        .setPopup(new mapboxgl.Popup().setHTML(`<h3>${report.name}</h3><p>Description: ${report.description}</p>`))
-        .addTo(map);
-    }
-    
-    // Function to get priority class based on severity
-    function getPriorityClass(severity) {
-      switch (severity) {
-        case 'low':
-          return 'low';
-        case 'medium':
-          return 'medium';
-        case 'high':
-          return 'high';
-        default:
-          return '';
+    async function addLocationNamesToReports(reports) {
+      for (let report of reports) {
+        if (report.coordinates && report.coordinates.length === 2) {
+          const locationName = await reverseGeocode(report.coordinates);
+          report.locationName = locationName;
+        } else {
+          report.locationName = 'Unknown Location';
+        }
       }
     }
-    
-    // Function to format date
+
+    async function reverseGeocode([longitude, latitude]) {
+      const apiKey = 'pk.eyJ1IjoiZmFsY29ud2F0Y2giLCJhIjoiY2x5ZWIwcDJhMDBxbTJqc2VnYWMxeWNvdCJ9.bijpr26vfErYoGhhlQnaFA'; // Replace with your Mapbox API key
+      const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=${apiKey}`;
+      
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+        if (data.features && data.features.length > 0) {
+          return data.features[0].place_name;
+        } else {
+          return 'Unknown Location';
+        }
+      } catch (error) {
+        console.error('Error during reverse geocoding:', error);
+        return 'Error fetching location';
+      }
+    }
+
+    function renderCrimeTable(reports) {
+      const tbody = document.getElementById('report-body');
+      tbody.innerHTML = '';
+
+      reports.forEach(report => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${report.incidentId}</td>
+          <td>${report.name}</td>
+          <td class="${getPriorityClass(report.severity)}">${report.severity}</td>
+          <td>${report.description}</td>
+          <td>${formatDate(report.date)}</td>
+          <td>${report.locationName || report.coordinates.join(', ')}</td>
+          <td><a href="main.html?showPin=${report.incidentId}" class="view-pin-btn">Show Pin</a></td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    function renderPaginationControls(totalPages) {
+      const pagination = document.getElementById('pagination-controls');
+      pagination.innerHTML = '';
+
+      for (let i = 1; i <= totalPages; i++) {
+        const button = document.createElement('button');
+        button.textContent = i;
+        button.className = i === currentPage ? 'active' : '';
+        button.onclick = () => {
+          currentPage = i;
+          fetchCrimeReports(currentPage);
+        };
+        pagination.appendChild(button);
+      }
+    }
+
+    function getPriorityClass(severity) {
+      switch (severity) {
+      case 'low': return 'low';
+        case 'medium': return 'medium';
+        case 'high': return 'high';
+        default: return '';
+      }
+    }
+
     function formatDate(dateStr) {
       const options = { year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric' };
       return new Date(dateStr).toLocaleDateString('en-US', options);
     }
-    
-   // Function to render crime cards sorted by severity
-function renderCrimeCards(reports) {
-  // Sort reports by severity: High > Medium > Low
-  reports.sort((a, b) => {
-    // Assigning higher weights to severity levels
-    const severityOrder = { 'high': 3, 'medium': 2, 'low': 1 };
-    return severityOrder[b.severity] - severityOrder[a.severity];
-  });
 
-  const container = document.getElementById('report-container');
-  container.innerHTML = '';
-
-  reports.forEach(report => {
-    const card = createCrimeCard(report);
-    container.appendChild(card);
-    addMarkerToMap(report);
-  });
-}
-
-    
     // Fetch crime reports when the page loads
-    fetchCrimeReports();
-    </script>
-    
-  
-  
+    fetchCrimeReports(currentPage);
+  </script>
 </body>
 </html>
+'
