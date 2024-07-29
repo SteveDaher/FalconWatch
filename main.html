@@ -170,7 +170,7 @@
         console.error('Invalid coordinates:', report.coordinates);
         return;
       }
-  
+
       const markerColor = getMarkerColor(report.severity);
       const popupContent = `
         <h3>Incident ID: ${report.incidentId}</h3>
@@ -182,20 +182,25 @@
         ${report.picture ? `<img src="${report.picture}" alt="Crime Picture" style="max-width: 100%; height: auto;">` : ''}
       `;
       const popup = new mapboxgl.Popup().setHTML(popupContent);
-  
+
       const el = document.createElement('div');
       el.className = 'custom-marker';
-      el.style.backgroundColor = markerColor;
+      if (report.severity.toLowerCase() === 'high') {
+        el.classList.add('red-marker', 'pulse');
+      } else {
+        el.style.backgroundColor = markerColor;
+      }
       el.dataset.incidentId = report.incidentId;
       el.dataset.coordinates = report.coordinates.join(',');
-  
+
       const marker = new mapboxgl.Marker(el)
         .setLngLat(report.coordinates)
         .setPopup(popup)
         .addTo(map);
-  
+
       markers[report.incidentId] = marker; // Save marker by ID
     }
+
   
     function addReportToTimeline(report) {
       const timeline = document.getElementById('timeline');
@@ -373,19 +378,6 @@
         }
       });
     }
-
-    // Function to add pulse effect
-    function addPulseEffect() {
-      const pulseEffect = document.createElement('div');
-      pulseEffect.className = 'pulse-effect';
-      document.body.appendChild(pulseEffect);
-
-      // Remove the pulse effect after 5 seconds
-      setTimeout(() => {
-        document.body.removeChild(pulseEffect);
-      }, 5000);
-    }
-      
   </script>  
 
 </body>

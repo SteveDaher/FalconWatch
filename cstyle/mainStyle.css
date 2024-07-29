@@ -16,7 +16,7 @@ html, body {
   background: #ffffff;
   border-bottom: 2px solid #40ac0e;
   position: relative;
-  z-index: 1000;
+  z-index: 9999;
   box-shadow: 0 2px 3px #00000049;
 }
 
@@ -208,17 +208,6 @@ html, body {
   margin-right: 10px;
 }
 
-.custom-marker {
-  background-color: #000; /* Default color, will be overridden by JavaScript */
-  border-radius: 50%;
-  width: 20px; /* Marker size */
-  height: 20px; /* Marker size */
-  border: 2px solid #fff; /* Marker border */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .modal {
   display: none; 
   position: fixed; 
@@ -303,4 +292,48 @@ background-color: #1c1c1c;
 
 #picture-img {
 border: 2px solid #000000; 
+}
+
+.custom-marker {
+  background-color: #000; 
+  border-radius: 50%;
+  width: 20px; 
+  height: 20px; 
+  border: 2px solid #fff; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.custom-marker.red-marker {
+  background-color: #df0000;
+}
+
+.custom-marker.red-marker.pulse {
+  position: relative;
+}
+
+.custom-marker.red-marker.pulse::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 40px;
+  height: 40px;
+  margin-left: -20px;
+  margin-top: -20px;
+  border-radius: 50%;
+  background-color: rgba(255, 0, 0, 0.5);
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.4);
+    opacity: 0;
+  }
 }
