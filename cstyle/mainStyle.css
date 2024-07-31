@@ -72,6 +72,9 @@ html, body {
   background: transparent;
 }
 
+.mapbox-logo{ display: none; } .mapboxgl-ctrl-logo { display: none !important; } .mapbox-improve-map { display: none; } .mapboxgl-ctrl-compass { display: none; }
+
+
 #reporting {
   display: none;
   width: 300px;
