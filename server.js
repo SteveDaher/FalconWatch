@@ -1,14 +1,18 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
-const app = express();
-const port = 3000;
 const { v4: uuidv4 } = require('uuid'); // For generating unique incident IDs
 const { spawn } = require('child_process');
 const path = require('path');
 
+const app = express();
+const port = 3000;
+
+app.use(bodyParser.json({ limit: '50mb' })); // Increase payload size limit
+app.use(bodyParser.urlencoded({ extended: true }));
+
 // Connect to MongoDB
-mongoose.connect('mongodb://localhost:27017/falconwatch', { useNewUrlParser: true, useUnifiedTopology: true });
+mongoose.connect('mongodb://localhost:27017/falconwatch');
 
 // Define schemas and models
 const userSchema = new mongoose.Schema({
@@ -27,7 +31,8 @@ const reportSchema = new mongoose.Schema({
   severity: String,
   coordinates: [Number],
   picture: String,
-  date: { type: Date, default: Date.now }
+  date: { type: Date, default: Date.now },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true } // Ensure this line exists
 });
 const Report = mongoose.model('Report', reportSchema);
 
@@ -93,23 +98,30 @@ app.post('/login', async (req, res) => {
   }
 });
 
-// Handle report submission
+// Report submission endpoint
 app.post('/report', async (req, res) => {
   try {
-    const reportData = req.body;
-    const severity = await classifySeverity(reportData.description);
+    const { name, category, description, coordinates, picture, userId } = req.body;
+    console.log('Received userId:', userId); // Debug: log the received userId
+
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID is required' });
+    }
+
+    const severity = await classifySeverity(description);
     console.log(`Severity classified as: ${severity}`);
 
     const incidentId = await getNextIncidentId();
     const report = new Report({
       incidentId,
-      name: reportData.name,
-      category: reportData.category,
-      description: reportData.description,
+      name,
+      category,
+      description,
       severity,
-      coordinates: reportData.coordinates,
-      picture: reportData.picture,
-      date: new Date()
+      coordinates,
+      picture,
+      date: new Date(),
+      userId: new mongoose.Types.ObjectId(userId) // Convert userId to ObjectId
     });
 
     await report.save();
@@ -120,10 +132,12 @@ app.post('/report', async (req, res) => {
   }
 });
 
-// Get all reports
+// Get reports for the logged-in user
 app.get('/reports', async (req, res) => {
   try {
-    const reports = await Report.find({});
+    const userId = req.query.userId; // Assuming userId is passed as a query parameter
+    console.log('Fetching reports for userId:', userId); // Debug: log the userId for fetching reports
+    const reports = await Report.find({ userId: new mongoose.Types.ObjectId(userId) });
     res.status(200).json(reports);
   } catch (error) {
     console.error('Error fetching reports:', error);
@@ -131,10 +145,13 @@ app.get('/reports', async (req, res) => {
   }
 });
 
-// Get crime summary by severity for each month
 app.get('/crime-summary', async (req, res) => {
   try {
+    const userId = req.query.userId;
+    console.log('Fetching crime summary for userId:', userId);
+
     const summary = await Report.aggregate([
+      { $match: { userId: new mongoose.Types.ObjectId(userId) } }, // Ensure only user-specific data is fetched
       {
         $group: {
           _id: {
@@ -165,7 +182,6 @@ app.get('/crime-summary', async (req, res) => {
     res.status(500).json({ message: 'Error fetching crime summary' });
   }
 });
-
 
 // Delete a report by incident ID
 app.delete('/report/:id', async (req, res) => {

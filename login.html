@@ -2,12 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>FalconWatch | Login</title>
-    <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
     <link rel="stylesheet" href="./cstyle/loginStyle.css">
 </head>
-<body class="align">
+<body>
     <div class="grid align__item">
         <div class="register">
             <img src="img/logoFW.png" class="site__logo" alt="Logo">
@@ -28,6 +27,30 @@
             <p>Don't have an account? <a href="register.html">Sign up</a></p>
         </div>
     </div>
-    <script src="auth.js"></script>
+    <script>
+        document.getElementById('login-form').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    console.log('Storing userId:', result.userId); // Debug: log the userId being stored
+                    localStorage.setItem('userId', result.userId); // Store userId in localStorage
+                    window.location.href = 'main.html';
+                } else {
+                    alert(result.message);
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+            }
+        });
+    </script>
 </body>
 </html>

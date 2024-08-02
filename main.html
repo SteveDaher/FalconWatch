@@ -96,7 +96,6 @@
       bearing: -50,
       minZoom: 14,
       maxZoom: 18,
-      attributionControl: false
     });
   
     let reportsCache = [];
@@ -152,10 +151,13 @@
         }
       }
     });
-  
+
+    // Function to fetch and display reports
     async function fetchReports() {
+      const userId = localStorage.getItem('userId'); // Assuming the userId is stored in localStorage after login
+      console.log('Retrieved userId from localStorage:', userId); // Debug: log the retrieved userId
       try {
-        const response = await fetch('/reports');
+        const response = await fetch(`/reports?userId=${userId}`);
         if (!response.ok) throw new Error('Network response was not ok');
         const reports = await response.json();
         reportsCache = reports;
@@ -186,11 +188,12 @@
 
       const el = document.createElement('div');
       el.className = 'custom-marker';
+      
       if (report.severity.toLowerCase() === 'high') {
         el.classList.add('red-marker', 'pulse');
-      } else {
-        el.style.backgroundColor = markerColor;
       }
+
+      el.style.backgroundColor = markerColor;
       el.dataset.incidentId = report.incidentId;
       el.dataset.coordinates = report.coordinates.join(',');
 
@@ -202,7 +205,6 @@
       markers[report.incidentId] = marker; // Save marker by ID
     }
 
-  
     function addReportToTimeline(report) {
       const timeline = document.getElementById('timeline');
       const reportElement = document.createElement('div');
@@ -222,7 +224,6 @@
       timeline.appendChild(reportElement);
     }
 
-
     document.getElementById('severity-filter').addEventListener('change', function() {
       const selectedSeverity = this.value;
       const timelineItems = document.querySelectorAll('.timeline-item');
@@ -236,7 +237,6 @@
       });
     });
 
-  
     function getMarkerColor(severity) {
       switch (severity.toLowerCase()) {
         case 'high': return '#df0000';
@@ -245,7 +245,7 @@
         default: return 'gray';
       }
     }
-  
+
     function getSeverityColor(severity) {
       switch (severity.toLowerCase()) {
         case 'high': return '#df0000';
@@ -254,7 +254,7 @@
         default: return 'gray';
       }
     }
-  
+
     function formatDate(date) {
       return date.toLocaleDateString('en-US', {
         year: 'numeric',
@@ -265,10 +265,11 @@
         second: '2-digit'
       });
     }
-  
+
     document.getElementById('crime-report-form').addEventListener('submit', async function(event) {
       event.preventDefault(); // Prevent the default form submission
   
+      const userId = localStorage.getItem('userId'); // Assuming the userId is stored in localStorage after login
       const name = document.getElementById('crime-title').value; // Change `title` to `name`
       const category = document.getElementById('crime-category').value;
       const description = document.getElementById('crime-description').value;
@@ -292,8 +293,11 @@
         category,
         description,
         coordinates: [lng, lat],
-        picture: pictureData
+        picture: pictureData,
+        userId // Include userId in the report data
       };
+  
+      console.log('Submitting report with userId:', userId); // Debug: log the userId being submitted
   
       try {
         const response = await fetch('/report', {
@@ -324,7 +328,7 @@
       // Reset the form after submission
       document.getElementById('crime-report-form').reset();
     });
-  
+
     // Function to convert file to base64
     async function toBase64(file) {
       return new Promise((resolve, reject) => {
@@ -334,7 +338,7 @@
         reader.readAsDataURL(file);
       });
     }
-  
+
     // Function to show modal
     function showModal(message, incidentId, timestamp) {
       const successModal = document.getElementById('success-modal');
@@ -345,14 +349,14 @@
       if (timestamp) {
         document.getElementById('timestamp').textContent = timestamp;
       }
-  
+
       successModal.style.display = 'block';
-  
+
       // Close modal when user clicks on (x)
       document.querySelector('.close').addEventListener('click', function() {
         successModal.style.display = 'none';
       });
-  
+
       // Close modal when user clicks anywhere outside of the modal
       window.addEventListener('click', function(event) {
         if (event.target === successModal) {
@@ -360,18 +364,18 @@
         }
       });
     }
-  
+
     // Function to view picture in a modal
     function viewPicture(pictureUrl) {
       const pictureModal = document.getElementById('picture-modal');
       document.getElementById('picture-img').src = pictureUrl;
       pictureModal.style.display = 'block';
-  
+
       // Close modal when user clicks on (x)
       document.querySelector('#picture-modal .close').addEventListener('click', function() {
         pictureModal.style.display = 'none';
       });
-  
+
       // Close modal when user clicks anywhere outside of the modal
       window.addEventListener('click', function(event) {
         if (event.target === pictureModal) {
@@ -379,7 +383,6 @@
         }
       });
     }
-  </script>  
-
+  </script>
 </body>
 </html>

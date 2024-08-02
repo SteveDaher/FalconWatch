@@ -8,16 +8,12 @@
 </head>
 <body>
   <div id="header">
-    <img src="./img/logoFW.png" alt="Logo" id="logo">
-    <div id="nav-buttons">
-      <a href="main.html">Home</a>
-      <a href="#">Simulations</a>
-      <a href="report.html" id="view-reports">View Reports</a>
-      <a href="chart.html" id="view-reports" class="active-link">View Chart</a>
+    <img src="logoFW.png" alt="Logo" id="logo">
+    <div>
+      <button>Simulations</button>
+      <a href="chart.html" id="view-reports">View Chart</a>
     </div>
-  </div> 
-
-
+  </div>
 
   <div class="container">
     <h1>Crime Severity Report</h1>
@@ -31,7 +27,10 @@
   <script>
     async function fetchCrimeData() {
       try {
-        const response = await fetch('/crime-summary');
+        const userId = localStorage.getItem('userId'); // Assuming the userId is stored in localStorage after login
+        console.log('Retrieved userId from localStorage:', userId); // Debug: log the retrieved userId
+
+        const response = await fetch(`/crime-summary?userId=${userId}`);
         const data = await response.json();
         console.log('Fetched data:', data);
 

@@ -8,15 +8,14 @@
   <link rel="stylesheet" href="./cstyle/reportstyle.css">
 </head>
 <body>
+
   <div id="header">
-    <img src="./img/logoFW.png" alt="Logo" id="logo">
-    <div id="nav-buttons">
-      <a href="main.html">Home</a>
-      <a href="#">Simulations</a>
-      <a href="report.html" id="view-reports" class="active-link">View Reports</a>
+    <img src="logoFW.png" alt="Logo" id="logo">
+    <div>
+      <button>Simulations</button>
       <a href="chart.html" id="view-reports">View Chart</a>
     </div>
-  </div> 
+  </div>
 
   <div class="container">
     <h1>Report History</h1>
@@ -42,7 +41,6 @@
       <!-- Pagination controls will be dynamically generated here -->
     </div>
     <a href="main.html" class="back-btn">Back to Map</a>
-    
   </div>
 
   <script src="https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.js"></script>
@@ -52,13 +50,16 @@
 
     async function fetchCrimeReports(page = 1) {
       try {
-        const response = await fetch(`/reports`);
+        const userId = localStorage.getItem('userId'); // Assuming the userId is stored in localStorage after login
+        console.log('Retrieved userId from localStorage:', userId); // Debug: log the retrieved userId
+
+        const response = await fetch(`/reports?userId=${userId}`);
         const reports = await response.json();
-        
+
         // Handle pagination if reports are more than the reportsPerPage
         const totalReports = reports.length;
         const totalPages = Math.ceil(totalReports / reportsPerPage);
-        
+
         // Slice reports for the current page
         const start = (page - 1) * reportsPerPage;
         const end = start + reportsPerPage;
@@ -66,7 +67,7 @@
 
         // Get location names for all reports
         await addLocationNamesToReports(paginatedReports);
-        
+
         renderCrimeTable(paginatedReports);
         renderPaginationControls(totalPages);
       } catch (error) {
@@ -88,7 +89,7 @@
     async function reverseGeocode([longitude, latitude]) {
       const apiKey = 'pk.eyJ1IjoiZmFsY29ud2F0Y2giLCJhIjoiY2x5ZWIwcDJhMDBxbTJqc2VnYWMxeWNvdCJ9.bijpr26vfErYoGhhlQnaFA'; // Replace with your Mapbox API key
       const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=${apiKey}`;
-      
+
       try {
         const response = await fetch(url);
         const data = await response.json();
@@ -140,7 +141,7 @@
 
     function getPriorityClass(severity) {
       switch (severity) {
-      case 'low': return 'low';
+        case 'low': return 'low';
         case 'medium': return 'medium';
         case 'high': return 'high';
         default: return '';
@@ -157,4 +158,3 @@
   </script>
 </body>
 </html>
-'
