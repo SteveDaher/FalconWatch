@@ -66,15 +66,16 @@ html, body {
   font-weight: bold !important;
 }
 
+
 #map {
   flex: 1;
   height: calc(100vh - 140px);
   background: transparent;
 }
 
-.mapbox-logo{ display: none; } .mapboxgl-ctrl-logo { display: none !important; } .mapbox-improve-map { display: none; } .mapboxgl-ctrl-compass { display: none; }
-
-
+.mapbox-logo{ display: none; } .mapboxgl-ctrl-logo { display: none !important; } .mapbox-improve-map { display: none; } .mapboxgl-ctrl-compass { display: none; } .mapboxgl-ctrl-bottom-right {
+  display: none;
+}
 #reporting {
   display: none;
   width: 300px;
@@ -340,3 +341,12 @@ border: 2px solid #000000;
     opacity: 0;
   }
 }
+
+.draggable-marker {
+  background-image: url('path_to_your_marker_icon.png'); /* Change this to your marker icon */
+  background-size: cover;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+}
+

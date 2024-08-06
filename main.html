@@ -43,7 +43,7 @@
       <label for="crime-description">Description</label>
       <textarea id="crime-description" name="crime-description" required></textarea>
       <label for="crime-coordinates">Coordinates</label>
-      <input type="text" id="crime-coordinates" name="crime-coordinates" placeholder="Enter coordinates (e.g., lng, lat)" required>
+      <input type="text" id="crime-coordinates" readonly>
       <label for="crime-picture">Picture</label>
       <input type="file" id="crime-picture" name="crime-picture">
       <button type="submit">Submit</button>
@@ -102,10 +102,47 @@
     const markers = {}; // To keep track of markers by their ID
   
     // Toggle the reporting form visibility
-    document.getElementById('toggle-reporting').addEventListener('click', function () {
-      const reportingDiv = document.getElementById('reporting');
-      reportingDiv.style.display = reportingDiv.style.display === 'none' ? 'block' : 'none';
-    });
+  document.getElementById('toggle-reporting').addEventListener('click', function () {
+    const reportingDiv = document.getElementById('reporting');
+    reportingDiv.style.display = reportingDiv.style.display === 'none' ? 'block' : 'none';
+    
+    if (reportingDiv.style.display === 'block') {
+      // Request user location when the reporting form is shown
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+          const userLocation = [position.coords.longitude, position.coords.latitude];
+          map.setCenter(userLocation);
+          map.setZoom(15);
+        });
+      } else {
+        alert("Geolocation is not supported by this browser.");
+      }
+    }
+  });
+  let currentPin = null; // Variable to store the current pin
+
+   // Add click event listener to drop a pin
+   map.on('click', function (event) {
+  const reportingDiv = document.getElementById('reporting');
+  
+  // Check if the reporting form is visible
+  if (reportingDiv.style.display === 'block') {
+    const coordinates = [event.lngLat.lng, event.lngLat.lat];
+
+    // Remove the previous pin if it exists
+    if (currentPin) {
+      currentPin.remove();
+    }
+
+    // Add the new pin
+    currentPin = new mapboxgl.Marker()
+      .setLngLat(coordinates)
+      .addTo(map);
+
+    // Autofill coordinates in the form
+    document.getElementById('crime-coordinates').value = `${coordinates[0]}, ${coordinates[1]}`;
+  }
+});
   
     // Toggle the timeline visibility
     document.getElementById('toggle-timeline').addEventListener('click', function () {
@@ -140,17 +177,17 @@
       // Fetch and display existing reports
       await fetchReports();
   
-      // Check URL for showPin parameter
-      const params = new URLSearchParams(window.location.search);
-      const showPinId = params.get('showPin');
-      if (showPinId) {
-        const marker = markers[showPinId];
-        if (marker) {
-          map.flyTo({ center: marker.getLngLat(), zoom: 17 });
-          marker.togglePopup();
-        }
+       // Check URL for showPin parameter
+    const params = new URLSearchParams(window.location.search);
+    const showPinId = params.get('showPin');
+    if (showPinId) {
+      const marker = markers[showPinId];
+      if (marker) {
+        map.flyTo({ center: marker.getLngLat(), zoom: 17 });
+        marker.togglePopup();
       }
-    });
+    }
+  });
 
     // Function to fetch and display reports
     async function fetchReports() {
@@ -339,6 +376,7 @@
       });
     }
 
+    
     // Function to show modal
     function showModal(message, incidentId, timestamp) {
       const successModal = document.getElementById('success-modal');

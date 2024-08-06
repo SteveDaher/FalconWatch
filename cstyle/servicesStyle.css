@@ -40,7 +40,7 @@ body {
   cursor: pointer;
   margin: 0 10px;
   transition: color 0.3s ease, text-decoration 0.3s ease;
-  color: #17820e; 
+  color: #2b966f; 
 }
 
 #nav-buttons a:hover {
@@ -82,18 +82,17 @@ h1 {
   border: 1px solid #ddd;
   padding: 20px;
   width: 150px;
+  height: 150px; /* Ensure square shape */
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   text-align: center;
-  transition: transform 0.3s;
-
+  transition: transform 0.3s, background-color 0.6s ease, color 0.6s ease;
   border-radius: 8px;
-
-  transition: background-color 0.6s ease, color 0.6s ease;
   overflow: hidden;
-  background-color: #ffffff; /* Default background color */
-  
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
-
 
 .service:hover {
   transform: translateY(-5px);
@@ -109,6 +108,9 @@ h1 {
   text-decoration: none;
   color: #333;
   font-weight: bold;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .chart-container {
@@ -139,7 +141,7 @@ h1 {
 }
 
 .low {
-  background-color: #4caf50; /* Green */
+  background-color: #2b966f; /* Green */
 }
 
 .medium {
@@ -172,7 +174,7 @@ h1 {
   display: block;
   text-align: center;
   padding: 10px 15px;
-  background-color: #17820e;
+  background-color: #2b966f;
   color: #f0f0f0;
   border: none;
   border-radius: 4px;
@@ -183,7 +185,7 @@ h1 {
 }
 
 .back-btn:hover {
-  background-color: #2fb63a;
+  background-color: #2b966f;
 }
 
 .icon-small {
@@ -192,17 +194,15 @@ h1 {
 }
 
 .green-icon {
-  fill: #17820e;
+  fill: #2b966f;
 }
 
-
 .service .icon-small {
-  margin-right: 10px;
   transition: fill 0.5s; /* Smooth transition for icon color */
 }
 
 .service:hover {
-  background-color: #28a745; /* Green background on hover */
+  background-color: #2b966f; /* Green background on hover */
   color: #fff; /* White text color on hover */
 }
 

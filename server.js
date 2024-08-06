@@ -182,6 +182,51 @@ app.get('/crime-summary', async (req, res) => {
     res.status(500).json({ message: 'Error fetching crime summary' });
   }
 });
+// Endpoint to fetch crime data by month and category
+app.get('/crime-summary-category', async (req, res) => {
+  try {
+    const userId = req.query.userId;
+    const month = req.query.month || '';
+
+    // Prepare the MongoDB query based on the month parameter
+    let matchStage = { userId: new mongoose.Types.ObjectId(userId) };
+
+    if (month) {
+      const [year, monthNumber] = month.split('-');
+      // Convert monthNumber to integer and create date range
+      const startDate = new Date(`${year}-${monthNumber}-01T00:00:00.000Z`);
+      const endDate = new Date(startDate);
+      endDate.setMonth(startDate.getMonth() + 1);
+
+      matchStage.date = {
+        $gte: startDate,
+        $lt: endDate
+      };
+    }
+
+    const data = await Report.aggregate([
+      { $match: matchStage },
+      {
+        $group: {
+          _id: "$category",
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          category: "$_id",
+          count: 1
+        }
+      }
+    ]);
+
+    res.status(200).json(data);
+  } catch (error) {
+    console.error('Error fetching crime data:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 // Delete a report by incident ID
 app.delete('/report/:id', async (req, res) => {
