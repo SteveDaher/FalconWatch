@@ -23,7 +23,7 @@ html, body {
 }
 
 body {
-    background-image: url('../img/loginBackground.png');
+    background-image: url('../img/LoginBackground.png'); /* Ensure this path is correct */
     background-size: cover;
     background-position: center center;
     background-repeat: no-repeat;
@@ -75,7 +75,7 @@ input::placeholder {
     margin-bottom: 1rem;
 }
 
-input[type="email"],
+input[type="identifier"],
 input[type="password"] {
     border: 1px solid #242c37;
     background-color: transparent;
@@ -86,7 +86,7 @@ input[type="password"] {
 }
 
 /* Background images for specific inputs */
-input[type="email"] {
+input[type="identifier"] {
     background-image: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20512%20512%22%20fill%3D%22%23242c37%22%3E%3Cpath%20d%3D%22M256.017%20273.436l-205.17-170.029h410.904l-205.734%20170.029zm-.034%2055.462l-205.983-170.654v250.349h412v-249.94l-206.017%20170.245z%22%2F%3E%3C%2Fsvg%3E');
 }
 
@@ -95,11 +95,9 @@ input[type="password"] {
 }
 
 input[type="submit"] {
-    background-image: linear-gradient(160deg, #378f7b 0%, #378f7b 100%);
+    background-image: linear-gradient(160deg, #8ceabb 0%, #378f7b 100%);
     color: #fff;
-    margin-top: 2rem;
     margin-bottom: 6rem;
-    font-weight: 500;
     border: none;
     padding: .5rem 1rem;
     border-radius: 999px;
@@ -109,14 +107,16 @@ input[type="submit"] {
 }
 
 input[type="submit"]:hover {
-    background: linear-gradient(160deg, #45a049 0%, #45a049 100%);
+    background: linear-gradient(160deg, #a3f3cc 0%, #45a049 100%);
+    transform: scale(1.05);
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
 }
 
 h2 {
-    font-size: 2rem;
-    font-weight: 500;
+    font-size: 2.75rem;
+    font-weight: 100;
     margin: 0 0 1rem;
+    text-transform: uppercase;
 }
 
 svg {
@@ -127,10 +127,6 @@ svg {
 
 a {
     color: var(--link-color);
-}
-
-.register-form a{
-    margin-top: -600px;
 }
 
 /* Styling for the logo */

@@ -13,8 +13,8 @@
             <h2>Login</h2>
             <form id="login-form" action="/login" method="post" class="form">
                 <div class="form__field">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" name="email" placeholder="info@mailaddress.com" required>
+                    <label for="identifier">Email or Badge Number</label>
+                    <input type="identifier" id="identifier" name="identifier" placeholder="Email or Badge Number" required>
                 </div>
                 <div class="form__field">
                     <label for="password">Password</label>
@@ -24,20 +24,20 @@
                     <input type="submit" value="Login">
                 </div>
             </form>
-            <p>Don't have an account? <a href="register.html">Sign up</a></p>
+            <p>Don't have an account? <a href="userType.html">Sign up</a></p>
         </div>
     </div>
     <script>
         document.getElementById('login-form').addEventListener('submit', async function(event) {
             event.preventDefault();
-            const email = document.getElementById('email').value;
+            const identifier = document.getElementById('identifier').value;
             const password = document.getElementById('password').value;
 
             try {
                 const response = await fetch('/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
+                    body: JSON.stringify({ identifier, password })
                 });
                 const result = await response.json();
                 if (response.ok) {

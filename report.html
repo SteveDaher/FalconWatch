@@ -40,7 +40,7 @@
     <div class="pagination" id="pagination-controls">
       <!-- Pagination controls will be dynamically generated here -->
     </div>
-    <a href="services.html" class="back-btn">Back to Services</a>
+    <a href="main.html" class="back-btn">Back to Map</a>
   </div>
 
   <script src="https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.js"></script>
@@ -53,7 +53,17 @@
         const userId = localStorage.getItem('userId'); // Assuming the userId is stored in localStorage after login
         console.log('Retrieved userId from localStorage:', userId); // Debug: log the retrieved userId
 
-        const response = await fetch(`/reports?userId=${userId}`);
+        const roleResponse = await fetch(`/userRole?userId=${userId}`);
+        const roleData = await roleResponse.json();
+        const role = roleData.role;
+
+        let response;
+        if (role === 'police') {
+          response = await fetch(`/all-reports?userId=${userId}`);
+        } else {
+          response = await fetch(`/reports?userId=${userId}`);
+        }
+
         const reports = await response.json();
 
         // Handle pagination if reports are more than the reportsPerPage

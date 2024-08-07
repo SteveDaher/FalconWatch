@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Police Registration</title>
+    <link rel="stylesheet" href="./cstyle/registerStyle.css">
+</head>
+<body>
+    <div class="grid align__item">
+        <div class="register">
+            <img src="img/logoFW.png" class="site__logo" alt="Logo">
+            <h2>Register as Police</h2>
+            <form id="register-form" action="/registerPolice" method="post" class="form">
+                <div class="form__field">
+                    <label for="name">Name</label>
+                    <input type="text" id="name" name="name" placeholder="Full Name" required>
+                </div>
+                <div class="form__field">
+                    <label for="badgeNumber">Badge Number</label>
+                    <input type="text" id="badgeNumber" name="badgeNumber" placeholder="Badge Number" required>
+                </div>
+                <div class="form__field">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="••••••••••••" required>
+                </div>
+                <div class="form__field">
+                    <input type="submit" value="Register">
+                </div>
+            </form>
+            <p>Already have an account? <a href="login.html">Login</a></p>
+        </div>
+    </div>
+</body>
+</html>

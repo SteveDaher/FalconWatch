@@ -19,7 +19,9 @@ const userSchema = new mongoose.Schema({
   name: String,
   email: { type: String, required: true, unique: true },
   phone: String,
-  password: { type: String, required: true } // Note: Storing plain-text passwords is insecure
+  password: { type: String, required: true }, // Note: Storing plain-text passwords is insecure
+  badgeNumber: { type: String, unique: true, sparse: true },
+  role: { type: String, enum: ['civilian', 'police'], default: 'civilian' }
 });
 const User = mongoose.model('User', userSchema);
 
@@ -36,9 +38,27 @@ const reportSchema = new mongoose.Schema({
 });
 const Report = mongoose.model('Report', reportSchema);
 
+const badgeSchema = new mongoose.Schema({
+  badgeNumber: { type: String, required: true, unique: true }
+});
+const Badge = mongoose.model('Badge', badgeSchema);
+
 // Middleware setup
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ extended: true }));
+
+async function addPlaceholderBadges() {
+  const badges = ['POLICE123', 'POLICE456', 'POLICE789'];
+  for (const badge of badges) {
+    try {
+      await Badge.updateOne({ badgeNumber: badge }, { badgeNumber: badge }, { upsert: true });
+      console.log(`Badge ${badge} added or updated`);
+    } catch (error) {
+      console.error('Error adding badge:', badge, error);
+    }
+  }
+}
+addPlaceholderBadges();
 
 // Function to classify severity
 async function classifySeverity(description) {
@@ -83,18 +103,54 @@ app.post('/register', async (req, res) => {
   }
 });
 
+// Handle police registration
+app.post('/registerPolice', async (req, res) => {
+  try {
+    const { name, badgeNumber, password } = req.body;
+
+    console.log(`Registering police with badge number: ${badgeNumber}`);
+    const badge = await Badge.findOne({ badgeNumber });
+    if (!badge) {
+      console.log(`Badge number ${badgeNumber} not found`);
+      return res.status(400).json({ message: 'Invalid badge number' });
+    }
+
+    const user = new User({ name, password, badgeNumber, role: 'police' });
+    await user.save();
+    res.redirect('/login.html');  // Redirect to login page after successful registration
+  } catch (error) {
+    console.error('Error registering police:', error);
+    res.status(500).json({ message: 'Error registering police' });
+  }
+});
+
 // Handle user login
 app.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
-    const user = await User.findOne({ email });
+    const { identifier, password } = req.body;
+    const user = await User.findOne({ $or: [{ email: identifier }, { badgeNumber: identifier }] });
     if (!user || user.password !== password) {
-      return res.status(400).json({ message: 'Invalid email or password' });
+      return res.status(400).json({ message: 'Invalid email/badge number or password' });
     }
     res.status(200).json({ message: 'Login successful', userId: user._id });
   } catch (error) {
     console.error('Error logging in:', error);
     res.status(500).json({ message: 'Error logging in' });
+  }
+});
+
+// Get user role
+app.get('/userRole', async (req, res) => {
+  try {
+    const userId = req.query.userId;
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.status(200).json({ role: user.role });
+  } catch (error) {
+    console.error('Error fetching user role:', error);
+    res.status(500).json({ message: 'Error fetching user role' });
   }
 });
 
@@ -145,6 +201,34 @@ app.get('/reports', async (req, res) => {
   }
 });
 
+// Get all reports (only for police)
+app.get('/all-reports', policeAuth, async (req, res) => {
+  try {
+    const reports = await Report.find({});
+    res.status(200).json(reports);
+  } catch (error) {
+    console.error('Error fetching all reports:', error);
+    res.status(500).json({ error: 'Error fetching all reports' });
+  }
+});
+
+function policeAuth(req, res, next) {
+  const userId = req.query.userId;
+  User.findById(userId).then(user => {
+    if (!user) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+    if (user.role !== 'police') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+    next();
+  }).catch(err => {
+    console.error('Error finding user:', err);
+    return res.status(500).json({ message: 'Error finding user' });
+  });
+}
+
+// Get crime summary by severity for the logged-in user
 app.get('/crime-summary', async (req, res) => {
   try {
     const userId = req.query.userId;
@@ -182,18 +266,56 @@ app.get('/crime-summary', async (req, res) => {
     res.status(500).json({ message: 'Error fetching crime summary' });
   }
 });
+
+// Get all crime summary by severity (only for police)
+app.get('/all-crime-summary', policeAuth, async (req, res) => {
+  try {
+    console.log('Fetching all crime summary');
+    
+    const summary = await Report.aggregate([
+      {
+        $group: {
+          _id: {
+            year: { $year: "$date" },
+            month: { $month: "$date" },
+            severity: "$severity"
+          },
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          year: "$_id.year",
+          month: "$_id.month",
+          severity: "$_id.severity",
+          count: 1
+        }
+      },
+      {
+        $sort: { year: 1, month: 1, severity: 1 }
+      }
+    ]);
+
+    res.status(200).json(summary);
+  } catch (error) {
+    console.error('Error fetching all crime summary:', error);
+    res.status(500).json({ message: 'Error fetching all crime summary' });
+  }
+});
+
+
 // Endpoint to fetch crime data by month and category
-app.get('/crime-summary-category', async (req, res) => {
+// Endpoint to fetch crime data by month and category for civilians
+app.get('/crime-summary-category-civilian', async (req, res) => {
   try {
     const userId = req.query.userId;
     const month = req.query.month || '';
-
-    // Prepare the MongoDB query based on the month parameter
+    
     let matchStage = { userId: new mongoose.Types.ObjectId(userId) };
 
     if (month) {
       const [year, monthNumber] = month.split('-');
-      // Convert monthNumber to integer and create date range
       const startDate = new Date(`${year}-${monthNumber}-01T00:00:00.000Z`);
       const endDate = new Date(startDate);
       endDate.setMonth(startDate.getMonth() + 1);
@@ -228,6 +350,50 @@ app.get('/crime-summary-category', async (req, res) => {
   }
 });
 
+// Endpoint to fetch crime data by month and category for police
+app.get('/crime-summary-category', policeAuth, async (req, res) => {
+  try {
+    const month = req.query.month || '';
+    
+    let matchStage = {};
+
+    if (month) {
+      const [year, monthNumber] = month.split('-');
+      const startDate = new Date(`${year}-${monthNumber}-01T00:00:00.000Z`);
+      const endDate = new Date(startDate);
+      endDate.setMonth(startDate.getMonth() + 1);
+
+      matchStage.date = {
+        $gte: startDate,
+        $lt: endDate
+      };
+    }
+
+    const data = await Report.aggregate([
+      { $match: matchStage },
+      {
+        $group: {
+          _id: "$category",
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          category: "$_id",
+          count: 1
+        }
+      }
+    ]);
+
+    res.status(200).json(data);
+  } catch (error) {
+    console.error('Error fetching crime data:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
 // Delete a report by incident ID
 app.delete('/report/:id', async (req, res) => {
   try {
@@ -241,6 +407,39 @@ app.delete('/report/:id', async (req, res) => {
 
 // Serve static files from the current directory
 app.use(express.static('.'));
+
+// Set default route to typeofuser.html
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'userType.html'));
+});
+
+app.get('/register.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'register.html'));
+});
+
+app.get('/registerPolice.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'registerPolice.html'));
+});
+
+app.get('/login.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'login.html'));
+});
+
+app.get('/userType.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'userType.html'));
+});
+
+app.get('/main.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'main.html'));
+});
+
+app.get('/report.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'report.html'));
+});
+
+app.get('/chart.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'chart.html'));
+});
 
 // Start the server
 app.listen(port, () => {

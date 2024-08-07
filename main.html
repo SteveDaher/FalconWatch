@@ -11,12 +11,17 @@
 <body>
   <div id="header">
     <img src="./img/logoFW.png" alt="Logo" id="logo">
+    <div id="user-info">
+      <img src="./img/user-icon.png" alt="User Icon" id="user-icon">
+      <span id="user-name"></span>
+    </div>
     <div id="nav-buttons">
       <a href="main.html" class="active-link">Home</a>
       <a href="#">Simulations</a>
       <a href="services.html" id="view-services">View Services</a>
       <a href="#" id="toggle-timeline">Toggle Timeline</a>
       <a href="#" id="toggle-reporting">Report a Crime</a>
+      <a href="login.html" id="sign-out" class="sign-out-btn">Sign Out</a>
     </div>
   </div>  
 
@@ -71,7 +76,6 @@
     <div class="modal-content">
       <span class="close">&times;</span>
       <p id="modal-message">Report submitted successfully!</p>
-      <p id="modal-id">Incident ID: <span id="incident-id"></span></p>
       <p id="modal-timestamp">Date: <span id="timestamp"></span></p>
     </div>
   </div>
@@ -100,50 +104,50 @@
   
     let reportsCache = [];
     const markers = {}; // To keep track of markers by their ID
-  
+    let currentPin = null; // Variable to store the current pin
+
     // Toggle the reporting form visibility
-  document.getElementById('toggle-reporting').addEventListener('click', function () {
-    const reportingDiv = document.getElementById('reporting');
-    reportingDiv.style.display = reportingDiv.style.display === 'none' ? 'block' : 'none';
-    
-    if (reportingDiv.style.display === 'block') {
-      // Request user location when the reporting form is shown
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(function(position) {
-          const userLocation = [position.coords.longitude, position.coords.latitude];
-          map.setCenter(userLocation);
-          map.setZoom(15);
-        });
-      } else {
-        alert("Geolocation is not supported by this browser.");
+    document.getElementById('toggle-reporting').addEventListener('click', function () {
+      const reportingDiv = document.getElementById('reporting');
+      reportingDiv.style.display = reportingDiv.style.display === 'none' ? 'block' : 'none';
+      
+      if (reportingDiv.style.display === 'block') {
+        // Request user location when the reporting form is shown
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(function(position) {
+            const userLocation = [position.coords.longitude, position.coords.latitude];
+            map.setCenter(userLocation);
+            map.setZoom(15);
+          });
+        } else {
+          alert("Geolocation is not supported by this browser.");
+        }
       }
-    }
-  });
-  let currentPin = null; // Variable to store the current pin
+    });
 
-   // Add click event listener to drop a pin
-   map.on('click', function (event) {
-  const reportingDiv = document.getElementById('reporting');
-  
-  // Check if the reporting form is visible
-  if (reportingDiv.style.display === 'block') {
-    const coordinates = [event.lngLat.lng, event.lngLat.lat];
+    // Add click event listener to drop a pin
+    map.on('click', function (event) {
+      const reportingDiv = document.getElementById('reporting');
+      
+      // Check if the reporting form is visible
+      if (reportingDiv.style.display === 'block') {
+        const coordinates = [event.lngLat.lng, event.lngLat.lat];
 
-    // Remove the previous pin if it exists
-    if (currentPin) {
-      currentPin.remove();
-    }
+        // Remove the previous pin if it exists
+        if (currentPin) {
+          currentPin.remove();
+        }
 
-    // Add the new pin
-    currentPin = new mapboxgl.Marker()
-      .setLngLat(coordinates)
-      .addTo(map);
+        // Add the new pin
+        currentPin = new mapboxgl.Marker()
+          .setLngLat(coordinates)
+          .addTo(map);
 
-    // Autofill coordinates in the form
-    document.getElementById('crime-coordinates').value = `${coordinates[0]}, ${coordinates[1]}`;
-  }
-});
-  
+        // Autofill coordinates in the form
+        document.getElementById('crime-coordinates').value = `${coordinates[0]}, ${coordinates[1]}`;
+      }
+    });
+
     // Toggle the timeline visibility
     document.getElementById('toggle-timeline').addEventListener('click', function () {
       const timelineContainer = document.getElementById('timeline-container');
@@ -177,26 +181,38 @@
       // Fetch and display existing reports
       await fetchReports();
   
-       // Check URL for showPin parameter
-    const params = new URLSearchParams(window.location.search);
-    const showPinId = params.get('showPin');
-    if (showPinId) {
-      const marker = markers[showPinId];
-      if (marker) {
-        map.flyTo({ center: marker.getLngLat(), zoom: 17 });
-        marker.togglePopup();
+      // Check URL for showPin parameter
+      const params = new URLSearchParams(window.location.search);
+      const showPinId = params.get('showPin');
+      if (showPinId) {
+        const marker = markers[showPinId];
+        if (marker) {
+          map.flyTo({ center: marker.getLngLat(), zoom: 17 });
+          marker.togglePopup();
+        }
       }
-    }
-  });
+    });
 
     // Function to fetch and display reports
     async function fetchReports() {
       const userId = localStorage.getItem('userId'); // Assuming the userId is stored in localStorage after login
       console.log('Retrieved userId from localStorage:', userId); // Debug: log the retrieved userId
       try {
-        const response = await fetch(`/reports?userId=${userId}`);
-        if (!response.ok) throw new Error('Network response was not ok');
-        const reports = await response.json();
+        // Fetch user role
+        const userResponse = await fetch(`/userRole?userId=${userId}`);
+        const user = await userResponse.json();
+        const role = user.role;
+        document.getElementById('user-name').textContent = user.name;
+
+        let reports = [];
+        if (role === 'police') {
+          const response = await fetch(`/all-reports?userId=${userId}`);
+          reports = await response.json();
+        } else {
+          const response = await fetch(`/reports?userId=${userId}`);
+          reports = await response.json();
+        }
+
         reportsCache = reports;
         reports.forEach(report => addReportToMap(report));
         reports.forEach(report => addReportToTimeline(report));
@@ -353,7 +369,7 @@
         addReportToMap(result);
         addReportToTimeline(result);
   
-        showModal('Report submitted successfully!', result.incidentId, formatDate(new Date(result.date)));
+        showModal('Report submitted successfully!', formatDate(new Date(result.date)));
   
         // Close the reporting form
         document.getElementById('reporting').style.display = 'none';
@@ -376,14 +392,10 @@
       });
     }
 
-    
     // Function to show modal
-    function showModal(message, incidentId, timestamp) {
+    function showModal(message, timestamp) {
       const successModal = document.getElementById('success-modal');
       document.getElementById('modal-message').textContent = message;
-      if (incidentId) {
-        document.getElementById('incident-id').textContent = incidentId;
-      }
       if (timestamp) {
         document.getElementById('timestamp').textContent = timestamp;
       }
