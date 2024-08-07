@@ -1,3 +1,4 @@
+/* General Styles */
 body {
   margin: 0;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -14,7 +15,7 @@ body {
   border-bottom: 2px solid #40ac0e;
   position: relative;
   z-index: 9999;
-  box-shadow: 0 2px 3px #00000049;
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.3);
 }
 
 #header img {
@@ -23,14 +24,11 @@ body {
   max-width: 170px;
   max-height: 150px;
   object-fit: contain;
-  display: block;
-  order: 1; 
 }
 
 #nav-buttons {
   display: flex;
   align-items: center;
-  order: 2; 
 }
 
 #nav-buttons a {
@@ -72,6 +70,7 @@ h1 {
 
 .services {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   gap: 20px;
 }
@@ -96,6 +95,8 @@ h1 {
 
 .service:hover {
   transform: translateY(-5px);
+  background-color: #2b966f; /* Green background on hover */
+  color: #fff; /* White text color on hover */
 }
 
 .service img {
@@ -113,32 +114,14 @@ h1 {
   align-items: center;
 }
 
+.service:hover .icon-small {
+  fill: #fff; /* White icon color on hover */
+}
+
 .chart-container {
-  padding: 20px;
+  padding: 10px;
 }
 
-.bar-chart {
-  display: flex;
-  align-items: flex-end;
-  height: 250px; /* Container height for bars */
-}
-
-.bar {
-  flex: 1;
-  margin: 0 10px;
-  background-color: gray;
-  border-radius: 4px;
-  position: relative;
-}
-
-.bar::before {
-  content: '';
-  display: block;
-  width: 100%;
-  background-color: inherit;
-  height: 0; /* Initial height, will be adjusted by JS */
-  transition: height 0.3s ease;
-}
 
 .low {
   background-color: #2b966f; /* Green */
@@ -199,15 +182,6 @@ h1 {
 
 .service .icon-small {
   transition: fill 0.5s; /* Smooth transition for icon color */
-}
-
-.service:hover {
-  background-color: #2b966f; /* Green background on hover */
-  color: #fff; /* White text color on hover */
-}
-
-.service:hover .icon-small {
-  fill: #fff; /* White icon color on hover */
 }
 
 .service:hover a {

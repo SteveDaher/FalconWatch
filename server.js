@@ -228,35 +228,70 @@ function policeAuth(req, res, next) {
   });
 }
 
-// Get crime summary by severity for the logged-in user
 app.get('/crime-summary', async (req, res) => {
   try {
     const userId = req.query.userId;
-    console.log('Fetching crime summary for userId:', userId);
+    const month = req.query.month;
+
+    if (!userId) {
+      return res.status(400).json({ message: 'User ID is required' });
+    }
+
+    const matchStage = { userId: new mongoose.Types.ObjectId(userId) };
+
+    if (month) {
+      const [year, monthNumber] = month.split('-');
+      const startDate = new Date(`${year}-${monthNumber}-01T00:00:00Z`);
+      const endDate = new Date(startDate);
+      endDate.setMonth(endDate.getMonth() + 1);
+
+      matchStage.date = {
+        $gte: startDate,
+        $lt: endDate
+      };
+    }
 
     const summary = await Report.aggregate([
-      { $match: { userId: new mongoose.Types.ObjectId(userId) } }, // Ensure only user-specific data is fetched
+      { $match: matchStage },
+      {
+        $addFields: {
+          // Adjust the date to Dubai timezone (UTC+4)
+          adjustedDate: {
+            $dateAdd: {
+              startDate: "$date",
+              unit: "hour",
+              amount: 4
+            }
+          }
+        }
+      },
+      {
+        $addFields: {
+          // Extract hour in Dubai timezone
+          hour: { $hour: "$adjustedDate" }
+        }
+      },
       {
         $group: {
           _id: {
-            year: { $year: "$date" },
-            month: { $month: "$date" },
-            severity: "$severity"
+            hour: "$hour",
+            category: "$category"
           },
-          count: { $sum: 1 }
+          count: { $sum: 1 },
+          incidentIds: { $push: "$incidentId" }
         }
       },
       {
         $project: {
           _id: 0,
-          year: "$_id.year",
-          month: "$_id.month",
-          severity: "$_id.severity",
-          count: 1
+          hour: "$_id.hour",
+          category: "$_id.category",
+          count: 1,
+          incidentIds: 1
         }
       },
       {
-        $sort: { year: 1, month: 1, severity: 1 }
+        $sort: { hour: 1, category: 1 }
       }
     ]);
 
@@ -267,20 +302,58 @@ app.get('/crime-summary', async (req, res) => {
   }
 });
 
-// Get all crime summary by severity (only for police)
+
 app.get('/all-crime-summary', policeAuth, async (req, res) => {
   try {
     console.log('Fetching all crime summary');
-    
+
+    const month = req.query.month;
+
+    const matchStage = {};
+
+    if (month) {
+      const [year, monthNumber] = month.split('-');
+      const startDate = new Date(`${year}-${monthNumber}-01T00:00:00Z`);
+      const endDate = new Date(startDate);
+      endDate.setMonth(endDate.getMonth() + 1);
+
+      matchStage.date = {
+        $gte: startDate,
+        $lt: endDate
+      };
+    }
+
     const summary = await Report.aggregate([
+      { $match: matchStage },
+      {
+        $addFields: {
+          // Adjust the date to Dubai timezone (UTC+4)
+          adjustedDate: {
+            $dateAdd: {
+              startDate: "$date",
+              unit: "hour",
+              amount: 4
+            }
+          }
+        }
+      },
+      {
+        $addFields: {
+          // Extract hour in Dubai timezone
+          hour: { $hour: "$adjustedDate" }
+        }
+      },
       {
         $group: {
           _id: {
-            year: { $year: "$date" },
-            month: { $month: "$date" },
-            severity: "$severity"
+            year: { $year: "$adjustedDate" },
+            month: { $month: "$adjustedDate" },
+            severity: "$severity",
+            hour: "$hour",
+            category: "$category"
           },
-          count: { $sum: 1 }
+          count: { $sum: 1 },
+          incidentIds: { $push: "$incidentId" }
         }
       },
       {
@@ -289,11 +362,14 @@ app.get('/all-crime-summary', policeAuth, async (req, res) => {
           year: "$_id.year",
           month: "$_id.month",
           severity: "$_id.severity",
-          count: 1
+          hour: "$_id.hour",
+          category: "$_id.category",
+          count: 1,
+          incidentIds: 1
         }
       },
       {
-        $sort: { year: 1, month: 1, severity: 1 }
+        $sort: { year: 1, month: 1, hour: 1, category: 1 }
       }
     ]);
 
