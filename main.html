@@ -9,22 +9,22 @@
   <link rel="stylesheet" href="./cstyle/mainStyle.css">
 </head>
 <body>
+
   <div id="header">
-    <img src="./img/logoFW.png" alt="Logo" id="logo">
-    <div id="user-info">
-      <img src="./img/user-icon.png" alt="User Icon" id="user-icon">
-      <span id="user-name"></span>
-    </div>
     <div id="nav-buttons">
       <a href="main.html" class="active-link">Home</a>
       <a href="#">Simulations</a>
       <a href="services.html" id="view-services">View Services</a>
-      <a href="#" id="toggle-timeline">Toggle Timeline</a>
       <a href="#" id="toggle-reporting">Report a Crime</a>
-      <a href="login.html" id="sign-out" class="sign-out-btn">Sign Out</a>
+      <div id="user-info">
+        <img src="./img/user-icon.png" alt="User Icon" id="user-icon">
+        <span id="user-name"></span>
+        <a href="login.html" id="sign-out" class="sign-out-btn">Sign Out</a>
+      </div>
     </div>
-  </div>  
-
+    <img src="./img/logoFW.png" alt="Logo" id="logo">
+  </div>
+  
   <div id="map"></div>
   
   <div id="reporting">
@@ -68,8 +68,14 @@
         </select>
       </div>
     </div>
-    <div id="timeline"></div>
+    <div id="timeline">
+      <div id="timeline-line"></div>
+    </div>
   </div>   
+
+  <div id="toggle-timeline-tab">
+    <span id="toggle-arrow">&#9650;</span>
+  </div>
 
   <!-- Success Modal HTML -->
   <div id="success-modal" class="modal">
@@ -85,6 +91,15 @@
     <div class="modal-content picture-modal-content">
       <span class="close">&times;</span>
       <img src="" alt="Crime Picture" id="picture-img">
+    </div>
+  </div>
+
+  <!-- New Crime Details Popup -->
+  <div id="new-crime-details-popup" class="new-modal" onclick="closeNewCrimeDetailsPopup(event)">
+    <div class="new-modal-content" onclick="event.stopPropagation()">
+      <div id="severity-line"></div> <!-- Severity line at the top -->
+      <span class="new-close" onclick="closeNewCrimeDetailsPopup()">&times;</span>
+      <div id="new-crime-details-content"></div>
     </div>
   </div>
 
@@ -149,15 +164,22 @@
     });
 
     // Toggle the timeline visibility
-    document.getElementById('toggle-timeline').addEventListener('click', function () {
-      const timelineContainer = document.getElementById('timeline-container');
-      if (timelineContainer.classList.contains('show')) {
-        timelineContainer.classList.remove('show');
-        setTimeout(() => { timelineContainer.style.display = 'none'; }, 500); // Wait for animation to finish
-      } else {
-        timelineContainer.style.display = 'block';
-        setTimeout(() => { timelineContainer.classList.add('show'); }, 10); // Slight delay to allow display change to take effect
-      }
+    const toggleTimelineTab = document.getElementById('toggle-timeline-tab');
+    const timelineContainer = document.getElementById('timeline-container');
+    const toggleArrow = document.getElementById('toggle-arrow');
+
+    toggleTimelineTab.addEventListener('click', function () {
+        if (timelineContainer.classList.contains('show')) {
+            timelineContainer.classList.remove('show');
+            timelineContainer.style.transform = 'translateY(100%)';
+            toggleTimelineTab.style.bottom = '0px'; 
+            toggleArrow.style.transform = 'rotate(0deg)';
+        } else {
+            timelineContainer.classList.add('show');
+            timelineContainer.style.transform = 'translateY(0)';
+            toggleTimelineTab.style.bottom = '153px'; 
+            toggleArrow.style.transform = 'rotate(180deg)';
+        }
     });
 
     // Load map.geojson as a source
@@ -215,7 +237,7 @@
 
         reportsCache = reports;
         reports.forEach(report => addReportToMap(report));
-        reports.forEach(report => addReportToTimeline(report));
+        addReportsToTimeline(reports);
       } catch (error) {
         console.error('Error fetching reports:', error);
       }
@@ -258,34 +280,70 @@
       markers[report.incidentId] = marker; // Save marker by ID
     }
 
-    function addReportToTimeline(report) {
+    function addReportsToTimeline(reports) {
       const timeline = document.getElementById('timeline');
-      const reportElement = document.createElement('div');
-      reportElement.className = 'timeline-item';
-      reportElement.dataset.severity = report.severity.toLowerCase(); 
+      const dateMarkers = {}; // Track date markers
 
-      const severityColor = getSeverityColor(report.severity);
+      reports.forEach(report => {
+        const dot = document.createElement('div');
+        dot.className = 'timeline-dot';
+        dot.dataset.severity = report.severity.toLowerCase();
+        dot.dataset.incidentId = report.incidentId;
 
-      reportElement.innerHTML = `
-        <div class="severity-indicator" style="background-color: ${severityColor};"></div>
-        <p><strong>ID:</strong> ${report.incidentId}</p>
-        <p><strong>Name:</strong> ${report.name}</p>
-        <p><strong>Severity:</strong> ${report.severity}</p>
-        <p><strong>Date:</strong> ${formatDate(new Date(report.date))}</p>
-      `;
+        const severityColor = getSeverityColor(report.severity);
+        dot.style.backgroundColor = severityColor;
 
-      timeline.appendChild(reportElement);
+        dot.addEventListener('click', () => {
+          showNewCrimeDetailsPopup(report);
+        });
+
+        const reportDate = new Date(report.date);
+        const reportDay = reportDate.toISOString().split('T')[0];
+        dot.dataset.date = reportDay; // Add date data attribute
+
+        // Create a date marker if it doesn't already exist
+        if (!dateMarkers[reportDay]) {
+          const dateMarker = document.createElement('div');
+          dateMarker.className = 'timeline-date-marker';
+          dateMarker.dataset.date = reportDay; // Set data-date attribute
+          dateMarker.innerHTML = `<div class="timeline-date"><span>${reportDate.getDate()} ${reportDate.toLocaleString('default', { month: 'short' })}</span></div>`;
+          dateMarkers[reportDay] = dateMarker;
+          timeline.appendChild(dateMarker);
+        }
+
+        timeline.appendChild(dot);
+      });
+
+      // Adjust date markers positions
+      Object.values(dateMarkers).forEach(dateMarker => {
+        const date = dateMarker.dataset.date;
+        const dots = document.querySelectorAll(`.timeline-dot[data-date="${date}"]`);
+        if (dots.length > 0) {
+          dateMarker.style.left = dots[0].offsetLeft + 'px';
+        }
+      });
     }
 
     document.getElementById('severity-filter').addEventListener('change', function() {
       const selectedSeverity = this.value;
-      const timelineItems = document.querySelectorAll('.timeline-item');
+      const timelineItems = document.querySelectorAll('.timeline-dot');
+      const dateMarkers = document.querySelectorAll('.timeline-date-marker');
 
       timelineItems.forEach(item => {
         if (selectedSeverity === 'all' || item.dataset.severity === selectedSeverity) {
-          item.style.display = 'flex';
+          item.style.display = 'block';
         } else {
           item.style.display = 'none';
+        }
+      });
+
+      dateMarkers.forEach(marker => {
+        const date = marker.dataset.date;
+        const dots = document.querySelectorAll(`.timeline-dot[data-date="${date}"]:not([style*="display: none"])`);
+        if (dots.length > 0) {
+          marker.style.display = 'block';
+        } else {
+          marker.style.display = 'none';
         }
       });
     });
@@ -317,6 +375,30 @@
         minute: '2-digit',
         second: '2-digit'
       });
+    }
+
+    function showNewCrimeDetailsPopup(report) {
+      const crimeDetailsContent = document.getElementById('new-crime-details-content');
+      const severityColor = getSeverityColor(report.severity); // Get the severity color
+      document.getElementById('severity-line').style.backgroundColor = severityColor; // Set the severity line color
+
+      crimeDetailsContent.innerHTML = `
+        <h3>Incident ID: ${report.incidentId}</h3>
+        <h4>${report.name || 'No Title Provided'}</h4>
+        <p><strong>Category:</strong> ${report.category}</p>
+        <p><strong>Description:</strong> ${report.description}</p>
+        <p><strong>Severity:</strong> ${report.severity}</p>
+        <p><strong>Date:</strong> ${formatDate(new Date(report.date))}</p>
+        ${report.picture ? `<img src="${report.picture}" alt="Crime Picture" style="max-width: 100%; height: auto;">` : ''}
+      `;
+      const crimeDetailsPopup = document.getElementById('new-crime-details-popup');
+      crimeDetailsPopup.style.display = 'block';
+    }
+
+    function closeNewCrimeDetailsPopup(event) {
+      if (event && event.target !== document.getElementById('new-crime-details-popup')) return;
+      const crimeDetailsPopup = document.getElementById('new-crime-details-popup');
+      crimeDetailsPopup.style.display = 'none';
     }
 
     document.getElementById('crime-report-form').addEventListener('submit', async function(event) {
@@ -367,7 +449,7 @@
   
         reportsCache.push(result);
         addReportToMap(result);
-        addReportToTimeline(result);
+        addReportsToTimeline(reportsCache);
   
         showModal('Report submitted successfully!', formatDate(new Date(result.date)));
   
