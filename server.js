@@ -17,7 +17,7 @@ mongoose.connect('mongodb://localhost:27017/falconwatch');
 // Define schemas and models
 const userSchema = new mongoose.Schema({
   name: String,
-  email: { type: String, required: true, unique: true },
+  email: { type: String, required: true },
   phone: String,
   password: { type: String, required: true }, // Note: Storing plain-text passwords is insecure
   badgeNumber: { type: String, unique: true, sparse: true },
