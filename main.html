@@ -4,26 +4,73 @@
   <meta charset="utf-8" />
   <title>FalconWatch</title>
   <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
-  <link href="https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.css" rel="stylesheet" />
-  <script src="https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.js"></script>
+  <link href='https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.css' rel='stylesheet' />
+  <link href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.0.0/mapbox-gl-directions.css" rel="stylesheet" />
+  <script src='https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.js'></script>
+  <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-language/v1.0.0/mapbox-gl-language.js'></script>
+  <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.0.0/mapbox-gl-directions.js'></script>
+  <script src="/socket.io/socket.io.js"></script>
+
+  
+
+
   <link rel="stylesheet" href="./cstyle/mainStyle.css">
 </head>
 <body>
 
   <div id="header">
     <div id="nav-buttons">
-      <a href="main.html" class="active-link">Home</a>
-      <a href="#">Simulations</a>
-      <a href="services.html" id="view-services">View Services</a>
-      <a href="#" id="toggle-reporting">Report a Crime</a>
-      <div id="user-info">
-        <img src="./img/user-icon.png" alt="User Icon" id="user-icon">
-        <span id="user-name"></span>
-        <a href="login.html" id="sign-out" class="sign-out-btn">Sign Out</a>
-      </div>
+        <div id="user-info">
+            <img src="./img/free-user-icon-3296-thumb.png" alt="User Icon" id="user-icon">
+            <span id="user-name"></span>
+            <a href="main.html" class="active-link">Home</a>
+            <a href="#">Simulations</a>
+            <a href="services.html" id="view-services">View Services</a>
+
+            <!-- Dropdown menu for View Reports -->
+            <div class="dropdown">
+                <a href="" id="view-reports" class="dropbtn">View Reports</a>
+                <ul class="dropdown-content">
+                    <li><a href="chart.html">Crime Severity Statistics</a></li>
+                    <li><a href="chart2.html">Crime Category Statistics</a></li>
+                    <li><a href="chart3.html">Crime Type vs Time of day</a></li>
+                    <li><a href="chart4.html">Crime Trends</a></li>
+
+                </ul>
+            </div>
+
+           <!-- Dropdown menu for Map Styles -->
+        <div class="dropdown">
+          <a href="#" id="map-styles" class="dropbtn">Map Styles</a>
+          <ul class="dropdown-content">
+            <li><a href="#" id="satellite-map">Satellite Map</a></li>
+            <li><a href="#" id="white-map">White Map[EN/AE]</a></li>
+            <li><a href="#" id="dark-map">Dark Map [EN/AE]</a></li>
+            <li><a href="#" id="standard-map">Standard Map</a></li>
+            <li><a href="#" id="arabic-map">Street Map[EN/AE]</a></li>
+
+            
+          </ul>
+        </div>
+        
+
+        <!-- Dropdown menu for Language Styles -->
+       <div class="dropdown">
+       <a href="#" id="Language" class="dropbtn">Language/لغة</a>
+        <ul class="dropdown-content">
+        <li><a href="#" id="EnglishLanguage">English</a></li>
+        <li><a href="#" id="ArabicLanguage">عربي</a></li>
+        </ul>
+        </div>
+            <a href="#" id="toggle-reporting">Report a Crime</a>
+        </div>
+        <a href="toggle-directions" id="Directions">View Directions</a>
+
     </div>
     <img src="./img/logoFW.png" alt="Logo" id="logo">
-  </div>
+</div>
+
+
   
   <div id="map"></div>
   
@@ -77,6 +124,8 @@
     <span id="toggle-arrow">&#9650;</span>
   </div>
 
+
+
   <!-- Success Modal HTML -->
   <div id="success-modal" class="modal">
     <div class="modal-content">
@@ -103,9 +152,15 @@
     </div>
   </div>
 
+
+
   <script>
+
     // Mapbox access token
     mapboxgl.accessToken = 'pk.eyJ1IjoiZmFsY29ud2F0Y2giLCJhIjoiY2x5ZWIwcDJhMDBxbTJqc2VnYWMxeWNvdCJ9.bijpr26vfErYoGhhlQnaFA';
+
+    mapboxgl.setRTLTextPlugin('https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-rtl-text/v0.2.3/mapbox-gl-rtl-text.js');
+
   
     const map = new mapboxgl.Map({
       container: 'map',
@@ -116,7 +171,183 @@
       minZoom: 14,
       maxZoom: 18,
     });
-  
+
+    // Retrieve the userId from localStorage after login
+  const userId = localStorage.getItem('userId');
+  const userName = localStorage.getItem('name'); // Corrected to match the key in localStorage
+  const userRole = localStorage.getItem('role'); // Store role in localStorage when the user logs in
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const userId = localStorage.getItem('userId');
+    const userName = localStorage.getItem('name');
+    const userRole = localStorage.getItem('role');
+
+    if (userId && userRole) {
+        const socket = io({ query: { userId } });
+        console.log('Connected as:', userName, 'with role:', userRole);
+
+        if (userRole === 'police') {
+          navigator.geolocation.watchPosition(
+    function(position) {
+        console.log(`Emitting location for ${userName}:`, position.coords);
+        socket.emit('userLocation', {
+            coordinates: [position.coords.longitude, position.coords.latitude],
+            timestamp: new Date(),
+            userName: userName,
+            userId: userId // Include userId to ensure unique identification
+        });
+    },
+    function(error) {
+        console.error('Error getting location:', error);
+    },
+    { enableHighAccuracy: true }
+);
+
+        }
+    } else {
+        console.log('User not logged in. Redirecting to login.');
+        alert('Please log in to continue.');
+        window.location.href = 'login.html';
+    }
+});
+
+
+    // Establish connection to the server with userId as a query parameter
+    const socket = io({ query: { userId } });
+
+  const policeMarkers = {}; // Object to store markers by userId
+
+  function animateMarker(marker, newCoordinates) {
+    const startCoordinates = marker.getLngLat();
+    const animationDuration = 1000; // 1 second
+    const startTime = performance.now();
+
+    function step(currentTime) {
+        const progress = (currentTime - startTime) / animationDuration;
+
+        if (progress < 1) {
+            const lng = startCoordinates.lng + (newCoordinates[0] - startCoordinates.lng) * progress;
+            const lat = startCoordinates.lat + (newCoordinates[1] - startCoordinates.lat) * progress;
+            marker.setLngLat([lng, lat]);
+            requestAnimationFrame(step);
+        } else {
+            marker.setLngLat(newCoordinates); // Ensure it ends at the exact final coordinates
+        }
+    }
+
+    requestAnimationFrame(step);
+}
+
+// Function to update marker position
+function updateMarkerPosition(position) {
+    console.log('Updating marker position:', position);
+    if (userRole !== 'police') {
+        console.log('Not a police user. Skipping marker update.');
+        return; // Do not track or show the position for non-police users
+    }
+
+    const coordinates = [position.coords.longitude, position.coords.latitude];
+    const timestamp = new Date();
+
+    if (!policeMarkers[userId]) {
+        const popup = new mapboxgl.Popup().setText(`Officer: ${userName}`);
+        policeMarkers[userId] = new mapboxgl.Marker({ color: 'blue' })
+            .setLngLat(coordinates)
+            .setPopup(popup)
+            .addTo(map);
+        console.log('Created new marker for', userName);
+    } else {
+        animateMarker(policeMarkers[userId], coordinates);
+        console.log('Updated marker position for', userName);
+    }
+
+    socket.emit('userLocation', {
+        coordinates: coordinates,
+        timestamp: timestamp,
+        userName: userName
+    });
+
+    map.easeTo({ center: coordinates, duration: 1000 });
+}
+
+
+// Handle incoming location updates from other users
+socket.on('locationUpdate', (data) => {
+    console.log(`Received location update for: ${data.userName}`, data);
+
+    if (userRole !== 'police') {
+        return; // Only police should see location updates
+    }
+
+    if (data.role !== 'police') {
+        return; // Ignore updates from non-police users
+    }
+
+    // Check if a marker already exists for this user
+    if (!policeMarkers[data.userId]) {
+        const popup = new mapboxgl.Popup().setText(`Officer: ${data.userName || 'Unknown'}`);
+        policeMarkers[data.userId] = new mapboxgl.Marker({ color: 'red' })
+            .setLngLat(data.coordinates)
+            .setPopup(popup)
+            .addTo(map);
+    } else {
+        animateMarker(policeMarkers[data.userId], data.coordinates);
+    }
+});
+
+
+    let directions; // Declare directions variable outside the event listener
+    let isDirectionsVisible = false; // Track the visibility state of the Directions control
+
+
+   // Event listener for Directions toggle
+    document.getElementById('Directions').addEventListener('click', function (event) {
+    event.preventDefault(); // Prevent the default anchor behavior
+
+    if (!directions) {
+        // Initialize the directions control only if it hasn't been created yet
+        directions = new MapboxDirections({
+            accessToken: mapboxgl.accessToken
+        });
+        map.addControl(directions, 'top-left');
+        isDirectionsVisible = true;
+    } else {
+        // Toggle the directions control visibility
+        if (isDirectionsVisible) {
+            map.removeControl(directions);
+        } else {
+            map.addControl(directions, 'top-left');
+        }
+        isDirectionsVisible = !isDirectionsVisible; // Toggle the visibility state
+    }
+});
+
+
+ 
+     // Add event listeners to the Map Styles menu items
+     document.getElementById('satellite-map').addEventListener('click', () => {
+      map.setStyle('mapbox://styles/mapbox/standard-satellite');
+    });
+
+    document.getElementById('white-map').addEventListener('click', () => {
+      map.setStyle('mapbox://styles/mapbox/light-v11');
+    });
+
+    document.getElementById('dark-map').addEventListener('click', () => {
+      map.setStyle('mapbox://styles/mapbox/dark-v11');
+    });
+
+    document.getElementById('standard-map').addEventListener('click', () => {
+      map.setStyle('mapbox://styles/mapbox/standard');
+    });
+
+    document.getElementById('arabic-map').addEventListener('click', () => {
+      map.setStyle('mapbox://styles/mapbox/satellite-streets-v11');
+    });
+
+
+    
+
     let reportsCache = [];
     const markers = {}; // To keep track of markers by their ID
     let currentPin = null; // Variable to store the current pin
@@ -182,8 +413,141 @@
         }
     });
 
+    function getDubaiTimeOfDay() {
+  // Create a new Date object for the current time
+  const now = new Date();
+
+  // Use Intl.DateTimeFormat to format the date to the Dubai time zone
+  const options = { timeZone: 'Asia/Dubai', hour: '2-digit', hour12: false };
+  const formatter = new Intl.DateTimeFormat([], options);
+  const dubaiTime = formatter.formatToParts(now);
+  
+  // Extract the hours part from the formatted date
+  const hours = parseInt(dubaiTime.find(part => part.type === 'hour').value);
+  console.log(`Dubai Time: ${now.toLocaleString('en-US', { timeZone: 'Asia/Dubai' })}, Hours: ${hours}`); // Debugging log
+
+  if (hours >= 5 && hours < 8) {
+    return 'dawn';
+  } else if (hours >= 8 && hours < 15) {
+    return 'day';
+  } else if (hours >= 15 && hours < 20) {
+    return 'dusk';
+  } else {
+    return 'night';
+  }
+}
+
+function setMapLightBasedOnTime() {
+  const timeOfDay = getDubaiTimeOfDay();
+  let lightPreset = '';
+
+  switch (timeOfDay) {
+    case 'dawn':
+      lightPreset = 'dawn';
+      break;
+    case 'day':
+      lightPreset = 'day';
+      break;
+    case 'dusk':
+      lightPreset = 'dusk';
+      break;
+    case 'night':
+      lightPreset = 'night';
+      break;
+    default:
+      lightPreset = 'day'; // Default to 'day' if the timeOfDay is unrecognized
+  }
+
+  console.log(`Applying light preset for ${timeOfDay}: ${lightPreset}`); // Debugging log
+
+  if (map.isStyleLoaded()) {
+    map.setConfigProperty('basemap', 'lightPreset', lightPreset);
+  } else {
+    map.on('style.load', () => {
+      map.setConfigProperty('basemap', 'lightPreset', lightPreset);
+    });
+  }
+}
+
+
+// Add Mapbox Language plugin
+const language = new MapboxLanguage();
+map.addControl(language);
+
+function setMapLanguage(language) {
+    console.log(`Setting map language to: ${language}`);
+    map.getStyle().layers.forEach((layer) => {
+        if (layer.layout && layer.layout['text-field']) {
+            console.log(`Updating layer: ${layer.id}`);
+            map.setLayoutProperty(layer.id, 'text-field', [
+                'get',
+                `name_${language}`
+            ]);
+        }
+    });
+}
+// Language switching logic
+document.getElementById('EnglishLanguage').addEventListener('click', () => {
+    console.log('English selected');
+    setMapLanguage('en');
+});
+
+document.getElementById('ArabicLanguage').addEventListener('click', () => {
+    console.log('Arabic selected');
+    setMapLanguage('ar');
+});
+
+
+function promptLocationPermission() {
+    // Check if the browser supports geolocation
+    if (navigator.geolocation) {
+        // Check if the user has granted location permissions
+        navigator.permissions.query({ name: 'geolocation' }).then(function(permissionStatus) {
+            if (permissionStatus.state === 'granted') {
+                console.log('Location access granted.');
+                // Store the user's location to localStorage or handle it as needed
+                localStorage.setItem('locationShared', 'true');
+            } else if (permissionStatus.state === 'prompt') {
+                // Request location access
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        console.log('Location access granted.');
+                        // Store the user's location to localStorage or handle it as needed
+                        localStorage.setItem('locationShared', 'true');
+                    },
+                    function(error) {
+                        console.error('Error getting location:', error);
+                        // Handle errors (e.g., user denies permission)
+                        if (error.code === error.PERMISSION_DENIED) {
+                            alert("Location access denied. Some features may not work.");
+                            console.log('User denied location access.');
+                        }
+                    }
+                );
+            } else {
+                console.log('Location access denied.');
+                alert("Location access is denied. Some features may not work.");
+            }
+        }).catch(function(error) {
+            console.error('Error querying permissions:', error);
+        });
+    } else {
+        alert("Geolocation is not supported by this browser.");
+    }
+}
     // Load map.geojson as a source
     map.on('load', async function () {
+     map.setConfigProperty('basemap', 'showPointOfInterestLabels', true);
+     map.setConfigProperty('basemap', 'showRoadLabels	', true);
+     
+ 
+     setMapLightBasedOnTime();
+     setInterval(setMapLightBasedOnTime, 0.1 * 60 * 1000);
+
+     setMapLanguage('en');
+     
+
+
       map.addSource('boundary', {
         type: 'geojson',
         data: 'map.geojson'
@@ -200,6 +564,7 @@
         }
       });
   
+   
       // Fetch and display existing reports
       await fetchReports();
   
@@ -213,7 +578,13 @@
           marker.togglePopup();
         }
       }
+
+      if (!localStorage.getItem('locationShared')) {
+        promptLocationPermission();
+    }
+
     });
+
 
     // Function to fetch and display reports
     async function fetchReports() {
@@ -242,7 +613,9 @@
         console.error('Error fetching reports:', error);
       }
     }
-  
+
+   
+
     function addReportToMap(report) {
       if (!report.coordinates || !Array.isArray(report.coordinates) || report.coordinates.length !== 2) {
         console.error('Invalid coordinates:', report.coordinates);
@@ -515,6 +888,10 @@
         }
       });
     }
+
+
+    
+
   </script>
 </body>
 </html>

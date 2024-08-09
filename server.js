@@ -5,11 +5,23 @@ const { v4: uuidv4 } = require('uuid'); // For generating unique incident IDs
 const { spawn } = require('child_process');
 const path = require('path');
 
+
+// For real time data
+const http = require('http'); // Import http module
+const socketIo = require('socket.io'); // Import Socket.IO
+
+
 const app = express();
+
+// For server 
+const server = http.createServer(app); // Create a server with http
+const io = socketIo(server); // Initialize Socket.IO with the server
+
 const port = 3000;
 
-app.use(bodyParser.json({ limit: '50mb' })); // Increase payload size limit
+app.use(bodyParser.json({ limit: '100mb' })); // Increase payload size limit
 app.use(bodyParser.urlencoded({ extended: true }));
+
 
 // Connect to MongoDB
 mongoose.connect('mongodb://localhost:27017/falconwatch');
@@ -129,15 +141,19 @@ app.post('/login', async (req, res) => {
   try {
     const { identifier, password } = req.body;
     const user = await User.findOne({ $or: [{ email: identifier }, { badgeNumber: identifier }] });
+
     if (!user || user.password !== password) {
       return res.status(400).json({ message: 'Invalid email/badge number or password' });
     }
-    res.status(200).json({ message: 'Login successful', userId: user._id });
+
+    // Send the user details in the response
+    res.status(200).json({ userId: user._id, role: user.role, name: user.name });
   } catch (error) {
     console.error('Error logging in:', error);
     res.status(500).json({ message: 'Error logging in' });
   }
 });
+
 
 // Get user role
 app.get('/userRole', async (req, res) => {
@@ -380,15 +396,12 @@ app.get('/all-crime-summary', policeAuth, async (req, res) => {
   }
 });
 
-
-// Endpoint to fetch crime data by month and category
-// Endpoint to fetch crime data by month and category for civilians
-app.get('/crime-summary-category-civilian', async (req, res) => {
+// Endpoint to fetch crime data by month and severity for police
+app.get('/crime-summary-severity', policeAuth, async (req, res) => {
   try {
-    const userId = req.query.userId;
     const month = req.query.month || '';
     
-    let matchStage = { userId: new mongoose.Types.ObjectId(userId) };
+    let matchStage = {};
 
     if (month) {
       const [year, monthNumber] = month.split('-');
@@ -406,14 +419,14 @@ app.get('/crime-summary-category-civilian', async (req, res) => {
       { $match: matchStage },
       {
         $group: {
-          _id: "$category",
+          _id: "$severity",
           count: { $sum: 1 }
         }
       },
       {
         $project: {
           _id: 0,
-          category: "$_id",
+          severity: "$_id",
           count: 1
         }
       }
@@ -421,10 +434,57 @@ app.get('/crime-summary-category-civilian', async (req, res) => {
 
     res.status(200).json(data);
   } catch (error) {
-    console.error('Error fetching crime data:', error);
+    console.error('Error fetching crime data by severity:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+app.get('/crime-trends', policeAuth, async (req, res) => {
+  try {
+    const { year } = req.query;
+
+    const startDate = new Date(`${year}-01-01T00:00:00Z`);
+    const endDate = new Date(`${year}-12-31T23:59:59Z`);
+
+    const data = await Report.aggregate([
+      { 
+        $match: {
+          date: {
+            $gte: startDate,
+            $lt: endDate
+          }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            year: { $year: '$date' },
+            month: { $month: '$date' },
+            severity: '$severity'
+          },
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          year: '$_id.year',
+          month: '$_id.month',
+          severity: '$_id.severity',
+          count: 1
+        }
+      },
+      { $sort: { year: 1, month: 1, severity: 1 } }
+    ]);
+
+    res.status(200).json(data);
+  } catch (error) {
+    console.error('Error fetching crime trends:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
 
 // Endpoint to fetch crime data by month and category for police
 app.get('/crime-summary-category', policeAuth, async (req, res) => {
@@ -481,6 +541,37 @@ app.delete('/report/:id', async (req, res) => {
   }
 });
 
+
+// CONNECTION
+io.on('connection', async (socket) => {
+  const userId = socket.handshake.query.userId;
+  const user = await User.findById(userId);
+
+  if (user && user.role === 'police') {
+      socket.user = user;
+      console.log(`New police client connected: ${user.name}`);
+
+      socket.on('userLocation', (locationData) => {
+        console.log(`Received location update for: ${locationData.userName}`, locationData);
+        io.emit('locationUpdate', {
+            userId: user._id,
+            coordinates: locationData.coordinates,
+            timestamp: locationData.timestamp,
+            userName: user.name,
+            role: user.role // Include role
+        });
+      });
+  } else {
+      console.log('Access denied: non-police client attempted to connect');
+      socket.disconnect(true);
+  }
+
+  socket.on('disconnect', () => {
+      console.log(`Client disconnected: ${user ? user.name : 'unknown user'}`);
+  });
+});
+
+
 // Serve static files from the current directory
 app.use(express.static('.'));
 
@@ -517,7 +608,6 @@ app.get('/chart.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'chart.html'));
 });
 
-// Start the server
-app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+server.listen(3000, () => {
+  console.log('Server is running on http://localhost:3000');
 });

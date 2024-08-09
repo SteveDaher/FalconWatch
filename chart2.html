@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FalconWatch Crime Report</title>
   <link rel="stylesheet" href="./cstyle/chart2Style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
 </head>
 <body>
   <div id="header">
@@ -20,7 +22,7 @@
   </div>
 
   <div class="container">
-    <h1>Crimes by Category</h1>
+    <h1>Crimes Report</h1>
     <div class="chart-wrapper">
       <div class="chart-container">
         <canvas id="categoryChart"></canvas>
@@ -47,41 +49,57 @@
         <option value="2024-11">November 2024</option>
         <option value="2024-12">December 2024</option>
       </select>
+      <label for="typeFilter">Filter by Type:</label>
+      <select id="typeFilter">
+        <option value="category">Category</option>
+        <option value="severity">Severity</option>
+      </select>
     </div>
     <a href="services.html" class="back-btn">Back to Services</a>
   </div>
-  
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+
   <script>
     let categoryChart;
 
     const categoryColors = {
-      'Willful Murder': '#FF5733',
-      'Aggravated Assault': '#33FF57',
-      'Rape': '#3357FF',
-      'Robbery': '#F1C40F',
-      'Theft': '#FF6384',
-      'Abduction': '#8E44AD',
-      'Burglary': '#FFCE56',
-      'Drugs': '#2ECC71',
-      'Human Trafficking': '#E74C3C',
-      'Other': '#95A5A6'
-    };
+  'Willful Murder': '#FF5733',
+  'Aggravated Assault': '#33FF57',
+  'Rape': '#3357FF',
+  'Robbery': '#F1C40F',
+  'Theft': '#FF6384',
+  'Abduction': '#8E44AD',
+  'Burglary': '#FFCE56',
+  'Drugs': '#2ECC71',
+  'Human Trafficking': '#E74C3C',
+  'Other': '#95A5A6'
+};
 
-    async function fetchCategoryData(month = '') {
+const severityColors = {
+  'low': '#4CAF50',    // Green
+  'medium': '#FFEB3B', // Yellow
+  'high': '#F44336'    // Red
+};
+
+async function fetchData(type, month = '') {
   try {
     const userId = localStorage.getItem('userId');
     const roleResponse = await fetch(`/userRole?userId=${userId}`);
     const roleData = await roleResponse.json();
     const role = roleData.role;
 
-    const response = role === 'police'
-      ? await fetch(`/crime-summary-category?userId=${userId}&month=${month}`)
-      : await fetch(`/crime-summary-category-civilian?userId=${userId}&month=${month}`);
+    let response;
+    if (type === 'category') {
+      response = role === 'police'
+        ? await fetch(`/crime-summary-category?userId=${userId}&month=${month}`)
+        : await fetch(`/crime-summary-category-civilian?userId=${userId}&month=${month}`);
+    } else {
+      response = role === 'police'
+        ? await fetch(`/crime-summary-severity?userId=${userId}&month=${month}`)
+        : await fetch(`/crime-summary-severity-civilian?userId=${userId}&month=${month}`);
+    }
 
     const data = await response.json();
-    console.log('Fetched category data:', data);
+    console.log('Fetched data:', data);
 
     if (!data || data.length === 0) {
       if (categoryChart) {
@@ -91,19 +109,20 @@
       return;
     }
 
-    const categoryCounts = {};
+    const counts = {};
     data.forEach(item => {
-      if (!categoryCounts[item.category]) {
-        categoryCounts[item.category] = 0;
+      const key = type === 'category' ? item.category : item.severity;
+      if (!counts[key]) {
+        counts[key] = 0;
       }
-      categoryCounts[item.category] += item.count;
+      counts[key] += item.count;
     });
 
-    const labels = Object.keys(categoryCounts);
-    const values = Object.values(categoryCounts);
+    const labels = Object.keys(counts);
+    const values = Object.values(counts);
 
-    const backgroundColors = labels.map(label => categoryColors[label] || '#999999');
-    const borderColors = backgroundColors.map(color => color.replace('0.5', '1'));
+    const colors = labels.map(label => (type === 'category' ? categoryColors[label] : severityColors[label]) || '#999999');
+    const borderColors = colors.map(color => color.replace('0.5', '1'));
 
     if (categoryChart) {
       categoryChart.destroy();
@@ -115,9 +134,9 @@
       data: {
         labels: labels,
         datasets: [{
-          label: 'Crimes by Category',
+          label: `Crimes by ${type.charAt(0).toUpperCase() + type.slice(1)}`,
           data: values,
-          backgroundColor: backgroundColors,
+          backgroundColor: colors,
           borderColor: borderColors,
           borderWidth: 1
         }]
@@ -157,7 +176,7 @@
     updateTotalCrimes(totalCrimes);
 
   } catch (error) {
-    console.error('Error fetching category data:', error);
+    console.error(`Error fetching ${type} data:`, error);
     updateTotalCrimes(0);
   }
 }
@@ -175,12 +194,26 @@ document.addEventListener('DOMContentLoaded', () => {
   const currentDate = new Date();
   const currentMonth = String(currentDate.getFullYear()) + '-' + String(currentDate.getMonth() + 1).padStart(2, '0');
   document.getElementById('monthFilter').value = currentMonth;
-  fetchCategoryData(currentMonth);
+  fetchData('category', currentMonth);
 
   document.getElementById('monthFilter').addEventListener('change', (event) => {
     const month = event.target.value;
+    const type = document.getElementById('typeFilter').value;
     if (month) {
-      fetchCategoryData(month);
+      fetchData(type, month);
+    } else {
+      if (categoryChart) {
+        categoryChart.destroy();
+      }
+      updateTotalCrimes(0);
+    }
+  });
+
+  document.getElementById('typeFilter').addEventListener('change', (event) => {
+    const type = event.target.value;
+    const month = document.getElementById('monthFilter').value;
+    if (month) {
+      fetchData(type, month);
     } else {
       if (categoryChart) {
         categoryChart.destroy();
@@ -190,62 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-async function updateTotalCrimes(total) {
-  try {
-    document.getElementById('total-crimes').textContent = total;
-  } catch (error) {
-    console.error('Error updating total crimes:', error);
-    document.getElementById('total-crimes').textContent = '0';
-  }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  const currentDate = new Date();
-  const currentMonth = String(currentDate.getFullYear()) + '-' + String(currentDate.getMonth() + 1).padStart(2, '0');
-  document.getElementById('monthFilter').value = currentMonth;
-  fetchCategoryData(currentMonth);
-
-  document.getElementById('monthFilter').addEventListener('change', (event) => {
-    const month = event.target.value;
-    if (month) {
-      fetchCategoryData(month);
-    } else {
-      if (categoryChart) {
-        categoryChart.destroy();
-      }
-      updateTotalCrimes(0);
-    }
-  });
-});
-
-
-    async function updateTotalCrimes(total) {
-      try {
-        document.getElementById('total-crimes').textContent = total;
-      } catch (error) {
-        console.error('Error updating total crimes:', error);
-        document.getElementById('total-crimes').textContent = '0';
-      }
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-      const currentDate = new Date();
-      const currentMonth = String(currentDate.getFullYear()) + '-' + String(currentDate.getMonth() + 1).padStart(2, '0');
-      document.getElementById('monthFilter').value = currentMonth;
-      fetchCategoryData(currentMonth);
-
-      document.getElementById('monthFilter').addEventListener('change', (event) => {
-        const month = event.target.value;
-        if (month) {
-          fetchCategoryData(month);
-        } else {
-          if (categoryChart) {
-            categoryChart.destroy();
-          }
-          updateTotalCrimes(0);
-        }
-      });
-    });
+  
   </script>
 </body>
 </html>

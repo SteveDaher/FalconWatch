@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FalconWatch Crime Trends</title>
+  <link rel="stylesheet" href="./cstyle/chartstyle.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div id="header">
+    <div id="user-info">
+      <span id="user-name"></span>
+    </div>
+    <img src="./img/logoFW.png" alt="Logo" id="logo">
+    <div id="nav-buttons">
+      <a href="main.html" class="active-link">Home</a>
+      <a href="services.html" id="view-services">View Services</a>
+      <a href="login.html" id="sign-out" class="sign-out-btn">Sign Out</a>
+    </div>
+  </div>
+
+  <div class="container">
+    <h1>Crime Trends</h1>
+    <div class="filter-container">
+      <label for="yearFilter">Select Year:</label>
+      <select id="yearFilter" onchange="fetchCrimeData()">
+        <option value="2024">2024</option>
+        <option value="2023">2023</option>
+        <option value="2022">2022</option>
+        <!-- Add more years as needed -->
+      </select>
+    </div>
+    <div class="chart-container">
+      <canvas id="myChart" width="400" height="200"></canvas>
+    </div>
+    <a href="services.html" class="back-btn">Back to Services</a>
+  </div>
+
+  <script>
+    let myChart = null;
+
+    const severityColors = {
+      'low': '#4CAF50',    // Green
+      'medium': '#FFEB3B', // Yellow
+      'high': '#F44336'    // Red
+    };
+
+    async function fetchCrimeData() {
+      try {
+        const userId = localStorage.getItem('userId');
+        const year = document.getElementById('yearFilter').value;
+
+        const response = await fetch(`/crime-trends?userId=${userId}&year=${year}`);
+        const data = await response.json();
+        console.log('Fetched data:', data);
+
+        // Prepare data for the chart
+        const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        const labels = months.map((month, index) => `${year}-${String(index + 1).padStart(2, '0')}`);
+
+        const severities = ['low', 'medium', 'high'];
+        const datasets = severities.map(severity => {
+          return {
+            label: severity,
+            data: labels.map(label => {
+              const [y, m] = label.split('-');
+              const monthData = data.find(d => d.year === parseInt(y) && d.month === parseInt(m) && d.severity === severity);
+              return monthData ? monthData.count : 0;
+            }),
+            backgroundColor: severityColors[severity],
+            stack: 'severity',
+            barThickness: 10 // Adjusted bar thickness
+          };
+        });
+
+        const totalCrimesData = labels.map(label => {
+          const [y, m] = label.split('-');
+          return data.filter(d => d.year === parseInt(y) && d.month === parseInt(m))
+                     .reduce((sum, item) => sum + item.count, 0);
+        });
+
+        datasets.push({
+          label: 'Total Crimes',
+          data: totalCrimesData,
+          type: 'line',
+          fill: false,
+          borderColor: '#000',
+          backgroundColor: '#000',
+          tension: 0.4,
+          borderWidth: 1,
+          radius: 0
+        });
+
+        const ctx = document.getElementById('myChart').getContext('2d');
+
+        if (myChart) {
+          myChart.destroy();
+        }
+
+        const animation = {
+          duration: 2000,
+          easing: 'easeOutBounce',
+          onComplete: function () {
+            myChart.update({
+              duration: 2000,
+              easing: 'easeInOutElastic'
+            });
+          }
+        };
+
+        myChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: months,
+            datasets: datasets
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: {
+                stacked: true,
+                title: {
+                  display: true,
+                  text: 'Month'
+                },
+                grid: {
+                  display: false
+                },
+                barPercentage: 0.6 // Adjust the thickness of the bars
+              },
+              y: {
+                stacked: true,
+                beginAtZero: true,
+                title: {
+                  display: true,
+                  text: 'Number of Crimes'
+                },
+                grid: {
+                  borderDash: [5, 5] // Dashed grid lines for better readability
+                }
+              }
+            },
+            plugins: {
+              legend: {
+                position: 'top',
+                labels: {
+                  boxWidth: 20,
+                  boxHeight: 2
+                }
+              },
+              tooltip: {
+                callbacks: {
+                  label: function(tooltipItem) {
+                    return `${tooltipItem.dataset.label}: ${tooltipItem.raw}`;
+                  }
+                }
+              }
+            },
+            animation: animation,
+            interaction: {
+              intersect: false
+            }
+          }
+        });
+
+      } catch (error) {
+        console.error('Error fetching crime data:', error);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      fetchCrimeData();
+    });
+  </script>
+</body>
+</html>
