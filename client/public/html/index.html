@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Falcon Watch</title>
+    <link rel="stylesheet" href="/css/indexStyle.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet"> 
+</head>
+<body>
+    <header id="header">
+        <div class="logo">
+            <a href="index.html">
+                <img src="/img/logoFW.png" alt="Falcon Watch Logo" class="footer-logo">
+            </a>
+        </div>
+
+        <nav>
+            <ul class="nav-list">
+                <li id="welcome-message">Welcome, Guest</li>
+                <li><a href="/html/account.html" id="login-link">Login / Signup</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="video-container">
+        <video id="background-video" autoplay loop muted>
+            <source src="/img/dubaivideo.mp4" type="video/mp4">
+            <source src="/img/dubaivideo.mp4" type="video/webm">
+            <source src="/img/dubaivideo.mp4" type="video/ogg">
+            Your browser does not support the video tag.
+        </video>
+        <div class="overlay"></div>
+        <div class="content">
+            <h1>Welcome To <br>FalconWatch</h1>
+            <p>Falcon Watch enables users to report crimes with evidence, <br> seamlessly connecting them with the police for swift action.</p>
+            <div class="button-box">
+                <a href="/html/report.html" class="btn">Report a Crime</a>
+            </div>
+        </div>
+    </div>
+
+    <section class="new-section">
+        <div class="tab"></div> <!-- Tab on top -->
+        <div class="container">
+            <div class="left-side">
+                <img src="/img/logoSmall.png" alt="falcon photo">
+            </div>
+            <div class="right-side">
+                <h2>Empowering Communities with Safety and Security.</h2>
+                <hr class="line-below-home"> <!-- Line below the heading -->
+                <p class="narrow-paragraph">FalconWatch is dedicated to improving community safety by offering a seamless way to report and manage incidents. You can swiftly report suspicious activities or crimes using an intuitive interface. These reports are then efficiently handled by law enforcement agencies, allowing for quick and effective responses. Our platform empowers citizens to actively contribute to the safety of their communities while enabling law enforcement to address issues more effectively, making neighborhoods safer for all.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <script src="/js/userInfo.js" defer></script>
+    <script>
+        window.addEventListener('scroll', function() {
+            const header = document.getElementById('header');
+            const scrollPosition = window.scrollY + window.innerHeight;
+            const documentHeight = document.documentElement.scrollHeight;
+
+            if (scrollPosition >= documentHeight) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
+    </script>
+</body>
+</html>

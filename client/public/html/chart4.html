@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FalconWatch Crime Trends</title>
+  <link rel="stylesheet" href="/css/chartStyle.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div id="header">
+    <div id="user-info">
+      <span id="user-name"></span>
+    </div>
+    <img src="/img/logoFW.png" alt="Logo" id="logo">
+    <div id="nav-buttons">
+      <a href="/html/main.html" class="active-link">Home</a>
+      <a href="/html/services.html" id="view-services">View Services</a>
+      <a href="/html/login.html" id="sign-out" class="sign-out-btn">Sign Out</a>
+    </div>
+  </div>
+
+  <div class="container">
+    <h1>Crime Trends</h1>
+    <div class="filter-container">
+      <label for="yearFilter">Select Year:</label>
+      <select id="yearFilter" onchange="fetchCrimeData()">
+        <option value="2024">2024</option>
+        <option value="2023">2023</option>
+        <option value="2022">2022</option>
+        <!-- Add more years as needed -->
+      </select>
+    </div>
+    <div class="chart-container">
+      <canvas id="myChart" width="800" height="600"></canvas> <!-- Adjusted width and height -->
+    </div>
+    <a href="/html/services.html" class="back-btn">Back to Services</a>
+  </div>
+
+  <script src="/js/chart4.js" defer></script>
+</body>
+</html>
