@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="/css/adminStyle.css"> <!-- Link to the updated CSS file -->
+</head>
+<body>
+    <div id="header">
+        <div id="user-info">
+            <span id="user-name"></span>
+        </div>
+        <img src="/img/logoFW.png" alt="Logo" id="logo">
+        <div id="nav-buttons">
+            <a href="/html/main.html" class="active-link">Home</a>
+            <a href="/html/services.html" id="view-services">View Services</a>
+            <a href="/html/login.html" id="sign-out" class="sign-out-btn">Sign Out</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1>Assign Badge Number</h1>
+        <form id="assign-badge-form">
+            <label for="email">User Email:</label>
+            <input type="email" id="email" name="email" required>
+
+            <label for="badgenumber">Badge Number:</label>
+            <input type="text" id="badgenumber" name="badgenumber" required>
+
+            <button type="submit">Assign Badge</button>
+        </form>
+
+        <p id="status"></p>
+        <a href="/html/services.html" class="back-btn">Back to Services</a>
+
+        <hr>
+
+        <!-- New section for wiping all reports -->
+        <h1>Wipe All Reports</h1>
+        <button id="wipe-reports-btn">Wipe All Reports</button>
+        <p id="wipe-status"></p>
+    </div>
+
+    <script src="/js/admin.js"></script> <!-- Link to the JavaScript file -->
+</body>
+</html>

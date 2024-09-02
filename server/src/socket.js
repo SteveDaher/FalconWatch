@@ -78,49 +78,48 @@
              */
             socket.on('reportCrime', async (data) => {
                 console.log('Received report data:', data);
-    
-                const user = users[socket.id]; // Retrieve user from the users object
+                const user = users[socket.id];
+            
                 if (!user) {
                     socket.emit('reportError', { message: 'User not authenticated.' });
                     return;
                 }
-    
-                // Ensure all required fields are present
-                if (!data.coordinates || !data.description || !user.id) {
-                    socket.emit('reportError', { message: 'Coordinates, description, and user ID are required.' });
+            
+                if (!data.coordinates || !data.description) {
+                    socket.emit('reportError', { message: 'Coordinates and description are required.' });
                     return;
                 }
-    
+            
                 try {
-                    // Parse coordinates
+                    // Parse the coordinates and validate them
                     const coordinates = data.coordinates.split(',').map(coord => parseFloat(coord.trim()));
-                    const lng = coordinates[0];
-                    const lat = coordinates[1];
-    
+                    const [lng, lat] = coordinates;
+            
+                    if (isNaN(lng) || isNaN(lat)) {
+                        socket.emit('reportError', { message: 'Invalid coordinates.' });
+                        return;
+                    }
+            
                     // Insert the report into the database
                     const result = await query(
-                        `INSERT INTO reports (category, description, severity, coordinates, userId) VALUES (?, ?, ?, POINT(?, ?), ?)`,
+                        `INSERT INTO reports (category, description, severity, coordinates, userId) 
+                         VALUES (?, ?, ?, POINT(?, ?), ?)`,
                         [data.category, data.description, data.severity || 'medium', lng, lat, user.id]
                     );
-    
+            
                     if (result.affectedRows > 0) {
-                        // Fetch the complete report from the database after insertion
-                        const [newReport] = await query('SELECT * FROM reports WHERE id = ?', [result.insertId]);
-    
+                        // Fetch the newly inserted report from the database
+                        const [newReport] = await query(
+                            `SELECT id, category, description, severity, ST_X(coordinates) AS lng, ST_Y(coordinates) AS lat, created_at 
+                             FROM reports WHERE id = ?`,
+                            [result.insertId]
+                        );
+            
                         if (newReport) {
                             // Emit the new report to all connected clients
-                            io.emit('newReport', {
-                                id: newReport.id,
-                                category: newReport.category,
-                                description: newReport.description,
-                                severity: newReport.severity,
-                                coordinates: {
-                                    lng: newReport.coordinates.x,
-                                    lat: newReport.coordinates.y,
-                                },
-                                userId: newReport.userId,
-                                created_at: newReport.created_at
-                            });
+                            io.emit('newReport', newReport);
+            
+                            // Acknowledge successful report submission to the client
                             socket.emit('reportSuccess', { message: 'Report submitted successfully.' });
                         } else {
                             socket.emit('reportError', { message: 'Failed to retrieve the new report from the database.' });
@@ -133,6 +132,7 @@
                     socket.emit('reportError', { message: 'Internal server error.' });
                 }
             });
+            
     
             /**
              * Event: 'disconnect'

@@ -1,0 +1,23 @@
+/* Specific adjustments for chart3 */
+.chart-container {
+    width: 90%; /* Make this chart wider */
+    margin: 0 auto; /* Center the chart */
+    padding: 20px;
+}
+
+canvas {
+    width: 100% !important;
+    height: auto !important; /* Make the chart adapt to its container */
+}
+
+/* Make sure the select element is styled properly */
+select {
+    font-size: 16px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 100%; /* Ensure it takes the full width of its container */
+    max-width: 400px; /* Adjust max-width as needed */
+    margin: 0 auto; /* Center it if needed */
+    display: block; /* Ensure it behaves as a block element */
+}

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="/css/loginStyle.css"> <!-- Adjusted path -->
+</head>
+<body>
+    <div class="grid align__item">
+        <div class="register">
+            <img src="/img/logoFW.png" class="site__logo" alt="Logo"> <!-- Adjusted path -->
+            <h2>Login</h2>
+            <form id="login-form" class="form">
+                <div class="form__field">
+                    <label for="identifier">Email or Badge Number</label>
+                    <input type="text" id="identifier" name="identifier" placeholder="Email or Badge Number" required>
+                </div>
+                <div class="form__field">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="••••••••••••" required>
+                </div>
+                <div class="form__field">
+                    <input type="submit" value="Login">
+                </div>
+            </form>
+            <p>Don't have an account? <a href="/html/register.html">Sign up</a></p> <!-- Adjusted path -->
+        </div>
+    </div>
+    <script src="/js/login.js"></script> <!-- Adjusted path -->
+</body>
+</html>

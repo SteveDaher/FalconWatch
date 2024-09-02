@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/css/reportHistoryStyle.css">
+  <title>FalconWatch Report History</title>
+</head>
+<body>
+
+  <div id="header">
+    <img src="/img/logoFW.png" alt="Logo" id="logo">
+    <div id="nav-buttons">
+      <a href="/html/main.html" class="active-link">Home</a>
+      <a href="/html/services.html" id="view-services">View Services</a>
+    </div>
+  </div>
+  
+  <div class="container">
+    <h1>Report History</h1>
+    <div class="table-container">
+      <table id="report-table">
+        <thead>
+          <tr>
+            <th>Incident Number</th>
+            <th>Name</th>
+            <th>Severity</th>
+            <th>Description</th>
+            <th>Date</th>
+            <th>Location</th>
+            <th>Pin</th>
+          </tr>
+        </thead>
+        <tbody id="report-body">
+          <!-- Report rows will be dynamically generated here -->
+        </tbody>
+      </table>
+    </div>
+    <div class="pagination" id="pagination-controls">
+      <!-- Pagination controls will be dynamically generated here -->
+    </div>
+    <a href="/html/main.html" class="back-btn">Back to Map</a>
+  </div>
+  <script src="/js/reportHistory.js"></script>
+
+  

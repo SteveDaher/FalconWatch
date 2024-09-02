@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FalconWatch</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+    
+    <!-- Mapbox GL JS and Directions CSS -->
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.css" rel="stylesheet">
+    <link href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.0.0/mapbox-gl-directions.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="/css/mainStyle.css"> <!-- Updated path to match the directory structure -->
+
+    <!-- Load other libraries and scripts -->
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.js"></script>
+    <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-language/v1.0.0/mapbox-gl-language.js"></script>
+    <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.0.0/mapbox-gl-directions.js"></script> <!-- Directions Plugin -->
+    
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/map.js"></script>
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Prevent scrolling */
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #header {
+            height: 60px; /* Adjust based on your header height */
+            width: 100%;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #fff; /* Optional: Add a background color */
+            padding: 0 20px; /* Optional: Add padding */
+        }
+
+        #nav-buttons {
+            display: flex;
+            align-items: center;
+        }
+
+        /* Style for the Auto-Direct button */
+        #auto-direct-button {
+            margin-left: 15px;
+            padding: 8px 16px;
+            background-color: #007bff; /* Bootstrap primary color */
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        #auto-direct-button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Existing styles... */
+        #loading-screen {
+            width: 100%;
+            height: calc(100vh - 60px); /* Full screen minus header height */
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 99;
+        }
+
+        #loading-video {
+            width: 90%;
+            height: 90%;
+            object-fit: contain;
+        }
+
+        #content {
+            flex: 1;
+            width: 100%;
+            height: calc(100vh - 60px); /* Full screen minus header height */
+            display: none; /* Initially hidden */
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Ensure no scrollbars appear */
+        html, body {
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div id="header">
+        <div id="nav-buttons">
+            <div id="user-info" class="user-dropdown">
+                <img src="/img/free-user-icon-3296-thumb.png" alt="User Icon" id="user-icon"> <!-- Updated path -->
+                <span id="user-name"></span>
+                <div id="user-menu" class="user-menu-dropdown">
+                    <a href="#" id="signout-link">Sign Out</a>
+                </div>
+            </div>
+            <a href="/html/main.html" class="active-link">Home</a> <!-- Updated path -->
+            <a href="#">Simulations</a>
+            <a href="/html/services.html" id="view-services">View Services</a> <!-- Updated path -->
+
+            <div class="dropdown">
+                <a href="#" id="view-reports" class="dropbtn">View Reports</a>
+                <ul class="dropdown-content">
+                    <li><a href="/html/chart.html">Crime Severity Statistics</a></li> <!-- Updated paths -->
+                    <li><a href="/html/chart2.html">Crime Category Statistics</a></li>
+                    <li><a href="/html/chart3.html">Crime Type vs Time of day</a></li>
+                    <li><a href="/html/chart4.html">Crime Trends</a></li>
+                </ul>
+            </div>
+
+            <div class="dropdown">
+                <a href="#" id="map-styles" class="dropbtn">Map Styles</a>
+                <ul class="dropdown-content">
+                    <li><a href="#" id="satellite-map">Satellite Map</a></li>
+                    <li><a href="#" id="white-map">White Map[EN/AE]</a></li>
+                    <li><a href="#" id="dark-map">Dark Map [EN/AE]</a></li>
+                    <li><a href="#" id="standard-map">Standard Map</a></li>
+                    <li><a href="#" id="arabic-map">Street Map[EN/AE]</a></li>
+                </ul>
+            </div>
+
+            <div class="dropdown">
+                <a href="#" id="Language" class="dropbtn">Language/لغة</a>
+                <ul class="dropdown-content">
+                    <li><a href="#" id="EnglishLanguage">English</a></li>
+                    <li><a href="#" id="ArabicLanguage">عربي</a></li>
+                </ul>
+            </div>
+        </div>
+        <img src="/img/logoFW.png" alt="Logo" id="logo"> <!-- Updated path -->
+    </div>
+
+    <!-- Loading Screen (Under Header) -->
+    <div id="loading-screen">
+        <video id="loading-video" autoplay muted playsinline>
+            <source src="/img/falconWatch2.mp4" type="video/mp4">
+            <source src="/img/falconWatch2.mp4" type="video/webm">
+            <source src="/img/falconWatch2.mp4" type="video/ogg">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+
+    <!-- Map and other content -->
+    <div id="content">
+        <div id="map"></div>
+
+        <div id="timeline-container">
+            <div id="timeline-header">
+                <h2>Timeline</h2>
+                <div id="filter-container">
+                    <label for="severity-filter">Filter by Severity:</label>
+                    <select id="severity-filter">
+                        <option value="all">All</option>
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+            </div>
+            <div id="timeline">
+                <div id="timeline-line"></div>
+            </div>
+        </div>
+
+        <div id="toggle-timeline-tab">
+            <span id="toggle-arrow">&#9650;</span>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const loadingScreen = document.getElementById('loading-screen');
+            const content = document.getElementById('content');
+
+            // Hide the loading screen and show the content after 4 seconds
+            setTimeout(function () {
+                loadingScreen.style.display = 'none';
+                content.style.display = 'block';
+                
+                // Trigger map resize
+                if (typeof map !== 'undefined') {
+                    map.resize();
+                }
+            }, 4000); // 4 seconds
+
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                window.location.href = '/html/login.html';
+                return;
+            }
+
+            console.log('Auth Token:', token);
+        });
+    </script>
+</body>
+</html>

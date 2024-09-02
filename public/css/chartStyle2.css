@@ -1,0 +1,56 @@
+.chart-container {
+    width: 40%;
+    max-width: 600px;
+    margin: 20px auto;
+  }
+  
+  canvas {
+    width: 100% !important;
+    height: auto !important;
+  }
+  
+  .filter-container {
+    text-align: center;
+    margin-top: 20px;
+  }
+  
+  .filter-container select {
+    font-size: 16px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+  .filter-container label {
+    font-size: 16px;
+    font-weight: bold;
+    color: #000000;
+  }
+  
+  .chart-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+  }
+  
+  #total-crimes-container {
+    width: 30%;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  #total-crimes-container h2 {
+    font-size: 18px;
+    margin-bottom: 10px;
+    color: #333;
+  }
+  
+  #total-crimes-container p {
+    font-size: 24px;
+    font-weight: bold;
+    color: #d9534f;
+  }
+  
