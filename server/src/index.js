@@ -355,6 +355,82 @@ app.get('/api/chartData', authenticateToken, async (req, res) => {
     }
 });
 
+// Route to handle police account operations: fetch, update, delete
+app.route('/api/police-accounts')
+    .get(authenticateToken, async (req, res) => {
+        // Fetch police accounts with search functionality
+        const searchQuery = req.query.search || '';
+
+        try {
+            const queryText = `
+                SELECT badgeNumber, name, email, role, created_at, phone
+                FROM users
+                WHERE (role = 'police' OR badgeNumber IS NOT NULL)
+                AND (name LIKE ? OR badgeNumber LIKE ?)
+            `;
+            const searchTerm = `%${searchQuery}%`;
+
+            console.log('Executing query:', queryText, 'with search term:', searchTerm);
+
+            const results = await query(queryText, [searchTerm, searchTerm]);
+
+            if (results.length > 0) {
+                console.log('Police accounts fetched successfully:', results);
+                res.json(results);
+            } else {
+                console.log('No police accounts found for the search query:', searchQuery);
+                res.status(404).json({ message: 'No police accounts found.' });
+            }
+        } catch (error) {
+            console.error('Error fetching police accounts:', error);
+            res.status(500).json({ message: 'Internal server error.' });
+        }
+    })
+    .post(authenticateToken, async (req, res) => {
+        // Update user role
+        const { email, role } = req.body;
+
+        if (!email || !role) {
+            return res.status(400).json({ message: 'Email and role are required.' });
+        }
+
+        try {
+            const queryText = `UPDATE users SET role = ? WHERE email = ?`;
+            const result = await query(queryText, [role, email]);
+
+            if (result.affectedRows > 0) {
+                res.json({ success: true, message: 'Role updated successfully.' });
+            } else {
+                res.status(404).json({ success: false, message: 'User not found.' });
+            }
+        } catch (error) {
+            console.error('Error updating role:', error);
+            res.status(500).json({ success: false, message: 'Internal server error.' });
+        }
+    })
+    .delete(authenticateToken, async (req, res) => {
+        // Delete user account
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ message: 'Email is required.' });
+        }
+
+        try {
+            const queryText = `DELETE FROM users WHERE email = ?`;
+            const result = await query(queryText, [email]);
+
+            if (result.affectedRows > 0) {
+                res.json({ success: true, message: 'Account deleted successfully.' });
+            } else {
+                res.status(404).json({ success: false, message: 'User not found.' });
+            }
+        } catch (error) {
+            console.error('Error deleting account:', error);
+            res.status(500).json({ success: false, message: 'Internal server error.' });
+        }
+    });
+
 
 // Route to wipe all reports
 app.post('/wipe-reports', authenticateToken, async (req, res) => {

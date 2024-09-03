@@ -1,8 +1,31 @@
-document.getElementById('assign-badge-form').addEventListener('submit', async function(event) {
-    event.preventDefault(); // Prevent the default form submission
+document.addEventListener('DOMContentLoaded', function () {
+    const assignBadgeForm = document.getElementById('assign-badge-form');
+    const wipeReportsBtn = document.getElementById('wipe-reports-btn');
 
+    if (assignBadgeForm) {
+        // Event listener for assigning a badge
+        assignBadgeForm.addEventListener('submit', async function (event) {
+            event.preventDefault(); // Prevent default form submission
+            await assignBadge(); // Call the function to assign a badge
+        });
+    } else {
+        console.error("Element with ID 'assign-badge-form' not found.");
+    }
+
+    if (wipeReportsBtn) {
+        // Event listener for wiping all reports
+        wipeReportsBtn.addEventListener('click', async function () {
+            await wipeReports(); // Call the function to wipe reports
+        });
+    } else {
+        console.error("Element with ID 'wipe-reports-btn' not found.");
+    }
+});
+
+// Function to assign a badge
+async function assignBadge() {
     const email = document.getElementById('email').value;
-    const badgenumber = document.getElementById('badgenumber').value;
+    const badgeNumber = document.getElementById('badgenumber').value;
     const token = localStorage.getItem('authToken'); // Retrieve the token from localStorage
 
     try {
@@ -13,7 +36,7 @@ document.getElementById('assign-badge-form').addEventListener('submit', async fu
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`, // Add the token to the Authorization header
             },
-            body: JSON.stringify({ email, badgenumber }),
+            body: JSON.stringify({ email, badgenumber: badgeNumber }),
         });
 
         if (!response.ok) {
@@ -30,10 +53,10 @@ document.getElementById('assign-badge-form').addEventListener('submit', async fu
         console.error('Error assigning badge number:', error);
         document.getElementById('status').textContent = 'An error occurred. Please try again later.';
     }
-});
+}
 
-// Add event listener for the wipe all reports button
-document.getElementById('wipe-reports-btn').addEventListener('click', async function() {
+// Function to wipe all reports
+async function wipeReports() {
     const token = localStorage.getItem('authToken'); // Retrieve the token from localStorage
 
     if (!confirm('Are you sure you want to wipe all reports? This action cannot be undone.')) {
@@ -46,7 +69,7 @@ document.getElementById('wipe-reports-btn').addEventListener('click', async func
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${token}`, // Add the token to the Authorization header
-            }
+            },
         });
 
         if (!response.ok) {
@@ -63,4 +86,4 @@ document.getElementById('wipe-reports-btn').addEventListener('click', async func
         console.error('Error wiping reports:', error);
         document.getElementById('wipe-status').textContent = 'An error occurred. Please try again later.';
     }
-});
+}

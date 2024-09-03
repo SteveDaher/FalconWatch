@@ -140,120 +140,108 @@ html, body {
   display: none; 
 }
 
+
+/* Container for the filter section */
 #filter-container {
-  display: flex;
-  align-items: center;
-}
-
-#filter-container label {
-  margin-right: 10px;
-}
-
-#timeline-container {
-  display: none;
+  display: block; /* Ensure the container is part of the layout */
   position: fixed;
   bottom: 0;
   width: 100%;
-  background-color: #ffffffd9;
+  background-color: rgba(255, 255, 255, 0.85); /* Slightly transparent background */
   color: #000;
-  padding: 10px 10px;
+  padding: 15px 20px;
   box-sizing: border-box;
-  box-shadow: 0 -2px 3px #00000049;
+  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.2); /* Soft shadow for better depth */
   font-size: 16px;
   z-index: 1000;
-  transform: translateY(100%);
-  transition: transform 0.5s ease-in-out;
+  transform: translateY(100%); /* Start hidden by translating it off-screen */
+  transition: transform 0.5s ease-in-out; /* Smooth transition for slide effect */
 }
 
-#timeline-container.show {
-  display: block;
-  transform: translateY(0);
+/* Toggle the filter container visibility */
+#filter-container.filter-shown {
+  transform: translateY(0); /* Bring the container into view */
 }
 
-#timeline-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-bottom: 5px;
-  border-bottom: 1px solid #2b966f;
+/* Ensure transition consistency */
+#filter-container.filter-hidden {
+  transform: translateY(100%); /* Keep it hidden */
 }
 
-#timeline {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  padding: 20px 0;
-  overflow-x: auto;
-  padding-left: 30px;
-}
-
-#timeline-line {
-  position: absolute;
-  top: 40px;
-  left: 0;
-  width: 100%;
-  height: 1px;
-  background-color: #000;
-  z-index: 0;
-}
-
-.timeline-dot {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  margin: 0 10px;
-  cursor: pointer;
-  position: relative;
-  top: 12px;
-}
-
-.timeline-date {
-  position: absolute;
-  top: -30px;
-  text-align: center;
-  width: 50px;
-  transform: translateX(-50%);
-  font-weight: bold;
-}
-
-.timeline-date-marker {
-  position: relative;
-  display: inline-block;
-  margin-right: 10px;
-}
-
-.timeline-date-marker::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: 0;
-  height: 25px;
-  width: 2px;
-  background-color: transparent;
-  border-left: 3px dotted #2b966f;
-  z-index: -1;
-}
-
-#toggle-timeline-tab {
+/* Toggle button at the bottom */
+#toggle-filter-tab {
   position: fixed;
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  background-color: #ffffffd9;
+  background-color: rgba(255, 255, 255, 0.85);
   padding: 10px 20px;
   border-radius: 20px 20px 0 0;
-  box-shadow: 0 -2px 3px #00000049;
+  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.2);
   cursor: pointer;
   text-align: center;
   z-index: 1001;
 }
 
+/* Arrow icon in the toggle button */
 #toggle-arrow {
-  display: block;
   font-size: 20px;
   transition: transform 0.3s ease;
 }
+
+/* Rotate arrow when filter is shown */
+#filter-container.filter-shown ~ #toggle-filter-tab #toggle-arrow {
+  transform: rotate(180deg);
+}
+
+/* Header for the filter section */
+#filter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #2b966f;
+  margin-bottom: 10px;
+}
+
+/* Container for category filters */
+#category-filters {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap; /* Allow wrapping if the screen is too narrow */
+  gap: 10px; /* Space between the filters */
+}
+
+/* Styling for each filter label */
+#category-filters label {
+  display: flex;
+  align-items: center;
+  padding: 5px 10px;
+  background-color: #f5f5f5; /* Light background for better contrast */
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  flex: 1 1 20%; /* Flex grow and basis */
+}
+
+/* Change background color on hover for labels */
+#category-filters label:hover {
+  background-color: #e0e0e0;
+}
+
+/* Number of crimes indicator */
+.filter-count {
+  margin-left: auto;
+  padding-left: 10px;
+  font-weight: bold;
+  color: #333;
+}
+
+/* Checkbox styling */
+#category-filters input[type="checkbox"] {
+  margin-right: 10px;
+}
+
 
 #severity-line {
   height: 5px;

@@ -8,16 +8,14 @@
     <!-- Mapbox GL JS and Directions CSS -->
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.css" rel="stylesheet">
     <link href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.0.0/mapbox-gl-directions.css" rel="stylesheet">
-
     <link rel="stylesheet" href="/css/mainStyle.css"> <!-- Updated path to match the directory structure -->
 
     <!-- Load other libraries and scripts -->
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.js"></script>
     <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-language/v1.0.0/mapbox-gl-language.js"></script>
     <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.0.0/mapbox-gl-directions.js"></script> <!-- Directions Plugin -->
-    
     <script src="/socket.io/socket.io.js"></script>
-    <script src="/js/map.js"></script>
+    <script src="/js/map.js"></script> <!-- This imports your external JS -->
     
     <style>
         body {
@@ -58,7 +56,7 @@
         }
 
         #auto-direct-button:hover {
-            background-color: #0056b3;
+            background-color: #0056b3;  
         }
 
         /* Existing styles... */
@@ -154,56 +152,25 @@
     </div>
 
     <!-- Map and other content -->
-    <div id="content">
-        <div id="map"></div>
+<div id="content">
+    <div id="map"></div>
 
-        <div id="timeline-container">
-            <div id="timeline-header">
-                <h2>Timeline</h2>
-                <div id="filter-container">
-                    <label for="severity-filter">Filter by Severity:</label>
-                    <select id="severity-filter">
-                        <option value="all">All</option>
-                        <option value="low">Low</option>
-                        <option value="medium">Medium</option>
-                        <option value="high">High</option>
-                    </select>
-                </div>
-            </div>
-            <div id="timeline">
-                <div id="timeline-line"></div>
+    <div id="filter-container" class="filter-hidden"> <!-- Initially hidden with class -->
+        <div id="filter-header">
+            <h2>Filter List</h2>
+            <div id="category-filters">
+                <!-- Filters will be dynamically generated here by JavaScript -->
             </div>
         </div>
-
-        <div id="toggle-timeline-tab">
-            <span id="toggle-arrow">&#9650;</span>
+        <div id="filter-list">
+            <div id="filter-line"></div>
         </div>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const loadingScreen = document.getElementById('loading-screen');
-            const content = document.getElementById('content');
-
-            // Hide the loading screen and show the content after 4 seconds
-            setTimeout(function () {
-                loadingScreen.style.display = 'none';
-                content.style.display = 'block';
-                
-                // Trigger map resize
-                if (typeof map !== 'undefined') {
-                    map.resize();
-                }
-            }, 4000); // 4 seconds
-
-            const token = localStorage.getItem('authToken');
-            if (!token) {
-                window.location.href = '/html/login.html';
-                return;
-            }
-
-            console.log('Auth Token:', token);
-        });
-    </script>
+    <!-- Toggle Arrow for Filter List -->
+    <div id="toggle-filter-tab">
+        <span id="toggle-arrow">&#9650;</span>
+    </div>
+</div>
 </body>
 </html>

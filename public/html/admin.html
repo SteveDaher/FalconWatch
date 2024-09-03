@@ -1,47 +1,54 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
-    <link rel="stylesheet" href="/css/adminStyle.css"> <!-- Link to the updated CSS file -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/css/reportHistoryStyle.css">
+  <title>FalconWatch Police Accounts</title>
 </head>
 <body>
-    <div id="header">
-        <div id="user-info">
-            <span id="user-name"></span>
-        </div>
-        <img src="/img/logoFW.png" alt="Logo" id="logo">
-        <div id="nav-buttons">
-            <a href="/html/main.html" class="active-link">Home</a>
-            <a href="/html/services.html" id="view-services">View Services</a>
-            <a href="/html/login.html" id="sign-out" class="sign-out-btn">Sign Out</a>
-        </div>
+
+  <div id="header">
+    <img src="/img/logoFW.png" alt="Logo" id="logo">
+    <div id="nav-buttons">
+      <a href="/html/main.html" class="active-link">Home</a>
+      <a href="/html/services.html" id="view-services">View Services</a>
     </div>
-
-    <div class="container">
-        <h1>Assign Badge Number</h1>
-        <form id="assign-badge-form">
-            <label for="email">User Email:</label>
-            <input type="email" id="email" name="email" required>
-
-            <label for="badgenumber">Badge Number:</label>
-            <input type="text" id="badgenumber" name="badgenumber" required>
-
-            <button type="submit">Assign Badge</button>
-        </form>
-
-        <p id="status"></p>
-        <a href="/html/services.html" class="back-btn">Back to Services</a>
-
-        <hr>
-
-        <!-- New section for wiping all reports -->
-        <h1>Wipe All Reports</h1>
-        <button id="wipe-reports-btn">Wipe All Reports</button>
-        <p id="wipe-status"></p>
+  </div>
+  
+  <div class="container">
+    <h1>Police Officer Accounts</h1>
+    
+    <!-- Search Bar -->
+    <div class="search-bar">
+      <input type="text" id="search-input" placeholder="Search by name or badge number...">
+      <button id="search-button">Search</button>
     </div>
-
-    <script src="/js/admin.js"></script> <!-- Link to the JavaScript file -->
+    
+    <!-- Police Accounts Table -->
+    <div class="table-container">
+      <table id="police-accounts-table">
+        <thead>
+          <tr>
+            <th>Badge Number</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Date Created</th>
+            <th>Phone</th>
+            <th>Actions</th> <!-- New column for actions -->
+          </tr>
+        </thead>
+        <tbody id="police-accounts-body">
+          <!-- Police accounts will be dynamically generated here -->
+        </tbody>
+      </table>
+    </div>
+    <div class="pagination" id="pagination-controls">
+      <!-- Pagination controls will be dynamically generated here -->
+    </div>
+    <a href="/html/services.html" class="back-btn">Back to Services</a>
+  </div>
+  <script src="/js/policeAccounts.js"></script>
 </body>
 </html>

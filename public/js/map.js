@@ -377,6 +377,7 @@ function removeMarker(map, userId) {
     }
 }
 
+// Function to actually add to the map
 function fetchReportsAndAddToMap(map) {
     const storedToken = localStorage.getItem('authToken');
     
@@ -403,6 +404,7 @@ function fetchReportsAndAddToMap(map) {
     })
     .then(reports => {
         if (Array.isArray(reports)) {
+            // First, add reports to the map
             reports.forEach(report => {
                 if (report.lng !== undefined && report.lat !== undefined) {
                     addReportToMap(report, map);
@@ -410,6 +412,9 @@ function fetchReportsAndAddToMap(map) {
                     console.error('Missing coordinates in report:', report);
                 }
             });
+
+            // Then, update the filter list
+            addReportsToFilterList(reports);
         } else {
             console.error('Invalid response format for reports:', reports);
         }
@@ -419,6 +424,10 @@ function fetchReportsAndAddToMap(map) {
     });
 }
 
+// Helper function to capitalize the category names
+function capitalize(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1).replace(/_/g, ' ');
+}
 
 // Function to add a report to the map with a marker and custom popup
 function addReportToMap(report, map) {
@@ -436,6 +445,7 @@ function addReportToMap(report, map) {
     // Create a marker element
     const markerElement = document.createElement('div');
     markerElement.classList.add('custom-marker');
+    markerElement.setAttribute('data-category', report.category.toLowerCase());
 
     // Apply marker color based on the severity of the report
     switch (report.severity.toLowerCase()) {
@@ -465,14 +475,21 @@ function addReportToMap(report, map) {
     });
 
     // Create and add the marker to the map with the custom popup content
-    new mapboxgl.Marker(markerElement)
+    const marker = new mapboxgl.Marker(markerElement)
         .setLngLat(coordinates)
         .setPopup(new mapboxgl.Popup({ offset: 25 })
-            .setDOMContent(popupContent)) // Set the custom content
+        .setDOMContent(popupContent))
         .addTo(map);
 
-    console.log('Marker and popup added to the map.');
+    console.log('Marker created:', marker);  // Log marker creation
+
+    // Store the marker in a global object for filtering
+    if (!window.mapMarkers) {
+        window.mapMarkers = {};
+    }
+    window.mapMarkers[report.id] = marker;  // Log storing the marker
 }
+
 
 // Function to create custom popup content
 function createPopupContent({ category, severity, description, createdAt, filePath, fileType, coordinates }) {
@@ -908,38 +925,6 @@ setMapLightBasedOnTime();
 setInterval(setMapLightBasedOnTime, 600000); // Check every minute
 
 
-
-// Toggle reporting page
-const reportingButton = document.getElementById('toggle-reporting');
-if (reportingButton) {
-    reportingButton.addEventListener('click', function () {
-        window.location.href = '/html/report.html';  // Adjust the path as needed
-    });
-} else {
-    console.warn('Element with ID "toggle-reporting" not found.');
-}
-
-// Toggle timeline visibility
-const toggleTimelineTab = document.getElementById('toggle-timeline-tab');
-if (toggleTimelineTab) {
-    toggleTimelineTab.addEventListener('click', function () {
-        const timelineContainer = document.getElementById('timeline-container');
-        const toggleArrow = document.getElementById('toggle-arrow');
-
-        if (timelineContainer.classList.contains('show')) {
-            timelineContainer.classList.remove('show');
-            this.style.bottom = '0px';
-            toggleArrow.style.transform = 'rotate(0deg)';
-        } else {
-            timelineContainer.classList.add('show');
-            this.style.bottom = '153px';
-            toggleArrow.style.transform = 'rotate(180deg)';
-        }
-    });
-} else {
-    console.warn('Element with ID "toggle-timeline-tab" not found.');
-}
-
 // Fetch and add reports to timeline
 function fetchReports() {
     const token = localStorage.getItem('authToken');
@@ -978,37 +963,6 @@ function fetchReports() {
     });
 }
 
-// Add reports to timeline
-function addReportsToTimeline(reports) {
-    const timeline = document.getElementById('timeline');
-    const dateMarkers = {};
-
-    reports.forEach(report => {
-        const dot = document.createElement('div');
-        dot.className = 'timeline-dot';
-        dot.dataset.severity = report.severity.toLowerCase();
-        dot.dataset.incidentId = report.id;
-
-        dot.style.backgroundColor = getSeverityColor(report.severity);
-
-        dot.addEventListener('click', () => showNewCrimeDetailsPopup(report));
-
-        const reportDate = new Date(report.created_at);
-        const reportDay = reportDate.toISOString().split('T')[0];
-        dot.dataset.date = reportDay;
-
-        if (!dateMarkers[reportDay]) {
-            const dateMarker = document.createElement('div');
-            dateMarker.className = 'timeline-date-marker';
-            dateMarker.dataset.date = reportDay;
-            dateMarker.innerHTML = `<div class="timeline-date"><span>${reportDate.getDate()} ${reportDate.toLocaleString('default', { month: 'short' })}</span></div>`;
-            dateMarkers[reportDay] = dateMarker;
-            timeline.appendChild(dateMarker);
-        }
-
-        dateMarkers[reportDay].appendChild(dot);
-    });
-}
 
 // Show crime details in a popup
 function showNewCrimeDetailsPopup(report) {
@@ -1028,25 +982,128 @@ function showNewCrimeDetailsPopup(report) {
         .addTo(map);
 }
 
-// Get severity color for timeline dot
-function getSeverityColor(severity) {
-    switch (severity.toLowerCase()) {
-        case 'high':
-            return '#ff0000';
-        case 'medium':
-            return '#ffa500';
-        case 'low':
-            return '#00ff00';
-        default:
-            return '#0000ff';
+
+
+// Add reports to filter list with crime counts
+function addReportsToFilterList(reports) {
+    const filterList = document.getElementById('filter-list');
+    filterList.innerHTML = ''; // Clear existing reports
+
+    const categoryCounts = {};
+
+    // Count reports per category
+    reports.forEach(report => {
+        const category = report.category.toLowerCase();
+        if (!categoryCounts[category]) {
+            categoryCounts[category] = 0;
+        }
+        categoryCounts[category]++;
+    });
+
+    const filterContainer = document.getElementById('category-filters');
+    filterContainer.innerHTML = ''; // Clear existing filters
+
+    for (const category in categoryCounts) {
+        const count = categoryCounts[category];
+        const label = document.createElement('label');
+        label.innerHTML = `
+            <input type="checkbox" value="${category}" class="crime-filter" checked>
+            ${capitalize(category)} <span class="filter-count">(${count})</span>
+        `;
+        filterContainer.appendChild(label);
+    }
+
+    // Reattach event listeners for filtering
+    document.querySelectorAll('.crime-filter').forEach(input => {
+        input.addEventListener('change', filterReports);
+    });
+
+    // Initially show all markers on the map
+    filterReports(); // Call this to apply the initial visibility state
+}
+
+
+
+
+// Filter reports based on selected categories
+function filterReports() {
+    const selectedCategories = Array.from(document.querySelectorAll('.crime-filter:checked')).map(input => input.value);
+    
+    if (!window.mapMarkers) return;
+
+    for (const markerId in window.mapMarkers) {
+        const marker = window.mapMarkers[markerId];
+        const markerCategory = marker.getElement().getAttribute('data-category');
+
+        if (selectedCategories.includes(markerCategory)) {
+            marker.addTo(map); // Show the marker
+        } else {
+            marker.remove(); // Hide the marker
+        }
     }
 }
 
-// User stuff
+document.querySelectorAll('.crime-filter').forEach(input => {
+    input.addEventListener('change', filterReports);
+});
 
+function showMarker(markerId) {
+    if (window.mapMarkers && window.mapMarkers[markerId]) {
+        window.mapMarkers[markerId].addTo(map);
+    }
+}
+
+function hideMarker(markerId) {
+    if (window.mapMarkers && window.mapMarkers[markerId]) {
+        window.mapMarkers[markerId].remove();
+    }
+}
+
+
+// Toggle filter visibility
+const toggleFilterTab = document.getElementById('toggle-filter-tab');
+if (toggleFilterTab) {
+    toggleFilterTab.addEventListener('click', function () {
+        const filterContainer = document.getElementById('filter-container');
+        const toggleArrow = document.getElementById('toggle-arrow');
+
+        if (filterContainer.classList.contains('show')) {
+            filterContainer.classList.remove('show');
+            this.style.bottom = '0px';
+            toggleArrow.style.transform = 'rotate(0deg)';
+        } else {
+            filterContainer.classList.add('show');
+            this.style.bottom = '153px'; // Adjust the value based on the height of the filter container
+            toggleArrow.style.transform = 'rotate(180deg)';
+        }
+    });
+} else {
+    console.warn('Element with ID "toggle-filter-tab" not found.');
+}
+
+
+// User and filter stuff
 document.addEventListener('DOMContentLoaded', function () {
-    console.log('DOMContentLoaded event fired.');
+    console.log('DOMContentLoaded event fired.2');
 
+    const loadingScreen = document.getElementById('loading-screen');
+    const content = document.getElementById('content');
+    const toggleFilterTab = document.getElementById('toggle-filter-tab');
+    const filterContainer = document.getElementById('filter-container');
+    const toggleArrow = document.getElementById('toggle-arrow');
+
+    // Hide the loading screen and show the content after 4 seconds
+    setTimeout(function () {
+        loadingScreen.style.display = 'none';
+        content.style.display = 'block';
+        
+        // Trigger map resize
+        if (typeof map !== 'undefined') {
+            map.resize();
+        }
+    }, 4000); // 4 seconds
+
+    // Token Check
     const token = localStorage.getItem('authToken');
     if (!token) {
         window.location.href = '/html/login.html';
@@ -1055,13 +1112,34 @@ document.addEventListener('DOMContentLoaded', function () {
 
     console.log('Auth Token:', token);
 
+    // Toggle Filter List
+    if (toggleFilterTab) {
+        toggleFilterTab.addEventListener('click', function () {
+            console.log('Filter Clicked.');
+
+            if (filterContainer.classList.contains('filter-shown')) {
+                filterContainer.classList.remove('filter-shown');
+                filterContainer.classList.add('filter-hidden');
+                toggleArrow.style.transform = 'rotate(0deg)';
+            } else {
+                filterContainer.classList.remove('filter-hidden');
+                filterContainer.classList.add('filter-shown');
+                toggleArrow.style.transform = 'rotate(180deg)';
+            }
+        });
+    } else {
+        console.warn('Element with ID "toggle-filter-tab" not found.');
+    }
+
     // Handle dropdown toggle
     const userInfo = document.getElementById('user-info');
     const userMenu = document.getElementById('user-menu');
 
-    userInfo.addEventListener('click', function () {
-        userInfo.classList.toggle('active');
-    });
+    if (userInfo) {
+        userInfo.addEventListener('click', function () {
+            userInfo.classList.toggle('active');
+        });
+    }
 
     // Handle sign out
     const signOutLink = document.getElementById('signout-link');
