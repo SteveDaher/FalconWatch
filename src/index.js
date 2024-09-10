@@ -6,16 +6,15 @@ const socketIo = require('socket.io');
 const authRoutes = require('./auth');
 const { setupSocket } = require('./socket');
 const multer = require('multer');
-const authenticateToken = require('./authMiddleware'); // Middleware for token authentication
+const { authenticateToken, authenticateRole } = require('./authMiddleware'); // Correctly destructure the middleware functions
+
 const { query, getUserByID } = require('./db');
 require('dotenv').config();  // Load environment variables
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server); // Initialize Socket.IO with the server
-
 const port = process.env.PORT || 3000;  // Set server port
-
 const UPLOAD_DIR = '/var/www/html/falconwatch/server/uploads';
 
 
@@ -58,9 +57,76 @@ const publicRoutes = [
     '/api/users/register'  // And register if applicable
 ];
 
+// Publicly accessible routes (login, register, index)
+publicRoutes.forEach(route => {
+    app.get(route, (req, res) => {
+        const requestedPath = path.join(__dirname, `../../client/public${route}`);
+        res.sendFile(requestedPath);
+    });
+});
+
+const protectedHtmlRoutes = [
+    { path: '/adminDash', role: 'police' },
+    { path: '/chart', role: 'police' },
+    { path: '/chart2', role: 'police' },
+    { path: '/chart3', role: 'police' },
+    { path: '/chart4', role: 'police' },
+    { path: '/generateReport', role: 'police' },
+    { path: '/main', role: 'police' },
+    { path: '/reportHistory', role: 'police' },
+    { path: '/services', role: 'police' }
+];
+
+const protectedJsRoutes = [
+    { path: '/admin', role: 'police' },
+    { path: '/chart', role: 'police' },
+    { path: '/chart2', role: 'police' },
+    { path: '/chart3', role: 'police' },
+    { path: '/chart4', role: 'police' },
+    { path: '/generateReport', role: 'police' },
+    { path: '/map', role: 'police' },
+    { path: '/policeAccounts', role: 'police' }
+];
+
+
+// Protect HTML pages with authentication and role-based access control
+protectedHtmlRoutes.forEach(route => {
+    app.get(`/html${route.path}.html`, authenticateToken, authenticateRole(route.role), (req, res) => {
+        console.log(`Serving protected HTML file: ${route.path}`);
+        const requestedPath = path.join(__dirname, `../../client/public/html${route.path}.html`);
+
+        // If the user is unauthorized, redirect them
+        res.sendFile(requestedPath, (err) => {
+            if (err && err.code === 'ENOENT') {
+                console.log('File not found, redirecting to login.');
+                return res.redirect('/html/login.html');
+            } else if (err) {
+                res.status(500).send('Server Error');
+            }
+        });
+    });
+});
+
+// Protect JavaScript files with authentication and role-based access control
+protectedJsRoutes.forEach(route => {
+    app.get(`/js${route.path}.js`, authenticateToken, authenticateRole(route.role), (req, res) => {
+        console.log(`Serving protected JS file: ${route.path}`);
+        const requestedPath = path.join(__dirname, `../../client/public/js${route.path}.js`);
+        res.sendFile(requestedPath, (err) => {
+            if (err && err.code === 'ENOENT') {
+                console.log('File not found, redirecting to login.');
+                return res.redirect('/html/login.html');
+            } else if (err) {
+                res.status(500).send('Server Error');
+            }
+        });
+    });
+});
+
 // Middleware to parse JSON and URL-encoded data
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
 
 // Middleware to log requests and responses
 app.use((req, res, next) => {
@@ -77,17 +143,10 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Serve the Socket.IO client library
 app.use('/socket.io', express.static(path.join(__dirname, '../../node_modules/socket.io/client-dist')));
-console.log(`[Setup] Serving Socket.IO from ${path.join(__dirname, '../../node_modules/socket.io/client-dist')}`);
 
 // Serve static files from the 'client/public' directory
-app.use(express.static(path.join(__dirname, '../../client/public')));
-console.log(`[Setup] Serving static files from ${path.join(__dirname, '../../client/public')}`);
+// app.use(express.static(path.join(__dirname, '../../client/public')));
 
-// Publicly accessible routes (login, register, index)
-app.get(publicRoutes, (req, res) => {
-    const requestedPath = path.join(__dirname, `../../client/public${req.path}`);
-    res.sendFile(requestedPath);
-});
 
 // Apply authentication middleware to all routes except public routes
 app.use((req, res, next) => {
@@ -97,11 +156,10 @@ app.use((req, res, next) => {
     return authenticateToken(req, res, next); // Authenticate all other routes
 });
 
-// Add this route to return the user's name
 
+// Add this route to return the user's name
 app.get('/api/user-info', authenticateToken, async (req, res) => {
     try {
-        console.log('User info endpoint hit');
 
         const userId = req.user.id; // Assuming req.user is populated by authenticateToken middleware
         if (!userId) {
@@ -123,8 +181,6 @@ app.get('/api/user-info', authenticateToken, async (req, res) => {
 
 // API routes for user authentication
 app.use('/api/users', authRoutes);
-
-
 
 // Middleware to authenticate and authorize access to /uploads/
 app.use('/uploads', authenticateToken, async (req, res, next) => {
@@ -150,9 +206,7 @@ app.use('/uploads', authenticateToken, async (req, res, next) => {
 
 //POST (SUBMITTING A REPORT)
 app.post('/api/reports', authenticateToken, upload.single('crime-attachment'), async (req, res) => {
-    console.log(`Request made to /api/reports with method ${req.method}`);
     try {
-        console.log('Report submission started');
         const { category, description, coordinates, severity } = req.body;
         const userId = req.user.id;
 
@@ -168,7 +222,6 @@ app.post('/api/reports', authenticateToken, upload.single('crime-attachment'), a
                 filePath = `/uploads/videos/${req.file.filename}`;
             }
 
-            console.log(`File uploaded as a ${fileType} to ${filePath}`);
         } else {
             console.log('No file uploaded');
         }
@@ -191,8 +244,6 @@ app.post('/api/reports', authenticateToken, upload.single('crime-attachment'), a
         );
 
         if (result.affectedRows > 0) {
-            console.log('Report successfully saved to the database');
-
             // Fetch the newly inserted report
             const [newReport] = await query(
                 `SELECT id, category, description, severity, ST_X(coordinates) AS lng, ST_Y(coordinates) AS lat, created_at, file_type, file_path 
@@ -205,7 +256,6 @@ app.post('/api/reports', authenticateToken, upload.single('crime-attachment'), a
 
             res.status(200).json({ message: 'Report submitted successfully.' });
         } else {
-            console.log('Failed to save the report to the database');
             res.status(500).json({ message: 'Failed to submit the report.' });
         }
     } catch (error) {
@@ -217,7 +267,6 @@ app.post('/api/reports', authenticateToken, upload.single('crime-attachment'), a
 
 //GET FETCHING A REPORT
 app.get('/api/reports', authenticateToken, async (req, res) => {
-    console.log(`Request made to /api/reports with method ${req.method}`);
     try {
         const reports = await query(
             `SELECT id, category, description, severity, ST_X(coordinates) AS lng, ST_Y(coordinates) AS lat, created_at, file_type, file_path 
@@ -233,14 +282,8 @@ app.get('/api/reports', authenticateToken, async (req, res) => {
 
 
 // API endpoint to fetch report history, accessible only by authenticated users with the 'police' role
-app.use('/api/reportHistory', authenticateToken, async (req, res) => {
-    console.log('Received request to /api/reportHistory');
-    console.log('Token in /api/reportHistory:', req.headers['authorization']);
-
+app.get('/api/reportHistory', authenticateToken, authenticateRole('police'), async (req, res) => {
     try {
-        if (req.user.role !== 'police') {
-            return res.status(403).json({ message: 'Access forbidden: Police role required.' });
-        }
         const reports = await query(`
             SELECT 
                 id AS incidentId, 
@@ -252,12 +295,31 @@ app.use('/api/reportHistory', authenticateToken, async (req, res) => {
                 created_at AS date
             FROM reports
         `);
-        res.json(reports);
+
+        // Ensure the reports are an array before sending
+        if (!Array.isArray(reports)) {
+            return res.status(500).json({ message: 'Internal Server Error: Reports data not an array' });
+        }
+
+        res.json(reports);  // Return the reports array
     } catch (error) {
         console.error('Error fetching reports:', error);
         res.status(500).json({ message: 'Internal Server Error' });
     }
 });
+
+// Define routes directly using app.get()
+app.get('/api/locations', authenticateToken, async (req, res) => {
+    try {
+        const queryText = 'SELECT DISTINCT ST_X(coordinates) AS lng, ST_Y(coordinates) AS lat FROM reports';
+        const rows = await query(queryText);
+        res.json(rows);
+    } catch (error) {
+        console.error('Error fetching coordinates:', error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
+
 
 // API endpoint to update online status
 app.post('/api/users/onlineStatus', authenticateToken, async (req, res) => {
@@ -275,7 +337,7 @@ app.post('/api/users/onlineStatus', authenticateToken, async (req, res) => {
 });
 
 // Middleware to protect admin page and ensure only 'police' role users can access
-app.get('/admin', authenticateToken, async (req, res) => {
+app.get('/admin', authenticateToken,  async (req, res) => {
     try {
         const userId = req.user.id; // Assuming authenticateToken attaches user info to req
         const [user] = await query('SELECT role FROM users WHERE id = ?', [userId]);
@@ -292,72 +354,76 @@ app.get('/admin', authenticateToken, async (req, res) => {
     }
 });
 
-// Middleware to protect reportHistory page and ensure only 'police' role users can access
-app.use('/reportHistory', authenticateToken, async (req, res, next) => {
-    try {
-        const userId = req.user.id; // Assuming authenticateToken attaches user info to req
-        const [user] = await query('SELECT role FROM user WHERE id = ?', [userId]);
-        if (!user) {
-            return res.status(404).json({ message: 'User not found.' });
-        }
-        if (user.role !== 'police') {
-            return res.status(403).json({ message: 'Access denied: Police role required.' });
-        }
-        next(); // Continue if the role is 'police'
-    } catch (error) {
-        console.error('Error checking user role:', error);
-        res.status(500).json({ message: 'Internal Server Error' });
-    }
-});
 
 // Protected API endpoint to fetch chart data, accessible only by authenticated users
-app.get('/api/chartData', authenticateToken, async (req, res) => {
-    console.log('Received request to /api/chartData');
+app.get('/api/chartData', authenticateToken, authenticateRole('police'), async (req, res) => {
 
-    const { month } = req.query;
-
+    const { month, type } = req.query;
     try {
-        let queryText = `
-            SELECT 
-                YEAR(DATE_SUB(created_at, INTERVAL 4 HOUR)) AS year, 
-                MONTH(DATE_SUB(created_at, INTERVAL 4 HOUR)) AS month, 
-                HOUR(DATE_SUB(created_at, INTERVAL 4 HOUR)) AS hour,
-                severity, 
-                category,
-                COUNT(*) AS count,
-                GROUP_CONCAT(id) AS incidentIds
-            FROM reports
-        `;
-
-        const conditions = [];
+        let queryText = '';
         const params = [];
 
-        if (month) {
-            const [year, monthPart] = month.split('-');
-            conditions.push('YEAR(DATE_SUB(created_at, INTERVAL 4 HOUR)) = ? AND MONTH(DATE_SUB(created_at, INTERVAL 4 HOUR)) = ?');
-            params.push(year, monthPart);
-        }
+        if (type === 'crime-summary') {
 
-        if (conditions.length > 0) {
-            queryText += ` WHERE ${conditions.join(' AND ')}`;
-        }
-
-        queryText += `
-            GROUP BY year, month, hour, severity, category
-            ORDER BY year, month, hour
+            // Fetch reports for the current week (Monday to Sunday)
+            queryText = `
+            SELECT 
+            category, 
+            COUNT(*) AS count, 
+            severity, 
+            DATE_ADD(created_at, INTERVAL 4 HOUR) AS created_at
+            FROM reports
+            WHERE created_at >= (CURDATE() - INTERVAL WEEKDAY(CURDATE()) DAY)
+            AND created_at < (CURDATE() - INTERVAL WEEKDAY(CURDATE()) DAY + INTERVAL 7 DAY)
+            GROUP BY category, severity, DATE_ADD(created_at, INTERVAL 4 HOUR)
+            ORDER BY COUNT(*) DESC;
         `;
+        } else {
 
+            // Month-based chart data, adjusting for UTC-4 (assumed from `INTERVAL 4 HOUR`)
+            queryText = `
+                SELECT 
+                    YEAR(DATE_SUB(created_at, INTERVAL 4 HOUR)) AS year, 
+                    MONTH(DATE_SUB(created_at, INTERVAL 4 HOUR)) AS month, 
+                    HOUR(DATE_SUB(created_at, INTERVAL 4 HOUR)) AS hour,
+                    severity, 
+                    category,
+                    COUNT(*) AS count,
+                    GROUP_CONCAT(id) AS incidentIds
+                FROM reports
+            `;
+
+            const conditions = [];
+
+            if (month) {
+                const [year, monthPart] = month.split('-');
+
+                conditions.push('YEAR(DATE_SUB(created_at, INTERVAL 4 HOUR)) = ? AND MONTH(DATE_SUB(created_at, INTERVAL 4 HOUR)) = ?');
+                params.push(year, monthPart);
+            }
+
+            if (conditions.length > 0) {
+                queryText += ` WHERE ${conditions.join(' AND ')}`;
+            }
+
+            queryText += `
+                GROUP BY year, month, hour, severity, category
+                ORDER BY year, month, hour
+            `;
+        }
         const rows = await query(queryText, params);
         res.json(rows || []);
     } catch (error) {
-        console.error('Error fetching chart data:', error);
+        console.error('Error fetching chart data:', error); // Log any errors that occur
         res.status(500).json({ message: 'Internal Server Error' });
     }
 });
 
+
+
 // Route to handle police account operations: fetch, update, delete
 app.route('/api/police-accounts')
-    .get(authenticateToken, async (req, res) => {
+    .get(authenticateToken, authenticateRole('police'),  async (req, res) => {
         // Fetch police accounts with search functionality
         const searchQuery = req.query.search || '';
 
@@ -370,15 +436,11 @@ app.route('/api/police-accounts')
             `;
             const searchTerm = `%${searchQuery}%`;
 
-            console.log('Executing query:', queryText, 'with search term:', searchTerm);
-
             const results = await query(queryText, [searchTerm, searchTerm]);
 
             if (results.length > 0) {
-                console.log('Police accounts fetched successfully:', results);
                 res.json(results);
             } else {
-                console.log('No police accounts found for the search query:', searchQuery);
                 res.status(404).json({ message: 'No police accounts found.' });
             }
         } catch (error) {
@@ -433,7 +495,7 @@ app.route('/api/police-accounts')
 
 
 // Route to wipe all reports
-app.post('/wipe-reports', authenticateToken, async (req, res) => {
+app.post('/wipe-reports', authenticateToken, authenticateRole('police'), async (req, res) => {
     if (req.user.role !== 'police') {
         return res.status(403).json({ message: 'Access forbidden: Police role required.' });
     }
@@ -442,7 +504,6 @@ app.post('/wipe-reports', authenticateToken, async (req, res) => {
         const result = await query('DELETE FROM reports');
 
         if (result.affectedRows > 0) {
-            console.log('All reports have been wiped from the database.');
             res.json({ message: 'All reports have been successfully wiped.' });
         } else {
             res.status(404).json({ message: 'No reports found to wipe.' });
@@ -455,13 +516,10 @@ app.post('/wipe-reports', authenticateToken, async (req, res) => {
 
 
 // Route to assign badge number and update user role
-app.post('/assign-badge', authenticateToken, async (req, res) => {
+app.post('/assign-badge', authenticateToken, authenticateRole('police'), async (req, res) => {
     const { email, badgenumber } = req.body;
 
-    console.log('Received request:', { email, badgenumber });
-
     if (!email || !badgenumber) {
-        console.log('Validation failed: Missing email or badgenumber');
         return res.status(400).json({ message: 'Email and badge number are required.' });
     }
 
@@ -471,15 +529,12 @@ app.post('/assign-badge', authenticateToken, async (req, res) => {
             SET badgenumber = ?, role = 'police'
             WHERE email = ?
         `;
-        console.log('Executing query:', queryText);
 
         const result = await query(queryText, [badgenumber, email]);
 
         if (result.affectedRows > 0) {
-            console.log('Badge number assigned successfully');
             res.json({ message: 'Badge number assigned and role updated to police.' });
         } else {
-            console.log('User not found');
             res.status(404).json({ message: 'User not found.' });
         }
     } catch (error) {
@@ -495,14 +550,10 @@ app.get('*', (req, res, next) => {
     }
 
     const requestedPath = path.join(__dirname, `../../client/public/html${req.path}.html`);
-    
-    console.log(`[Wildcard Route] Requested Path: ${requestedPath}`);
-    
+        
     res.sendFile(requestedPath, (err) => {
         if (err) {
-            console.log(`[Error] Failed to serve ${requestedPath}: ${err.message}`);
             if (err.code === 'ENOENT') {
-                console.log('File not found, serving index.html instead.');
                 res.sendFile(path.join(__dirname, '../../client/public/index.html'));
             }
         }

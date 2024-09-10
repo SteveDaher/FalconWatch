@@ -1,43 +1,56 @@
+<!-- Path: client/html/chart3.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FalconWatch Crime Report: Type vs. Time of Day</title>
-  <!-- Link to shared styles -->
-  <link rel="stylesheet" href="/css/chartStyle.css">
-  <!-- Link to specific styles for chart3 -->
-  <link rel="stylesheet" href="/css/chartStyle3.css">
-  <!-- Include Chart.js library -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- Include the JavaScript for this chart -->
-  <script src="/js/chart3.js" defer></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FalconWatch Crime Report: Type vs. Time of Day</title>
+
+    <!-- Link to shared styles and specific styles for chart3 -->
+    <link rel="stylesheet" href="/css/chartStyle.css">
+    <link rel="stylesheet" href="/css/chartStyle3.css">
+
+    <!-- Include Chart.js library for rendering charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Include custom JavaScript for this specific chart -->
+    <script src="/js/chart3.js" defer></script>
 </head>
 <body>
-  <div id="header">
-    <div id="user-info">
-      <span id="user-name"></span>
-    </div>
-    <img src="/img/logoFW.png" alt="Logo" id="logo">
-    <div id="nav-buttons">
-      <a href="/html/main.html" class="active-link">Home</a>
-      <a href="/html/services.html" id="view-services">View Services</a>
-      <a href="/html/login.html" id="sign-out" class="sign-out-btn">Sign Out</a>
-    </div>
-  </div>
+    <div class="page-content"> <!-- Add this wrapper to control visibility -->
+        <!-- Header section with logo and navigation links -->
+        <div id="header">
+            <div id="user-info">
+                <span id="user-name"></span> <!-- Placeholder for displaying the user's name -->
+            </div>
+            <img src="/img/logoFW.png" alt="FalconWatch Logo" id="logo"> <!-- Logo image with alt text -->
+            <div id="nav-buttons">
+                <a href="/html/main.html" class="active-link">Home</a> <!-- Link to home page -->
+                <a href="/html/services.html" id="view-services">View Services</a> <!-- Link to services page -->
+                <a href="/html/login.html" id="sign-out" class="sign-out-btn">Sign Out</a> <!-- Sign out button -->
+            </div>
+        </div>
 
-  <div class="container">
-    <h1>Crime Type vs. Time of Day</h1>
-    <div>
-      <label for="month">Select Month:</label>
-      <select id="month" onchange="fetchCrimeData()">
-        <!-- Populate months dynamically -->
-      </select>
-    </div>
-    <div class="chart-container">
-      <canvas id="myChart"></canvas>
-    </div>
-    <a href="/html/services.html" class="back-btn">Back to Services</a>
-  </div>
+        <!-- Main container for the chart and filter options -->
+        <div class="container">
+            <h1>Crime Type vs. Time of Day</h1> <!-- Page heading -->
+
+            <!-- Dropdown for selecting a month -->
+            <div>
+                <label for="month">Select Month:</label>
+                <select id="month" onchange="fetchCrimeData()">
+                    <!-- Options for months will be populated dynamically -->
+                </select>
+            </div>
+
+            <!-- Chart container -->
+            <div class="chart-container">
+                <canvas id="myChart"></canvas> <!-- Canvas element for rendering the chart -->
+            </div>
+
+            <!-- Back button to return to services page -->
+            <a href="/html/services.html" class="back-btn">Back to Services</a>
+        </div>
+    </div> <!-- End of page-content -->
 </body>
 </html>

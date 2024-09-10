@@ -1,147 +1,147 @@
+/* General Styles for Body */
 body {
   margin: 0;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: url('/img/background.jpg') no-repeat center center fixed;
-  background-size: cover;
-  color: #333;
+  background: url('/img/background.jpg') no-repeat center center fixed; /* Background image fixed in place */
+  background-size: cover; /* Ensures the image covers the whole screen */
+  color: #333; /* Text color */
 }
 
+/* Header Styling */
 #header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px 30px;
-  background: #ffffff;
-  border-bottom: 2px solid #40ac0e;
-  position: relative;
-  z-index: 9999;
-  box-shadow: 0 2px 3px #00000049;
+  display: flex; /* Flexbox for layout */
+  justify-content: space-between; /* Space out elements */
+  align-items: center; /* Vertically align items */
+  padding: 15px 30px; /* Padding around the header */
+  background: rgba(255, 255, 255, 0.9); /* Semi-transparent white background */
+  border-bottom: 2px solid #40ac0e; /* Green border at the bottom */
+  position: relative; /* Ensure z-index works */
+  z-index: 9999; /* Keep header above other content */
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.3); /* Subtle shadow for depth */
 }
 
+/* Adjust logo to be at the left side */
 #header img {
-  height: 60px;
-  width: auto;
-  max-width: 170px;
-  max-height: 150px;
-  object-fit: contain;
-  display: block;
-  order: 1;
+  height: 60px; /* Set logo height */
+  width: auto; /* Maintain aspect ratio */
+  max-width: 250px; /* Set maximum width */
+  max-height: 250px; /* Set maximum height */
+  object-fit: contain; /* Ensure the image fits within its container */
+  margin-right: auto; /* Aligns the logo to the left */
 }
 
+/* Navigation Buttons in Header */
 #nav-buttons {
   display: flex;
   align-items: center;
-  order: 2;
+  order: 2; /* Specifies the order of the navigation buttons */
 }
 
+/* Individual Navigation Links */
 #nav-buttons a {
-  text-decoration: none;
+  text-decoration: none; /* Removes underlines from links */
   font-size: 16px;
   font-weight: 400;
   cursor: pointer;
-  margin: 0 10px;
-  transition: color 0.3s ease, text-decoration 0.3s ease;
-  color: #17820e;
+  margin: 0 10px; /* Adds spacing between the links */
+  transition: color 0.3s ease, text-decoration 0.3s ease; /* Smooth transition effects */
+  color: #17820e; /* Green text color for links */
 }
 
+/* Hover Effect for Navigation Links */
 #nav-buttons a:hover {
-  color: #2fb63a;
-  text-decoration: underline;
+  color: #2fb63a; /* Lighter green on hover */
+  text-decoration: underline; /* Underline effect on hover */
 }
 
+
+/* Style for Active Link */
 .active-link {
-  font-weight: bold !important;
+  font-weight: bold !important; /* Bolds the active link */
 }
 
+/* Main Content Container */
 .container {
-  max-width: 1000px;
-  margin: 30px auto;
+  max-width: 1000px; /* Maximum width for the container */
+  margin: 30px auto; /* Centers the container horizontally */
   padding: 20px;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.6);
+  background-color: #fff; /* White background for the container */
+  border-radius: 8px; /* Rounds the corners of the container */
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.6); /* Adds shadow for depth */
 }
 
+/* Heading Styles */
 h1 {
-  text-align: center;
+  text-align: center; /* Centers the heading text */
   font-size: 24px;
   margin-bottom: 20px;
-  color: #000000;
-  border-bottom: 2px solid #333;
+  color: #000000; /* Black text color */
+  border-bottom: 2px solid #333; /* Dark border under the heading */
   padding-bottom: 10px;
 }
 
+/* Chart Container */
 .chart-container {
-  padding: 20px;
+  padding: 20px; /* Adds padding around the chart */
 }
 
-.bar-chart {
-  display: flex;
-  align-items: flex-end;
-  height: 250px;
-}
-
+/* Bar Graph Styles */
 .bar {
   flex: 1;
   margin: 0 10px;
-  background-color: gray;
-  border-radius: 4px;
+  background-color: gray; /* Default bar color */
+  border-radius: 4px; /* Rounds the corners of the bars */
   position: relative;
 }
 
+/* Animation for Bar Height */
 .bar::before {
   content: '';
   display: block;
   width: 100%;
   background-color: inherit;
   height: 0;
-  transition: height 0.3s ease;
+  transition: height 0.3s ease; /* Smooth height transition */
 }
 
+/* Low Severity Bar Color */
 .low {
-  background-color: #4caf50;
+  background-color: #4caf50; /* Green for low severity */
 }
 
+/* Medium Severity Bar Color */
 .medium {
-  background-color: #ffeb3b;
+  background-color: #ffeb3b; /* Yellow for medium severity */
 }
 
+/* High Severity Bar Color */
 .high {
-  background-color: #f44336;
+  background-color: #f44336; /* Red for high severity */
 }
 
+/* Legend Styles */
 .legend {
   display: flex;
-  justify-content: space-around;
+  justify-content: space-around; /* Evenly distributes legend items */
   margin-top: 20px;
 }
 
-.legend-item {
-  display: flex;
-  align-items: center;
-}
-
-.color-box {
-  width: 18px;
-  height: 18px;
-  margin-right: 8px;
-  border-radius: 3px;
-}
-
+/* Back Button Styles */
 .back-btn {
   display: block;
   text-align: center;
   padding: 10px 15px;
-  background-color: #17820e;
-  color: #f0f0f0;
+  background-color: #17820e; /* Green background for the button */
+  color: #f0f0f0; /* Light text color */
   border: none;
-  border-radius: 4px;
-  text-decoration: none;
+  border-radius: 4px; /* Rounded corners */
+  text-decoration: none; /* Removes underline from the link */
   font-size: 14px;
   margin-top: 20px;
-  transition: background-color 0.3s ease;
+  transition: background-color 0.3s ease; /* Smooth background color transition */
 }
 
+/* Hover Effect for Back Button */
 .back-btn:hover {
-  background-color: #2fb63a;
+  background-color: #2fb63a; /* Lighter green on hover */
 }

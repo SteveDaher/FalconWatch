@@ -1,4 +1,56 @@
-document.addEventListener('DOMContentLoaded', function () {
+//Path: client/js/admin.js
+document.addEventListener('DOMContentLoaded', async function () {
+    // Hide the page content initially
+    const pageContent = document.querySelector('body');
+    pageContent.style.display = 'none';
+
+    const token = localStorage.getItem('authToken');  // Get the auth token from localStorage
+
+    // Redirect to login if no auth token is found
+    if (!token) {
+        console.error('No authentication token found. Redirecting to login.');
+        window.location.href = '/html/login.html';
+        return;
+    }
+
+    try {
+        // Fetch user information to check their role
+        const userInfoResponse = await fetch('/api/user-info', {
+            headers: {
+                'Authorization': `Bearer ${token}` // Attach the token in the request header
+            }
+        });
+
+        if (!userInfoResponse.ok) {
+            throw new Error('Failed to fetch user info.');
+        }
+
+        const userInfo = await userInfoResponse.json();
+
+        // Redirect the user if they are not 'police'
+        if (userInfo.role !== 'police') {
+            console.error('Access denied. Redirecting to login.');
+            window.location.href = '/html/login.html';
+            return;
+        }
+
+        // Now that the user is authorized, show the page content
+        pageContent.style.display = 'block';
+
+        // Initialize the admin page functionalities after user is verified
+        initializeAdminPage();
+
+    } catch (error) {
+        console.error('Error during user verification:', error);
+        window.location.href = '/html/login.html';
+    }
+});
+
+/**
+ * Function to initialize the admin page features.
+ * This function will be called once the user is verified.
+ */
+function initializeAdminPage() {
     const assignBadgeForm = document.getElementById('assign-badge-form');
     const wipeReportsBtn = document.getElementById('wipe-reports-btn');
 
@@ -8,8 +60,6 @@ document.addEventListener('DOMContentLoaded', function () {
             event.preventDefault(); // Prevent default form submission
             await assignBadge(); // Call the function to assign a badge
         });
-    } else {
-        console.error("Element with ID 'assign-badge-form' not found.");
     }
 
     if (wipeReportsBtn) {
@@ -20,7 +70,7 @@ document.addEventListener('DOMContentLoaded', function () {
     } else {
         console.error("Element with ID 'wipe-reports-btn' not found.");
     }
-});
+}
 
 // Function to assign a badge
 async function assignBadge() {

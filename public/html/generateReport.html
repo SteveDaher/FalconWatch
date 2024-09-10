@@ -1,0 +1,86 @@
+<!-- Path: client/html/generateReport.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Weekly crime insights report from FalconWatch.">
+  <meta name="keywords" content="crime, insights, report, FalconWatch, public safety">
+  <title>FalconWatch Insights Report</title>
+  
+  <!-- Link to custom CSS for styling the report -->
+  <link rel="stylesheet" href="/css/generateReportStyle.css">
+
+  <!-- D3.js library for creating dynamic charts -->
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+
+  <style>
+    /* Hide the whole page by default */
+    body {
+        display: none;
+    }
+</style>
+
+
+</head>
+<body>
+  <div class="body"> <!-- Add this wrapper to control visibility -->
+    <!-- Header with logo and navigation buttons -->
+    <div id="header">
+      <div class="logo-container">
+        <img src="/img/logoFW.png" alt="Logo" class="heading-logo2"> <!-- FalconWatch logo -->
+      </div>
+      <div id="nav-buttons">
+        <a href="/html/main.html" class="active-link">Home</a>
+        <a href="/html/services.html" id="view-services">View Services</a>
+        <a href="/html/login.html" id="sign-out" class="sign-out-btn">Sign Out</a>
+      </div>
+    </div>
+
+    <!-- Main container for insights report -->
+    <div class="container">
+      <div class="heading-logo-container">
+        <h1 class="insights-heading">FalconWatch <span class="fancy-text">Insights</span></h1>
+        <img src="/img/logoFW.png" alt="Logo" class="heading-logo1"> <!-- Additional FalconWatch logo -->
+      </div>
+      <div class="divider"></div>
+
+      <!-- Report background image with overlay text -->
+      <div class="report-background-container">
+        <img src="/img/reportBackground.png" alt="Report Background" class="report-background">
+        <div class="overlay-text">
+          <h1 class="report-title">FalconWatch Weekly Report</h1>
+          <p class="report-date">Week of <span id="title-start-date"></span> to <span id="title-end-date"></span></p>
+        </div>
+      </div>
+
+      <!-- Insights introduction section -->
+      <p class="insights-intro" style="font-weight: bold;">
+        FalconWatch offers a comprehensive analysis of crime and public safety trends for the previous week, 
+        covering the period from <span id="start-date">[start date]</span> to <span id="end-date">[end date]</span>.
+        This report provides valuable insights into the incidents that occurred.
+      </p>
+      
+      <!-- Section for summary of highest crime types -->
+      <div class="crime-report-section">
+        <div class="crime-text">
+          <h2>Summary of Highest Crime Types</h2>
+          <p id="highest-crime-category">[This section will contain the highest category of crime for the current week.]</p>
+        </div>
+        <div id="crimeChart"></div> <!-- D3.js chart will be rendered here -->
+      </div>
+      
+      <!-- Additional sections for crime areas and summary -->
+      <h2>Areas with the Highest Crime Types</h2>
+      <h2>Crime Summary (Index, Rate, Count, Trend)</h2>
+      <p class="placeholder-text">[This section will display the crime summary, including index, rate, count, and trend analysis.]</p>
+
+      <!-- Back button to navigate back to services -->
+      <a href="/html/services.html" class="back-btn">Back to Services</a>
+    </div>
+  </div> <!-- End of page-content -->
+
+  <!-- Load the custom JavaScript for generating the report -->
+  <script src="/js/generateReport.js"></script>
+</body>
+</html>

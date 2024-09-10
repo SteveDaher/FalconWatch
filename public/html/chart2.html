@@ -1,71 +1,90 @@
+<!-- Path: client/html/chart2.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FalconWatch Crime Report</title>
-  
-  <!-- Corrected CSS file paths -->
-  <link rel="stylesheet" href="/css/chartStyle.css">
-  <link rel="stylesheet" href="/css/chartStyle2.css">
-  
-  <!-- External libraries -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
-  
-  <!-- Corrected JS file path -->
-  <script src="/js/chart2.js" defer></script>
-  <script src="/socket.io/socket.io.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FalconWatch Crime Report</title>
 
+    <!-- Link to external stylesheets for chart styling -->
+    <link rel="stylesheet" href="/css/chartStyle.css">
+    <link rel="stylesheet" href="/css/chartStyle2.css">
+
+    <!-- External libraries for Chart.js and plugins -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+
+    <!-- Link to custom JavaScript for this page -->
+    <script src="/js/chart2.js" defer></script>
+    <script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
-  <div id="header">
-    <div id="user-info">
-      <span id="user-name"></span>
-    </div>
-    <img src="/client/public/img/logoFW.png" alt="Logo" id="logo">
-    <div id="nav-buttons">
-      <a href="/client/public/html/main.html" class="active-link">Home</a>
-      <a href="/client/public/html/services.html" id="view-services">View Services</a>
-      <a href="/client/public/html/login.html" id="sign-out" class="sign-out-btn">Sign Out</a>
-    </div>
-  </div>
+    <div class="page-content"> <!-- Add this wrapper to control visibility -->
+        <!-- Header section with user info, logo, and navigation -->
+        <div id="header">
+            <div id="user-info">
+                <span id="user-name"></span> <!-- Placeholder for displaying the user's name -->
+            </div>
+            <img src="/img/logoFW.png" alt="FalconWatch Logo" id="logo"> <!-- Logo image with alt text -->
+            <div id="nav-buttons">
+                <a href="/client/public/html/main.html" class="active-link">Home</a> <!-- Link to home page -->
+                <a href="/client/public/html/services.html" id="view-services">View Services</a> <!-- Link to services page -->
+                <a href="/client/public/html/login.html" id="sign-out" class="sign-out-btn">Sign Out</a> <!-- Sign out button -->
+            </div>
+        </div>
 
-  <div class="container">
-    <h1>Crimes Report</h1>
-    <div class="chart-wrapper">
-      <div class="chart-container">
-        <canvas id="categoryChart"></canvas>
-      </div>
-      <div id="total-crimes-container">
-        <h2>Total Crimes this Month:</h2>
-        <p id="total-crimes">0</p>
-      </div>
-    </div>
-    <div class="filter-container">
-      <label for="monthFilter">Filter by Month:</label>
-      <select id="monthFilter">
-        <option value="">Select Month</option>
-        <option value="2024-01">January 2024</option>
-        <option value="2024-02">February 2024</option>
-        <option value="2024-03">March 2024</option>
-        <option value="2024-04">April 2024</option>
-        <option value="2024-05">May 2024</option>
-        <option value="2024-06">June 2024</option>
-        <option value="2024-07">July 2024</option>
-        <option value="2024-08">August 2024</option>
-        <option value="2024-09">September 2024</option>
-        <option value="2024-10">October 2024</option>
-        <option value="2024-11">November 2024</option>
-        <option value="2024-12">December 2024</option>
-      </select>
-      <label for="typeFilter">Filter by Type:</label>
-      <select id="typeFilter">
-        <option value="category">Category</option>
-        <option value="severity">Severity</option>
-      </select>
-    </div>
-    <a href="/html/services.html" class="back-btn">Back to Services</a>
-  </div>
+        <!-- Main container for the chart and filters -->
+        <div class="container">
+            <h1>Crimes Report</h1> <!-- Page heading -->
+
+            <!-- Chart section displaying crime data -->
+            <div class="chart-wrapper">
+                <div class="chart-container">
+                    <canvas id="categoryChart"></canvas> <!-- Canvas element for the chart -->
+                </div>
+                <div id="total-crimes-container">
+                    <h2>Total Crimes this Month:</h2> <!-- Label for total crimes -->
+                    <p id="total-crimes">0</p> <!-- Placeholder for displaying total crimes -->
+                </div>
+            </div>
+
+            <!-- Filter section for filtering crimes by month, type, and location -->
+            <div class="filter-container">
+                <label for="monthFilter">Filter by Month:</label>
+                <select id="monthFilter">
+                    <!-- Dropdown options for month filtering -->
+                    <option value="">Select Month</option>
+                    <option value="2024-01">January 2024</option>
+                    <option value="2024-02">February 2024</option>
+                    <option value="2024-03">March 2024</option>
+                    <option value="2024-04">April 2024</option>
+                    <option value="2024-05">May 2024</option>
+                    <option value="2024-06">June 2024</option>
+                    <option value="2024-07">July 2024</option>
+                    <option value="2024-08">August 2024</option>
+                    <option value="2024-09">September 2024</option>
+                    <option value="2024-10">October 2024</option>
+                    <option value="2024-11">November 2024</option>
+                    <option value="2024-12">December 2024</option>
+                </select>
+
+                <label for="typeFilter">Filter by Type:</label>
+                <select id="typeFilter">
+                    <!-- Dropdown options for filtering by crime type -->
+                    <option value="category">Category</option>
+                    <option value="severity">Severity</option>
+                </select>
+
+                <!-- Dropdown to filter crimes by location -->
+                <label for="locationFilter">Filter by Location:</label>
+                <select id="locationFilter">
+                    <option value="">All Locations</option>
+                </select>
+            </div>
+
+            <!-- Back button to return to services page -->
+            <a href="/html/services.html" class="back-btn">Back to Services</a>
+        </div>
+    </div> <!-- End of page-content -->
 </body>
 </html>

@@ -1,32 +1,50 @@
+<!-- Path: client/html/login.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
+    <!-- Link to external CSS file for styling -->
     <link rel="stylesheet" href="/css/loginStyle.css"> <!-- Adjusted path -->
 </head>
 <body>
+    <!-- Grid container for centering the login form -->
     <div class="grid align__item">
         <div class="register">
-            <img src="/img/logoFW.png" class="site__logo" alt="Logo"> <!-- Adjusted path -->
+            <!-- Site logo for branding -->
+            <img src="/img/logoFW.png" class="site__logo" alt="FalconWatch Logo"> <!-- Adjusted path -->
+            
+            <!-- Login form heading -->
             <h2>Login</h2>
+            
+            <!-- Login form with fields for identifier (email or badge number) and password -->
             <form id="login-form" class="form">
+                
+                <!-- Identifier field (email or badge number) -->
                 <div class="form__field">
                     <label for="identifier">Email or Badge Number</label>
                     <input type="text" id="identifier" name="identifier" placeholder="Email or Badge Number" required>
                 </div>
+                
+                <!-- Password field -->
                 <div class="form__field">
                     <label for="password">Password</label>
                     <input type="password" id="password" name="password" placeholder="••••••••••••" required>
                 </div>
+                
+                <!-- Submit button for form submission -->
                 <div class="form__field">
                     <input type="submit" value="Login">
                 </div>
             </form>
+            
+            <!-- Link for users to sign up if they don't have an account -->
             <p>Don't have an account? <a href="/html/register.html">Sign up</a></p> <!-- Adjusted path -->
         </div>
     </div>
+    
+    <!-- External JavaScript file to handle form submission -->
     <script src="/js/login.js"></script> <!-- Adjusted path -->
 </body>
 </html>

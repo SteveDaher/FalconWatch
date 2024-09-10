@@ -1,54 +1,69 @@
+<!-- Path: client/html/admin.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="/css/reportHistoryStyle.css">
-  <title>FalconWatch Police Accounts</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FalconWatch Police Accounts</title>
+    <!-- Link to external stylesheet for admin functionalities -->
+    <link rel="stylesheet" href="/css/reportHistoryStyle.css">
+    
+    <style>
+      /* Hide the whole page by default */
+      body {
+          display: none;
+      }
+  </style>
+  
 </head>
 <body>
+    <!-- Header section with logo and navigation buttons -->
+    <div id="header">
+        <img src="/img/logoFW.png" alt="FalconWatch Logo" id="logo"> <!-- Adjusted path for logo -->
+        <div id="nav-buttons">
+            <a href="/html/main.html" class="active-link">Home</a> <!-- Adjusted path for home -->
+            <a href="/html/services.html" id="view-services">View Services</a> <!-- Adjusted path for services -->
+        </div>
+    </div>
 
-  <div id="header">
-    <img src="/img/logoFW.png" alt="Logo" id="logo">
-    <div id="nav-buttons">
-      <a href="/html/main.html" class="active-link">Home</a>
-      <a href="/html/services.html" id="view-services">View Services</a>
+    <!-- Main container for police officer accounts -->
+    <div class="container">
+        <h1>Police Officer Accounts</h1>
+
+        <!-- Search bar for filtering accounts by name or badge number -->
+        <div class="search-bar">
+            <input type="text" id="search-input" placeholder="Search by name or badge number...">
+            <button id="search-button">Search</button>
+        </div>
+
+        <!-- Table to display police officer accounts -->
+        <div class="table-container">
+            <table id="police-accounts-table">
+                <thead>
+                    <tr>
+                        <th>Badge Number</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Date Created</th>
+                        <th>Phone</th>
+                        <th>Actions</th> <!-- New column for account-related actions -->
+                    </tr>
+                </thead>
+                <tbody id="police-accounts-body">
+                    <!-- Table rows will be dynamically populated via JavaScript -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination controls for navigating through accounts -->
+        <div class="pagination" id="pagination-controls"></div>
+
+        <!-- Back button to navigate back to services page -->
+        <a href="/html/services.html" class="back-btn">Back to Services</a> <!-- Adjusted path -->
     </div>
-  </div>
-  
-  <div class="container">
-    <h1>Police Officer Accounts</h1>
-    
-    <!-- Search Bar -->
-    <div class="search-bar">
-      <input type="text" id="search-input" placeholder="Search by name or badge number...">
-      <button id="search-button">Search</button>
-    </div>
-    
-    <!-- Police Accounts Table -->
-    <div class="table-container">
-      <table id="police-accounts-table">
-        <thead>
-          <tr>
-            <th>Badge Number</th>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Role</th>
-            <th>Date Created</th>
-            <th>Phone</th>
-            <th>Actions</th> <!-- New column for actions -->
-          </tr>
-        </thead>
-        <tbody id="police-accounts-body">
-          <!-- Police accounts will be dynamically generated here -->
-        </tbody>
-      </table>
-    </div>
-    <div class="pagination" id="pagination-controls">
-      <!-- Pagination controls will be dynamically generated here -->
-    </div>
-    <a href="/html/services.html" class="back-btn">Back to Services</a>
-  </div>
-  <script src="/js/policeAccounts.js"></script>
+
+    <!-- External JavaScript to handle admin functionalities like badge assignment -->
+    <script src="/js/policeAccounts.js"></script> <!-- Adjusted path -->
 </body>
 </html>

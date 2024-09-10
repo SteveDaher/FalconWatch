@@ -1,42 +1,57 @@
+<!-- Path: client/html/chart4.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FalconWatch Crime Trends</title>
+
+  <!-- Link to external styles -->
   <link rel="stylesheet" href="/css/chartStyle.css">
+
+  <!-- Include Chart.js library -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <div id="header">
-    <div id="user-info">
-      <span id="user-name"></span>
+  <div class="page-content"> <!-- Add this wrapper to control visibility -->
+    <!-- Header with logo and navigation buttons -->
+    <div id="header">
+      <div id="user-info">
+        <span id="user-name"></span> <!-- Placeholder for user name -->
+      </div>
+      <img src="/img/logoFW.png" alt="Logo" id="logo"> <!-- Logo image -->
+      <div id="nav-buttons">
+        <a href="/html/main.html" class="active-link">Home</a> <!-- Link to Home -->
+        <a href="/html/services.html" id="view-services">View Services</a> <!-- Link to Services -->
+        <a href="/html/login.html" id="sign-out" class="sign-out-btn">Sign Out</a> <!-- Link to sign out -->
+      </div>
     </div>
-    <img src="/img/logoFW.png" alt="Logo" id="logo">
-    <div id="nav-buttons">
-      <a href="/html/main.html" class="active-link">Home</a>
-      <a href="/html/services.html" id="view-services">View Services</a>
-      <a href="/html/login.html" id="sign-out" class="sign-out-btn">Sign Out</a>
-    </div>
-  </div>
 
-  <div class="container">
-    <h1>Crime Trends</h1>
-    <div class="filter-container">
-      <label for="yearFilter">Select Year:</label>
-      <select id="yearFilter" onchange="fetchCrimeData()">
-        <option value="2024">2024</option>
-        <option value="2023">2023</option>
-        <option value="2022">2022</option>
-        <!-- Add more years as needed -->
-      </select>
-    </div>
-    <div class="chart-container">
-      <canvas id="myChart" width="800" height="600"></canvas> <!-- Adjusted width and height -->
-    </div>
-    <a href="/html/services.html" class="back-btn">Back to Services</a>
-  </div>
+    <!-- Main container for crime trends -->
+    <div class="container">
+      <h1>Crime Trends</h1> <!-- Page title -->
 
-  <script src="/js/chart4.js" defer></script>
+      <!-- Year filter dropdown -->
+      <div class="filter-container">
+        <label for="yearFilter">Select Year:</label>
+        <select id="yearFilter" onchange="fetchCrimeData()">
+          <option value="2024">2024</option>
+          <option value="2023">2023</option>
+          <option value="2022">2022</option>
+          <!-- More years can be added as needed -->
+        </select>
+      </div>
+
+      <!-- Canvas for the chart -->
+      <div class="chart-container">
+        <canvas id="myChart" width="800" height="600"></canvas> <!-- Canvas for rendering the chart -->
+      </div>
+
+      <!-- Back button -->
+      <a href="/html/services.html" class="back-btn">Back to Services</a>
+    </div>
+  </div> <!-- End of page-content -->
+  <!-- Link to custom JavaScript -->
+  <script src="/js/chart4.js" defer></script> <!-- Defer loading of JavaScript -->
 </body>
 </html>

@@ -1,26 +1,29 @@
 /* General Styles */
 body {
+    /* Remove default margin and set a background image that covers the entire page */
     margin: 0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: url('/img/background.jpg') no-repeat center center fixed;
     background-size: cover;
-    color: #333;
+    color: #333; /* Set text color */
 }
 
 /* Header Styles */
 #header {
+    /* Flexbox layout for header: align logo and navigation horizontally */
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 15px 30px;
-    background: #ffffff;
-    border-bottom: 2px solid #40ac0e;
+    background: #ffffff; /* White background */
+    border-bottom: 2px solid #40ac0e; /* Green border */
     position: relative;
     z-index: 9999;
-    box-shadow: 0 2px 3px #00000049;
+    box-shadow: 0 2px 3px #00000049; /* Shadow under the header */
 }
 
 #header img {
+    /* Styles for logo image */
     height: 60px;
     width: auto;
     max-width: 170px;
@@ -30,31 +33,36 @@ body {
 }
 
 #nav-buttons {
+    /* Flexbox for navigation buttons */
     display: flex;
     align-items: center;
 }
 
 #nav-buttons a {
+    /* Styles for navigation links */
     text-decoration: none;
     font-size: 16px;
     font-weight: 400;
     cursor: pointer;
     margin: 0 10px;
     transition: color 0.3s ease, text-decoration 0.3s ease;
-    color: #17820e;
+    color: #17820e; /* Green color */
 }
 
 #nav-buttons a:hover {
-    color: #2fb63a;
+    /* Hover effect for navigation links */
+    color: #2fb63a; /* Lighter green on hover */
     text-decoration: underline;
 }
 
 .active-link {
+    /* Style for active link */
     font-weight: bold !important;
 }
 
 /* Container Styles */
 .container {
+    /* Main container with background and box shadow */
     max-width: 1000px;
     margin: 30px auto;
     padding: 20px;
@@ -65,21 +73,24 @@ body {
 }
 
 h1 {
+    /* Heading styles */
     color: #006C35; /* Dubai Police green */
     font-size: 24px;
     margin-bottom: 20px;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    border-bottom: 2px solid #333;
+    text-transform: uppercase; /* Uppercase letters */
+    letter-spacing: 2px; /* Spacing between letters */
+    border-bottom: 2px solid #333; /* Dark border under the heading */
     padding-bottom: 10px;
 }
 
 /* Form Styles */
 form {
+    /* Margin for form */
     margin-bottom: 20px;
 }
 
 label {
+    /* Label styling */
     display: block;
     text-align: left;
     margin-top: 10px;
@@ -89,18 +100,20 @@ label {
 
 input[type="email"],
 input[type="text"] {
+    /* Input field styles */
     width: 100%;
     padding: 10px;
     margin-top: 5px;
     margin-bottom: 15px;
     border-radius: 5px;
-    border: 1px solid #004C2A; /* Dubai Police dark green */
-    background-color: #004C2A; /* Dubai Police dark green */
-    color: #ffffff;
+    border: 1px solid #004C2A; /* Dark green border */
+    background-color: #004C2A; /* Dark green background */
+    color: #ffffff; /* White text */
     box-sizing: border-box;
 }
 
 button {
+    /* Button styling */
     width: 100%;
     padding: 10px 0;
     background-color: #006C35; /* Dubai Police green */
@@ -116,16 +129,19 @@ button {
 }
 
 button:hover {
+    /* Hover effect for buttons */
     background-color: #004C2A; /* Darker shade for hover */
 }
 
 #status {
+    /* Status message styling */
     margin-top: 20px;
     font-weight: bold;
-    color: #E8E8E8; /* Light gray for better visibility */
+    color: #E8E8E8; /* Light gray for visibility */
 }
 
 .back-btn {
+    /* Back button styling */
     display: block;
     text-align: center;
     padding: 10px 15px;
@@ -140,11 +156,13 @@ button:hover {
 }
 
 .back-btn:hover {
+    /* Hover effect for back button */
     background-color: #2fb63a;
 }
 
 /* Mobile Responsive */
 @media only screen and (max-width: 600px) {
+    /* Responsive styling for smaller screens */
     .container {
         width: 90%;
         padding: 20px;
@@ -159,9 +177,9 @@ button:hover {
     }
 }
 
-
 /* AdminStyle PoliceAccounts */
 
+/* Search bar styling for police accounts section */
 .search-bar {
     display: flex;
     justify-content: space-between;
@@ -169,6 +187,7 @@ button:hover {
 }
 
 .search-bar input[type="text"] {
+    /* Input field for search bar */
     width: 80%;
     padding: 10px;
     border-radius: 5px;
@@ -177,6 +196,7 @@ button:hover {
 }
 
 .search-bar button {
+    /* Button for search bar */
     width: 18%;
     padding: 10px;
     background-color: #378f7b;
@@ -189,19 +209,23 @@ button:hover {
 }
 
 .search-bar button:hover {
+    /* Hover effect for search bar button */
     background-color: #45a049;
 }
 
+/* Table container styling */
 .table-container {
     margin-top: 20px;
 }
 
+/* Table styles for police accounts */
 #police-accounts-table {
     width: 100%;
     border-collapse: collapse;
 }
 
-#police-accounts-table th, #police-accounts-table td {
+#police-accounts-table th, 
+#police-accounts-table td {
     padding: 10px;
     text-align: left;
     border-bottom: 1px solid #ddd;
@@ -211,3 +235,4 @@ button:hover {
     background-color: #354152;
     color: white;
 }
+

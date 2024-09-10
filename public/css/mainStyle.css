@@ -1,20 +1,22 @@
+/* Base body and html styling */
 html, body {
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
   height: 100vh;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-  background: #fff;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Default font family */
+  background: #fff; /* Default white background */
 }
 
+/* Header section */
 #header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 15px 30px;
   background: #ffffff;
-  border-bottom: 2px solid #2b966f;
+  border-bottom: 2px solid #2b966f; /* Green border at the bottom */
   position: relative;
   z-index: 9999;
 }
@@ -32,12 +34,13 @@ html, body {
   display: inline-block;
 }
 
+/* Dropdown menu content */
 .dropdown-content {
   display: none;
   position: absolute;
-  background-color: rgba(255, 255, 255, 0.99); /* 50% opacity */
+  background-color: rgba(255, 255, 255, 0.99); /* Slight opacity */
   min-width: 190px;
-  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2); /* Light shadow */
   z-index: 1;
   list-style: none;
   padding: 0;
@@ -48,6 +51,7 @@ html, body {
   text-align: left;
 }
 
+/* Links in dropdown menu */
 .dropdown-content li a {
   color: black;
   padding: 12px 16px;
@@ -55,9 +59,9 @@ html, body {
   display: block;
 }
 
+/* Hover effect for dropdown links */
 .dropdown-content li a:hover {
-  background-color:   
-#f1f1f1;
+  background-color: #f1f1f1;
 }
 
 /* Show the dropdown on hover */
@@ -65,6 +69,7 @@ html, body {
   display: block;
 }
 
+/* Logo styling */
 #logo {
   height: 60px;
   width: auto;
@@ -73,6 +78,7 @@ html, body {
   object-fit: contain;
 }
 
+/* Navigation buttons */
 #nav-buttons {
   display: flex;
   align-items: center;
@@ -85,90 +91,79 @@ html, body {
   cursor: pointer;
   margin: 0 10px;
   transition: color 0.3s ease, text-decoration 0.3s ease;
-  color: #2b966f;
+  color: #2b966f; /* Green color */
 }
 
 #nav-buttons a:hover {
-  color: #31b283;
-}
-
-#toggle-reporting {
-  color: #ff0000 !important;
-}
-
-#toggle-reporting:hover {
-  color: #ff6666 !important;
+  color: #31b283; /* Lighter green on hover */
 }
 
 .active-link {
-  font-weight: bold !important;
+  font-weight: bold !important; /* Bold active link */
 }
 
+/* User info section in the header */
 #user-info {
   display: flex;
   align-items: center;
   margin-left: 20px;
 }
 
+/* User icon styling */
 #user-icon {
   height: 40px;
   width: 40px;
-  border-radius: 50%;
+  border-radius: 50%; /* Round profile icon */
   margin-right: 10px;
 }
 
+/* Sign out button styling */
 .sign-out-btn {
   padding: 10px 20px;
-  color: #ff0000 !important;
+  color: #ff0000 !important; /* Red color for sign out */
   text-decoration: none;
   border-radius: 5px;
   margin-left: 10px;
 }
 
 .sign-out-btn:hover {
-  color: #2b966f !important;
+  color: #2b966f !important; /* Green color on hover */
 }
 
+/* Map styling to take full available height */
 #map {
   flex: 1;
-  height: calc(100vh - 140px);
+  height: calc(100vh - 140px); /* Adjust height to account for header */
   background: transparent;
 }
 
-.mapbox-logo{ display: none; } .mapboxgl-ctrl-logo { display: none !important; } .mapbox-improve-map { display: none; } .mapboxgl-ctrl-compass { display: none;  
-} .mapboxgl-ctrl-bottom-right {
-  display: none; 
-}
-
-
-/* Container for the filter section */
+/* Filter section container at the bottom */
 #filter-container {
-  display: block; /* Ensure the container is part of the layout */
+  display: block;
   position: fixed;
   bottom: 0;
   width: 100%;
-  background-color: rgba(255, 255, 255, 0.85); /* Slightly transparent background */
+  background-color: rgba(255, 255, 255, 0.85); /* Slightly transparent */
   color: #000;
   padding: 15px 20px;
   box-sizing: border-box;
-  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.2); /* Soft shadow for better depth */
+  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.2); /* Shadow for depth */
   font-size: 16px;
   z-index: 1000;
-  transform: translateY(100%); /* Start hidden by translating it off-screen */
-  transition: transform 0.5s ease-in-out; /* Smooth transition for slide effect */
+  transform: translateY(100%); /* Hidden initially */
+  transition: transform 0.5s ease-in-out; /* Slide effect */
 }
 
-/* Toggle the filter container visibility */
+/* Show filter container when toggled */
 #filter-container.filter-shown {
-  transform: translateY(0); /* Bring the container into view */
+  transform: translateY(0); /* Bring into view */
 }
 
-/* Ensure transition consistency */
 #filter-container.filter-hidden {
-  transform: translateY(100%); /* Keep it hidden */
+  transform: translateY(100%); /* Hide out of view */
 }
 
-/* Toggle button at the bottom */
+/* Toggle button for the filter */
 #toggle-filter-tab {
   position: fixed;
   bottom: 0;
@@ -177,24 +172,24 @@ html, body {
   background-color: rgba(255, 255, 255, 0.85);
   padding: 10px 20px;
   border-radius: 20px 20px 0 0;
-  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.2); /* Soft shadow */
   cursor: pointer;
   text-align: center;
   z-index: 1001;
 }
 
-/* Arrow icon in the toggle button */
+/* Arrow icon for the toggle button */
 #toggle-arrow {
   font-size: 20px;
   transition: transform 0.3s ease;
 }
 
-/* Rotate arrow when filter is shown */
+/* Rotate arrow when the filter is shown */
 #filter-container.filter-shown ~ #toggle-filter-tab #toggle-arrow {
   transform: rotate(180deg);
 }
 
-/* Header for the filter section */
+/* Filter section header */
 #filter-header {
   display: flex;
   justify-content: space-between;
@@ -204,32 +199,32 @@ html, body {
   margin-bottom: 10px;
 }
 
-/* Container for category filters */
+/* Category filters layout */
 #category-filters {
   display: flex;
   justify-content: space-between;
-  flex-wrap: wrap; /* Allow wrapping if the screen is too narrow */
-  gap: 10px; /* Space between the filters */
+  flex-wrap: wrap;
+  gap: 10px; /* Space between filters */
 }
 
-/* Styling for each filter label */
+/* Styling for individual filter labels */
 #category-filters label {
   display: flex;
   align-items: center;
   padding: 5px 10px;
-  background-color: #f5f5f5; /* Light background for better contrast */
+  background-color: #f5f5f5; /* Light background */
   border-radius: 5px;
   cursor: pointer;
   transition: background-color 0.3s ease;
-  flex: 1 1 20%; /* Flex grow and basis */
+  flex: 1 1 20%; /* Flexible width */
 }
 
-/* Change background color on hover for labels */
+/* Hover effect for filter labels */
 #category-filters label:hover {
   background-color: #e0e0e0;
 }
 
-/* Number of crimes indicator */
+/* Filter count styling */
 .filter-count {
   margin-left: auto;
   padding-left: 10px;
@@ -237,21 +232,14 @@ html, body {
   color: #333;
 }
 
-/* Checkbox styling */
+/* Checkbox styling inside filters */
 #category-filters input[type="checkbox"] {
   margin-right: 10px;
 }
 
-
-#severity-line {
-  height: 5px;
-  width: 100%;
-  border-radius: 8px 8px 0 0;
-}
-
-/* Modal */
+/* Modal popup styles */
 .modal {
-  display: none; /* Hidden by default */
+  display: none;
   position: fixed;
   z-index: 1;
   left: 0;
@@ -259,51 +247,15 @@ html, body {
   width: 100%;
   height: 100%;
   overflow: auto;
-  background-color: rgba(0, 0, 0, 0.5);  
-
+  background-color: rgba(0, 0, 0, 0.5); /* Dark semi-transparent background */
 }
 
-/* Modal Content */
-.modal-content {
-  background-color: #111827; /* Dark background color */
-  color: #92A0B0; /* Light text color */
-  margin: 15% auto; /* Adjusted margin for better positioning */
-  padding: 20px;
-  border: 1px solid #444;
-  width: 80%; /* Slightly smaller width */
-  max-width: 600px; /* Smaller maximum width */
-  border-radius: 8px; /* Slightly rounded corners */
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5); /* Slight shadow for depth */
-}
-/* Close Button Styling */
-.modal .close {
-  color: #aaa;
-  float: right;
-  font-size: 28px;
-  font-weight: bold;
-}
+/* Modal content styling */
 
-.modal .close:hover,
-.modal .close:focus {
-  color: #ff0000;
-  text-decoration: none;
-  cursor: pointer;
-}
-
-/* Category Color */
-#report-category {
-  color: #456684; /* Category text color */
-}
-
-/* Modal Heading */
-.modal-content h2, .modal-content p {
-  color: #93A1B1; /* Ensure all text inside the modal is the correct color */
-}
-
-/* Update the background color of the buttons within the popup */
-.view-attachment-btn, .back-button {
+/* View attachment button */
+.view-attachment-btn {
   background-color: #007bff;
-  color: #92A0B0; /* Text color for buttons */
+  color: #92A0B0;
   border: none;
   padding: 8px 12px;
   cursor: pointer;
@@ -311,41 +263,14 @@ html, body {
   margin-top: 10px;
 }
 
-.view-attachment-btn:hover, .back-button:hover {
+.view-attachment-btn:hover {
   background-color: #0056b3;
-  color: white; /* Hover state text color */
+  color: white;
 }
 
-/* Modal Picture Container */
-.picture-modal-content {
-  position: relative;
-  padding: 0;
-}
-
-/* Modal Picture */
-#picture-img {
-  width: 100%; /* Ensure the image takes up the full width of the modal */
-  height: auto;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
-}
-
-/* Styling */
-.modal-content {
-  border: 2px solid #07070715;
-  background-color: #333;
-}
-
-#picture-modal .modal-content {
-  background-color: #1c1c1c;
-}
-
-#picture-img {
-  border: 2px solid #000000;
-}
-
+/* Custom marker styling for map */
 .custom-marker {
-  cursor: pointer; /* Ensure cursor changes to pointer on hover */
+  cursor: pointer;
   background-color: #000;
   border-radius: 50%;
   width: 20px;
@@ -368,6 +293,7 @@ html, body {
   background-color: #df0000;
 }
 
+/* Animation for pulsing red marker */
 .custom-marker.red-marker.pulse {
   position: relative;
 }
@@ -388,23 +314,24 @@ html, body {
 
 @keyframes pulse {
   0% {
-      transform: scale(0.8);
-      opacity: 1;
+    transform: scale(0.8);
+    opacity: 1;
   }
   100% {
-      transform: scale(1.4);
-      opacity: 0;
+    transform: scale(1.4);
+    opacity: 0;
   }
 }
 
+/* Police marker styling */
 .police-marker {
   background-color: transparent;
   background-size: cover;
   background-position: center;
   border-radius: 50%;
   border: 2px solid #fff;
-  width: 50px; /* Adjust width */
-  height: 50px; /* Adjust height */
+  width: 50px;
+  height: 50px;
 }
 
 .police-marker-container {
@@ -413,6 +340,7 @@ html, body {
   align-items: center;
 }
 
+/* Police name label styling */
 .police-name-label {
   background-color: rgba(0, 0, 0, 0.7);
   color: #fff;
@@ -424,49 +352,167 @@ html, body {
   white-space: nowrap;
 }
 
-/* user stuff */
+/* User info section for profile dropdown */
 #user-info {
-  position: relative;
-  display: flex;
-  align-items: center;
-  margin-left: 20px;
-  cursor: pointer;
+position: relative;
+display: flex;
+align-items: center;
+margin-left: 20px;
+cursor: pointer;
 }
 
+/* Dropdown menu for user profile */
 .user-menu-dropdown {
-  display: none;
-  position: absolute;
-  top: 60px; /* Adjust as needed */
-  right: 0;
-  background-color: rgba(255, 255, 255, 0.99); /* Light background */
-  min-width: 160px;
-  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-  z-index: 1;
-  border-radius: 8px;
+display: none;
+position: absolute;
+top: 60px; /* Adjust as needed */
+right: 0;
+background-color: rgba(255, 255, 255, 0.99); /* Light background */
+min-width: 160px;
+box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+z-index: 1;
+border-radius: 8px;
 }
 
+/* Links in user dropdown */
 .user-menu-dropdown a {
-  color: #333;
-  padding: 12px 16px;
-  text-decoration: none;
-  display: block;
-  font-size: 14px;
-  border-bottom: 1px solid #f1f1f1;
+color: #333;
+padding: 12px 16px;
+text-decoration: none;
+display: block;
+font-size: 14px;
+border-bottom: 1px solid #f1f1f1;
 }
 
+/* Hover effect for user dropdown links */
 .user-menu-dropdown a:hover {
-  background-color: #f1f1f1;
+background-color: #f1f1f1;
 }
 
 /* Display dropdown when user-info is clicked */
 .user-dropdown.active .user-menu-dropdown {
-  display: block;
+display: block;
 }
 
-/* additional view report css */
+/* Popup styling for report information */
+.report-popup {
+background-color: #1f2937; /* Dark background color */
+color: #ffffff; /* White text color */
+padding: 15px; /* Padding inside the popup */
+border-radius: 8px; /* Rounded corners */
+width: 280px; /* Width of the popup */
+display: flex;
+flex-direction: column;
+box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.5); /* Shadow for contrast */
+}
+
+.report-popup h3 {
+margin: 0 0 10px 0; /* Spacing around the heading */
+font-size: 1.2em;
+text-align: center; /* Center-aligned heading */
+}
+
+.report-popup p {
+margin: 5px 0; /* Spacing for paragraphs */
+font-size: 0.9em;
+text-align: left; /* Left-aligned text */
+}
+
+/* View attachment button inside report popup */
+.view-attachment-btn {
+background-color: #2563eb;
+color: #ffffff;
+border: none;
+padding: 8px 12px;
+border-radius: 4px;
+cursor: pointer;
+font-size: 0.9em;
+width: 100%; /* Button takes full width */
+text-align: center;
+transition: background-color 0.3s ease;
+margin-top: 10px;
+}
+
+.view-attachment-btn:hover {
+background-color: #1d4ed8;
+}
+
+/* Modal for viewing attachments */
+.attachment-modal {
+position: fixed;
+z-index: 1000;
+left: 0;
+top: 0;
+width: 100%;
+height: 100%;
+background-color: rgba(0, 0, 0, 0.8); /* Dark background with opacity */
+display: flex;
+align-items: center;
+justify-content: center;
+}
+
+/* Modal content for attachments */
+.attachment-modal-content {
+background-color: #1f2937; /* Dark background for modal */
+padding: 20px;
+border-radius: 8px;
+position: relative;
+max-width: 90%;
+max-height: 90%;
+overflow: auto; /* Allow scrolling if content overflows */
+}
+
+/* Close button for modal */
+.close-button {
+position: absolute;
+top: 10px;
+right: 20px;
+color: #ffffff;
+font-size: 28px;
+cursor: pointer;
+}
+
+/* Image or video displayed in the modal */
+.attachment-image, .attachment-video {
+width: 100%;
+height: auto;
+border-radius: 8px;
+margin-top: 20px;
+}
+
+/* Button container for actions */
+.button-container {
+display: flex;
+justify-content: space-between;
+margin-top: 10px;
+}
+
+.view-attachment-btn, .auto-direct-btn {
+flex: 1;
+margin: 2px;
+padding: 8px;
+background-color: #007bff; /* Default blue button color */
+color: white;
+border: none;
+cursor: pointer;
+text-align: center;
+}
+
+.auto-direct-btn {
+background-color: #28a745; /* Green button color */
+}
+
+.view-attachment-btn:hover, .auto-direct-btn:hover {
+opacity: 0.8; /* Slight opacity on hover */
+}
+
+/* Ensure buttons and ETA (Estimated Time of Arrival) are aligned vertically */
+.button-container div {
+margin-bottom: 5px; /* Space between ETA and Auto-Direct button */
+}
 
 
-/* FIXED CODE, IMPORTANT */ 
+/* Report marker CODE, IMPORTANT */ 
 
 .mapboxgl-popup-content {
   background-color: #1f2937 !important; /* Match your custom background */
@@ -486,134 +532,12 @@ html, body {
 }
 /* FIXED*/ 
 
-/* Your custom popup styles */
-.report-popup {
-  background-color: #1f2937; /* Dark background color */
-  color: #ffffff; /* White text color */
-  padding: 15px; /* Reduced padding */
-  border-radius: 8px; /* Rounded corners */
-  width: 280px; /* Adjusted width */
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.5); /* Adjusted shadow for better contrast */
+
+.mapbox-logo{ display: none; } .mapboxgl-ctrl-logo { display: none !important; } .mapbox-improve-map { display: none; } .mapboxgl-ctrl-compass { display: none;  
+} .mapboxgl-ctrl-bottom-right {
+  display: none; 
 }
 
-.report-popup h3 {
-  margin: 0 0 10px 0; /* Adjusted margin */
-  font-size: 1.2em;
-  text-align: center; /* Center-align the title */
-}
-
-.report-popup p {
-  margin: 5px 0; /* Adjusted margins for spacing */
-  font-size: 0.9em;
-  text-align: left; /* Left-align text */
-}
-
-.view-attachment-btn {
-  background-color: #2563eb;
-  color: #ffffff;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.9em;
-  width: 100%; /* Ensure button takes full width */
-  text-align: center; /* Center-align text in button */
-  transition: background-color 0.3s ease;
-  margin-top: 10px;
-}
-
-.view-attachment-btn:hover {
-  background-color: #1d4ed8;
-}
-
-.report-popup .no-attachment {
-  color: #888;
-  font-style: italic;
-  margin-top: 10px;
-  text-align: center; /* Center-align "No Attachment" text */
-}
-
-/* For when the user selects 'view attachment' */ 
-
-.attachment-modal {
-  position: fixed;
-  z-index: 1000;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.8); /* Black background with opacity */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.attachment-modal-content {
-  background-color: #1f2937;
-  padding: 20px;
-  border-radius: 8px;
-  position: relative;
-  max-width: 90%;
-  max-height: 90%;
-  overflow: auto;
-}
-
-.close-button {
-  position: absolute;
-  top: 10px;
-  right: 20px;
-  color: #ffffff;
-  font-size: 28px;
-  cursor: pointer;
-}
-
-.attachment-image, .attachment-video {
-  width: 100%;
-  height: auto;
-  border-radius: 8px;
-  margin-top: 20px;
-}
-
-/* more marker css */ 
-
-.button-container {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 10px;
-}
-
-.view-attachment-btn, .auto-direct-btn {
-  flex: 1;
-  margin: 2px;
-  padding: 8px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  cursor: pointer;
-  text-align: center;
-}
-
-.auto-direct-btn {
-  background-color: #28a745;
-}
-
-.view-attachment-btn:hover, .auto-direct-btn:hover {
-  opacity: 0.8;
-}
-
-.mapboxgl-ctrl-directions {
-  display: none !important;
-}
-
-
-/* Ensure buttons and ETA are aligned vertically */
-.button-container {
-  display: flex;
-  justify-content: space-between;
-}
-
-.button-container div {
-  margin-bottom: 5px; /* Space between ETA and Auto-Direct button */
+.page-content {
+  display: none; /* Hide the content initially */
 }

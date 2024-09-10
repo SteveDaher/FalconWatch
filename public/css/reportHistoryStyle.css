@@ -1,173 +1,199 @@
+/* Global body styles */
 body {
-  margin: 0;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #ffffff;
-  color: #e0e0e0;
+  margin: 0; /* Removes default margin */
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Set global font */
+  background-color: #ffffff; /* White background */
+  color: #e0e0e0; /* Light grey text color */
 }
 
+/* Header styles */
 #header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px 30px;
-  background: #ffffff;
-  border-bottom: 2px solid #40ac0e;
-
-  position: relative;
-  z-index: 1000;
-  box-shadow: 0 2px 3px #00000049;
+  display: flex; /* Flexbox for layout */
+  justify-content: space-between; /* Distribute content with space between */
+  align-items: center; /* Vertically center items */
+  padding: 15px 30px; /* Padding around the header */
+  background: #ffffff; /* White background */
+  border-bottom: 2px solid #40ac0e; /* Green border at the bottom */
+  position: relative; /* Allows z-index to work */
+  z-index: 1000; /* Ensures header stays on top */
+  box-shadow: 0 2px 3px #00000049; /* Subtle shadow for depth */
 }
 
+/* Logo styling */
 #header img {
-  height: 60px;
-  width: auto;
-  max-width: 170px;
-  max-height: 150px;
-  object-fit: contain;
-  display: block;
-  order: 1; 
-
+  height: 60px; /* Fixed height */
+  width: auto; /* Auto width to maintain aspect ratio */
+  max-width: 250px; /* Max width for scaling */
+  max-height: 250px; /* Max height for scaling */
+  object-fit: contain; /* Maintain aspect ratio inside the container */
+  display: block; /* Display as a block element */
+  order: 1; /* Control the order within the flex container */
 }
 
+/* Navigation button container */
 #nav-buttons {
-  display: flex;
-  align-items: center;
-  order: 2; 
+  display: flex; /* Flexbox for layout */
+  align-items: center; /* Center align items vertically */
+  order: 2; /* Flex order */
 }
 
+/* Navigation link styling */
 #nav-buttons a {
-  text-decoration: none;
-  font-size: 16px;
-  font-weight: 400;
-  cursor: pointer;
-  margin: 0 10px;
-  transition: color 0.3s ease, text-decoration 0.3s ease;
-  color: #17820e; 
+  text-decoration: none; /* Remove underline */
+  font-size: 16px; /* Set font size */
+  font-weight: 400; /* Regular weight */
+  cursor: pointer; /* Show pointer cursor on hover */
+  margin: 0 10px; /* Space between navigation items */
+  transition: color 0.3s ease, text-decoration 0.3s ease; /* Smooth transition for hover effects */
+  color: #17820e; /* Green text color */
 }
 
+/* Hover effect for navigation links */
 #nav-buttons a:hover {
-  color: #2fb63a;
-  text-decoration: underline;
+  color: #2fb63a; /* Lighter green on hover */
+  text-decoration: underline; /* Underline on hover */
 }
 
+/* Active link styling */
 .active-link {
-  font-weight: bold !important;
+  font-weight: bold !important; /* Make active link bold */
 }
 
+/* Main content container */
 .container {
-  max-width: 1200px;
-  margin: 30px auto;
-  padding: 20px;
-  background-color: #fcfcfc;
-  border-radius: 8px;
+  max-width: 1200px; /* Max width of container */
+  margin: 30px auto; /* Center the container with vertical spacing */
+  padding: 20px; /* Padding inside the container */
+  background-color: #fcfcfc; /* Very light background */
+  border-radius: 8px; /* Rounded corners */
 }
 
+/* Heading styles */
 h1 {
-  text-align: center;
-  font-size: 28px;
-  margin-bottom: 30px;
-  color: #000000;
-  border-bottom: 2px solid #333;
-  padding-bottom: 10px;
+  text-align: center; /* Center-align the heading */
+  font-size: 28px; /* Font size */
+  margin-bottom: 30px; /* Space below the heading */
+  color: #000000; /* Black text */
+  border-bottom: 2px solid #333; /* Dark bottom border */
+  padding-bottom: 10px; /* Padding below the heading */
 }
 
+/* Table container */
 .table-container {
-  overflow-x: auto;
+  overflow-x: auto; /* Enable horizontal scrolling on small screens */
 }
 
+/* Table styles */
 table {
-  width: 100%;
-  border-collapse: collapse;
-  background-color: #ffffff;
-  color: #000000;
-  border: 2px solid #17820e;
+  width: 100%; /* Full width */
+  border-collapse: collapse; /* Remove space between table cells */
+  background-color: #ffffff; /* White table background */
+  color: #000000; /* Black text color */
+  border: 2px solid #17820e; /* Green border around the table */
 }
 
+/* Table, header, and data cell borders */
 table, th, td {
-  border: 1px solid #17820e;
+  border: 1px solid #17820e; /* Green borders */
 }
 
+/* Header and data cell padding and alignment */
 th, td {
-  padding: 12px;
-  text-align: left;
+  padding: 12px; /* Padding inside cells */
+  text-align: left; /* Left-align text */
 }
 
+/* Table header styling */
 th {
-  background-color: #0d4c07;
-  color: #fdfdfd;
+  background-color: #0d4c07; /* Dark green background for header */
+  color: #fdfdfd; /* White text */
 }
 
+/* Row background color for even rows */
 tr:nth-child(even) {
-  background-color: #e0e0e0;
+  background-color: #e0e0e0; /* Light grey for even rows */
 }
 
+/* Row hover effect */
 tr:hover {
-  background-color: #a9d799;
+  background-color: #a9d799; /* Light green on hover */
 }
 
+/* Pagination container */
 .pagination {
-  display: flex;
-  justify-content: center;
-  margin-top: 30px;
+  display: flex; /* Flexbox for layout */
+  justify-content: center; /* Center the pagination */
+  margin-top: 30px; /* Space above the pagination */
 }
 
+/* Pagination button styling */
 .pagination button {
-  background-color: #0f5b08;
-  color: #e0e0e0;
-  border: 1px solid #787878;
-  padding: 10px 20px;
-  cursor: pointer;
-  border-radius: 4px;
-  margin: 0 5px;
-  transition: background-color 0.3s ease;
+  background-color: #0f5b08; /* Dark green background */
+  color: #e0e0e0; /* Light grey text */
+  border: 1px solid #787878; /* Grey border */
+  padding: 10px 20px; /* Padding inside buttons */
+  cursor: pointer; /* Pointer cursor */
+  border-radius: 4px; /* Rounded corners */
+  margin: 0 5px; /* Space between pagination buttons */
+  transition: background-color 0.3s ease; /* Smooth transition for hover effect */
 }
 
+/* Hover effect for pagination buttons */
 .pagination button:hover {
-  background-color: #17820e;
+  background-color: #17820e; /* Lighter green on hover */
 }
 
+/* Back button styling */
 .back-btn {
-  display: block;
-  width: 20%;
-  margin-left: 470px;
-  padding: 12px;
-  background-color: #0f5b08;
-  color: #e0e0e0;
-  border: none;
-  border-radius: 4px;
-  text-align: center;
-  text-decoration: none;
-  font-size: 18px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  margin-top: 20px;
+  display: block; /* Block element */
+  width: 20%; /* Width of the button */
+  margin-left: 470px; /* Center the button */
+  padding: 12px; /* Padding inside the button */
+  background-color: #0f5b08; /* Dark green background */
+  color: #e0e0e0; /* Light grey text */
+  border: none; /* Remove border */
+  border-radius: 4px; /* Rounded corners */
+  text-align: center; /* Center-align text */
+  text-decoration: none; /* Remove underline */
+  font-size: 18px; /* Font size */
+  cursor: pointer; /* Pointer cursor */
+  transition: background-color 0.3s ease; /* Smooth transition for hover effect */
+  margin-top: 20px; /* Space above the button */
 }
 
+/* Hover effect for back button */
 .back-btn:hover {
-  background-color: #17820e;
+  background-color: #17820e; /* Lighter green on hover */
 }
 
+/* Responsive styles for smaller screens */
 @media (max-width: 768px) {
   .container {
-    padding: 15px;
+    padding: 15px; /* Adjust padding for smaller screens */
   }
   .back-btn {
-    font-size: 16px;
+    font-size: 16px; /* Adjust font size for smaller screens */
   }
 }
 
+/* Text color for different levels of severity */
 .low {
-  color: #307332; /* Green */
+  color: #307332; /* Green for low severity */
 }
 
 .medium {
-  color: #f4c61f; /* Yellow */
+  color: #f4c61f; /* Yellow for medium severity */
 }
 
 .high {
-  color: #dd2c1f; /* Red */
+  color: #dd2c1f; /* Red for high severity */
 }
 
+/* Label styling */
 label {
-  font-weight: 500;
+  font-weight: 500; /* Bold font weight */
+}
+
+.page-content {
+  display: none; /* Hide the content initially */
 }

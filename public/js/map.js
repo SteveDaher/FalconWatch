@@ -1,4 +1,4 @@
-//Path: client/js/map.js
+// Path: client/public/js/map.js
 mapboxgl.accessToken = 'pk.eyJ1IjoiZmFsY29ud2F0Y2giLCJhIjoiY2x5ZWIwcDJhMDBxbTJqc2VnYWMxeWNvdCJ9.bijpr26vfErYoGhhlQnaFA';
 mapboxgl.setRTLTextPlugin('https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-rtl-text/v0.2.3/mapbox-gl-rtl-text.js');
 
@@ -6,63 +6,44 @@ let map;  // Declare the map variable in the global scope
 let isZoomingToPin = false; // Flag to indicate if we are zooming to a pin
 
 document.addEventListener('DOMContentLoaded', function () {
-    console.log('DOMContentLoaded event fired1.');
+
+    // Hide the page content initially
+    const pageContent = document.querySelector('.page-content');
+    pageContent.style.display = 'none';
 
     const token = localStorage.getItem('authToken');
     const role = localStorage.getItem('role');
 
-    // Debugging statements to verify values
-    console.log('Token:', token);
-    console.log('Role:', role);
-
-    // Redirect to login if no token is found
-    if (!token) {
-        console.error('No auth token found. Redirecting to login.');
+    // Redirect to login if no auth token or the role isn't 'police'
+    if (!token || role !== 'police') {
+        console.error('Authentication failed. Redirecting to login.');
         window.location.href = '/html/login.html';
         return;
-    }
-
-    // Redirect to login if the user is not a police officer
-    if (role !== 'police') {
-        alert('Access denied. Tracking is enabled only for police users.');
-        window.location.href = '/html/login.html';
-        return;
-    }
-
-    const autoDirectButton = document.getElementById('auto-direct-button');
-    if (autoDirectButton) {
-        autoDirectButton.addEventListener('click', function () {
-            toggleDirectionsControl(map);
-        });
-    } else {
-        console.error('Auto-Direct button not found.');
     }
 
     // Set up the Socket.IO connection
     const socket = initializeSocket();
 
-    console.log('Emitting authenticate event with token:', token);
     socket.emit('authenticate', { token });
 
     socket.on('authenticated', (data) => {
-        console.log('Authentication response received:', data);
 
         if (data.success) {
             const { id: userId, name, role } = data.user; // Ensure 'role' is part of the data.user object
-            console.log('Authenticated user:', userId, name, role);
 
             // Update the user name on the page
             const userNameElement = document.getElementById('user-name');
             if (userNameElement) {
                 userNameElement.textContent = name;
-                console.log('User name updated on page:', name);
             } else {
                 console.error('User name element not found on the page.');
             }
 
             if (role === 'police') {
+                // Now that the user is authorized, show the page content
+                pageContent.style.display = 'block';
+
                 // Initialize the map and related functionalities only for police role
-                console.log('Initializing map and related functionalities...');
                 map = initializeMap();
                 setupMapStyleSwitcher(map);
                 setupLanguageControls(map);
@@ -80,6 +61,7 @@ document.addEventListener('DOMContentLoaded', function () {
             window.location.href = '/html/login.html';
         }
     });
+
 
     socket.on('disconnect', () => {
         console.warn('Disconnected from server.');
@@ -100,16 +82,13 @@ document.addEventListener('DOMContentLoaded', function () {
             window.location.href = '/html/login.html'; // Redirect to login page
         });
     } else {
-        console.error('Sign Out button not found.');
     }
 });
 
 // Ensure initializeSocket is defined and correctly connects to your Socket.IO server
 function initializeSocket() {
-    console.log('Initializing Socket.IO connection...');
     const socket = io.connect(); 
     socket.on('connect', () => {
-        console.log('Socket.IO connected:', socket.id);
     });
     return socket;
 }
@@ -124,18 +103,25 @@ function initializeMap() {
         zoom: mapState.zoom || 15,
         center: mapState.center || [55.146127904809504, 25.041687862886718], // Default center
         bearing: mapState.bearing || -50,
-        minZoom: 14,
-        maxZoom: 18,
+        minZoom: 10,
+        maxZoom: 21,
         pitch: mapState.pitch || 0
     });
 
-    console.log('Map initialized.');
 
+    
     map.on('load', () => {
         setMapLightBasedOnTime();
         setInterval(setMapLightBasedOnTime, 600000);  // Update every minute
 
         restoreMapState(map); // Restore the map's previous state
+        
+        // Add a 4-second buffer before hiding the loading screen
+    setTimeout(() => {
+        document.getElementById('loading-screen').style.display = 'none'; // Hide loading screen after 4 seconds
+        document.getElementById('content').style.display = 'block'; // Show the content
+    }, 4000); // 4000 milliseconds = 4 seconds
+
     });
 
     // Save map state on unload
@@ -153,7 +139,6 @@ function saveMapState(map) {
         pitch: map.getPitch()
     };
     sessionStorage.setItem('mapState', JSON.stringify(mapState));
-    console.log('Map state saved:', mapState);
 }
 
 // Get saved map state from sessionStorage
@@ -170,7 +155,6 @@ function restoreMapState(map) {
         map.setZoom(mapState.zoom);
         map.setBearing(mapState.bearing);
         map.setPitch(mapState.pitch);
-        console.log('Map state restored:', mapState);
     }
 }
 
@@ -200,7 +184,6 @@ function handleShowPinFromURL(map) {
     const lat = parseFloat(params.get('lat'));
 
     if (!isNaN(lng) && !isNaN(lat)) {
-        console.log('Zooming to coordinates from URL:', lng, lat);
 
         if (map.isStyleLoaded()) {
             flyToPin(map, lng, lat);
@@ -209,9 +192,7 @@ function handleShowPinFromURL(map) {
                 flyToPin(map, lng, lat);
             });
         }
-    } else {
-        console.log('No valid coordinates found in the URL.');
-    }
+    } 
 }
 
 // Function to fly to the pin's coordinates
@@ -227,7 +208,6 @@ function flyToPin(map, lng, lat) {
         .setHTML('<p>Incident Location</p>')
         .addTo(map);
 
-    console.log('Map has flown to the coordinates:', [lng, lat]);
 }
 
 // Call the function after initializing the map
@@ -235,7 +215,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if (map) {
         handleShowPinFromURL(map);
     } else {
-        console.error('Map is not initialized.');
     }
 });
 
@@ -256,7 +235,6 @@ function trackUserLocation(userId, userName, map, socket) {
             if (!isZoomingToPin && !getSavedMapState().center) {
                 map.once('moveend', () => {
                     map.setCenter([longitude, latitude]);
-                    console.log(`Map centered on user's location: Latitude: ${latitude}, Longitude: ${longitude}`);
                 });
             }
 
@@ -324,7 +302,6 @@ function listenForPoliceLocations(currentUserId, map, socket) {
 
 // Update or add a marker for police locations with the officer's name
 function updateOrAddMarker(map, userId, latitude, longitude, userName) {
-    console.log(`Updating or adding marker for user ${userId} at [${longitude}, ${latitude}]`);
 
     if (!window.userMarkers) {
         window.userMarkers = {};
@@ -364,7 +341,6 @@ function updateOrAddMarker(map, userId, latitude, longitude, userName) {
 
         window.userMarkers[userId] = { marker, nameLabel };
 
-        console.log(`Added new marker for user ${userId}`);
     }
 }
 
@@ -373,7 +349,6 @@ function removeMarker(map, userId) {
     if (window.userMarkers && window.userMarkers[userId]) {
         window.userMarkers[userId].marker.remove(); // Remove the marker from the map
         delete window.userMarkers[userId]; // Delete the reference from the global object
-        console.log(`Removed marker for user ${userId}`);
     }
 }
 
@@ -431,7 +406,6 @@ function capitalize(str) {
 
 // Function to add a report to the map with a marker and custom popup
 function addReportToMap(report, map) {
-    console.log('Adding report to map:', report);
     const lng = report.lng;
     const lat = report.lat;
 
@@ -481,7 +455,6 @@ function addReportToMap(report, map) {
         .setDOMContent(popupContent))
         .addTo(map);
 
-    console.log('Marker created:', marker);  // Log marker creation
 
     // Store the marker in a global object for filtering
     if (!window.mapMarkers) {
@@ -607,7 +580,6 @@ function updateETA(eta) {
         if (autoDirectButton && autoDirectButton.parentNode) {
             autoDirectButton.parentNode.insertBefore(etaElement, autoDirectButton);
         } else {
-            console.error('Auto-Direct button not found. Unable to insert ETA element.');
             return;
         }
     }
@@ -686,7 +658,6 @@ function directToMarker(map, lng, lat) {
                     autoDirectButton.textContent = 'Cancel Auto Direct';
 
                     isAutoDirecting = true;
-                    console.log('Auto Direct mode activated.');
                 })
                 .catch(error => {
                     console.error('Error fetching route:', error);
@@ -718,7 +689,6 @@ function cancelAutoDirect(map) {
     if (map.getLayer(routeLayerId)) {
         map.removeLayer(routeLayerId);
         map.removeSource(routeLayerId);
-        console.log("Route layer removed from the map.");
     } else {
         console.warn("Route layer not found on the map.");
     }
@@ -730,25 +700,20 @@ function cancelAutoDirect(map) {
     const autoDirectButton = document.getElementById('auto-direct-button');
     if (autoDirectButton) {
         autoDirectButton.textContent = 'Auto Direct';
-        console.log("Auto Direct button text reset.");
     } else {
         console.warn("Auto Direct button not found.");
     }
 
     // Stop auto-directing
     isAutoDirecting = false;  
-    console.log('Auto Direct mode deactivated.');
-
     // Remove the directions control if it exists
     if (directionsControl) {
         map.removeControl(directionsControl);
         directionsControl = null;
-        console.log('Directions control removed.');
     }
 
     // Stop tracking user location for auto-direct
     navigator.geolocation.clearWatch(userLocationWatcherId);
-    console.log('Geolocation watch cleared.');
 }
 
 let userLocationWatcherId;
@@ -761,7 +726,6 @@ userLocationWatcherId = navigator.geolocation.watchPosition(
             longitude: position.coords.longitude
         };
 
-        console.log('Updated user location:', userLocation);
 
         // Update route if Auto Direct is active
         if (isAutoDirecting) {
@@ -785,7 +749,6 @@ userLocationWatcherId = navigator.geolocation.watchPosition(
 
 // For when user clicks show attachment
 function showAttachmentInContainer(filePath, fileType) {
-    console.log('Attempting to show attachment:', filePath, fileType);
 
     const token = localStorage.getItem('authToken');
     if (!token) {
@@ -847,7 +810,6 @@ function showAttachmentInContainer(filePath, fileType) {
 
 function listenForNewReports(map, socket) {
     socket.on('newReport', (report) => {
-        console.log('New report received:', report);
         if (report.lng !== undefined && report.lat !== undefined) {
             addReportToMap(report, map);
         } else {
@@ -873,7 +835,6 @@ function setupMapStyleSwitcher(map) {
         if (styleButton) {
             styleButton.addEventListener('click', () => {
                 map.setStyle(styles[id]);
-                console.log(`Map style switched to: ${styles[id]}`);
             });
         } else {
             console.warn(`Style button with ID "${id}" not found.`);
@@ -913,7 +874,6 @@ function setMapLightBasedOnTime() {
     }
 
     lastAppliedLightPreset = timeOfDay;
-    console.log(`Applying light preset for ${timeOfDay}: ${timeOfDay}`);
 
     map.setConfigProperty('basemap', 'lightPreset', timeOfDay);
 }
@@ -1077,14 +1037,10 @@ if (toggleFilterTab) {
             toggleArrow.style.transform = 'rotate(180deg)';
         }
     });
-} else {
-    console.warn('Element with ID "toggle-filter-tab" not found.');
 }
-
 
 // User and filter stuff
 document.addEventListener('DOMContentLoaded', function () {
-    console.log('DOMContentLoaded event fired.2');
 
     const loadingScreen = document.getElementById('loading-screen');
     const content = document.getElementById('content');
@@ -1110,12 +1066,9 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
     }
 
-    console.log('Auth Token:', token);
-
     // Toggle Filter List
     if (toggleFilterTab) {
         toggleFilterTab.addEventListener('click', function () {
-            console.log('Filter Clicked.');
 
             if (filterContainer.classList.contains('filter-shown')) {
                 filterContainer.classList.remove('filter-shown');

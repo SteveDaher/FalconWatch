@@ -1,3 +1,4 @@
+// client/public/js/welcome.js
 document.addEventListener('DOMContentLoaded', () => {
     const loginButton = document.getElementById('loginButton');
     const registerButton = document.getElementById('registerButton');

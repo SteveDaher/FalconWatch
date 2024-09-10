@@ -1,56 +1,68 @@
+/* Chart Container */
 .chart-container {
-    width: 40%;
-    max-width: 600px;
-    margin: 20px auto;
-  }
-  
-  canvas {
-    width: 100% !important;
-    height: auto !important;
-  }
-  
-  .filter-container {
-    text-align: center;
-    margin-top: 20px;
-  }
-  
-  .filter-container select {
-    font-size: 16px;
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-  }
-  
-  .filter-container label {
-    font-size: 16px;
-    font-weight: bold;
-    color: #000000;
-  }
-  
-  .chart-wrapper {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 20px;
-  }
-  
-  #total-crimes-container {
-    width: 30%;
-    padding: 15px;
-    background-color: #f9f9f9;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  }
-  
-  #total-crimes-container h2 {
-    font-size: 18px;
-    margin-bottom: 10px;
-    color: #333;
-  }
-  
-  #total-crimes-container p {
-    font-size: 24px;
-    font-weight: bold;
-    color: #d9534f;
-  }
-  
+  width: 40%; /* Sets the width of the chart container to 40% of its parent */
+  max-width: 600px; /* Maximum width of the chart container */
+  margin: 20px auto; /* Center the container with margin */
+}
+
+/* Canvas (Chart) Styling */
+canvas {
+  width: 100% !important; /* Ensure the canvas takes up 100% of the container's width */
+  height: auto !important; /* Maintain the aspect ratio by automatically adjusting height */
+}
+
+/* Filter Container */
+.filter-container {
+  text-align: center; /* Center-align the filter container */
+  margin-top: 20px; /* Adds space above the filter container */
+}
+
+/* Styling for Select Dropdowns inside the Filter Container */
+.filter-container select {
+  font-size: 16px; /* Set the font size for the select element */
+  padding: 8px; /* Padding inside the select box */
+  border: 1px solid #ccc; /* Light gray border */
+  border-radius: 4px; /* Slightly rounded corners */
+}
+
+/* Label Styling inside the Filter Container */
+.filter-container label {
+  font-size: 16px; /* Set the font size for labels */
+  font-weight: bold; /* Bold text for labels */
+  color: #000000; /* Black text color */
+}
+
+/* Chart Wrapper */
+.chart-wrapper {
+  display: flex; /* Use flexbox for layout */
+  justify-content: space-between; /* Evenly space out items */
+  align-items: flex-start; /* Align items to the top */
+  gap: 20px; /* Adds space between chart elements */
+}
+
+/* Total Crimes Container */
+#total-crimes-container {
+  width: 30%; /* Set width to 30% of the parent container */
+  padding: 15px; /* Padding inside the total crimes container */
+  background-color: #f9f9f9; /* Light gray background */
+  border-radius: 8px; /* Rounded corners */
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+}
+
+/* Heading in Total Crimes Container */
+#total-crimes-container h2 {
+  font-size: 18px; /* Font size for the heading */
+  margin-bottom: 10px; /* Adds space below the heading */
+  color: #333; /* Dark gray text color */
+}
+
+/* Paragraph in Total Crimes Container */
+#total-crimes-container p {
+  font-size: 24px; /* Larger font size for total crimes number */
+  font-weight: bold; /* Bold text */
+  color: #d9534f; /* Red color for emphasis */
+}
+
+.page-content {
+  display: none; /* Hide the content initially */
+}

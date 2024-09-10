@@ -1,185 +1,180 @@
 /* General Styles */
 body {
   margin: 0;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: url('/img/background.jpg') no-repeat center center fixed;
-  background-size: cover;
-  color: #333;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Use a clean, readable font */
+  background: url('/img/background.jpg') no-repeat center center fixed; /* Background image */
+  background-size: cover; /* Ensure the background covers the whole page */
+  color: #333; /* Dark grey text color */
 }
 
-
+/* Header Styling */
 #header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px 30px;
-  background: rgba(255, 255, 255, 0.9); /* Semi-transparent background */
-  border-bottom: 2px solid #40ac0e;
-  position: relative;
-  z-index: 9999;
-  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.3);
+  display: flex; /* Flexbox for layout */
+  justify-content: space-between; /* Space out elements */
+  align-items: center; /* Vertically align items */
+  padding: 15px 30px; /* Padding around the header */
+  background: rgba(255, 255, 255, 0.9); /* Semi-transparent white background */
+  border-bottom: 2px solid #40ac0e; /* Green border at the bottom */
+  position: relative; /* Ensure z-index works */
+  z-index: 9999; /* Keep header above other content */
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.3); /* Subtle shadow for depth */
 }
 
 #header img {
-  height: 60px;
-  width: auto;
-  max-width: 170px;
-  max-height: 150px;
-  object-fit: contain;
+  height: 60px; /* Set logo height */
+  width: auto; /* Maintain aspect ratio */
+  max-width: 250px; /* Set maximum width */
+  max-height: 250px; /* Set maximum height */
+  object-fit: contain; /* Ensure the image fits within its container */
 }
 
+/* Navigation Buttons */
 #nav-buttons {
-  display: flex;
-  align-items: center;
+  display: flex; /* Flexbox layout */
+  align-items: center; /* Vertically align links */
 }
 
 #nav-buttons a {
-  text-decoration: none;
-  font-size: 16px;
-  font-weight: 400;
-  cursor: pointer;
-  margin: 0 10px;
-  transition: color 0.3s ease, text-decoration 0.3s ease;
-  color: #2b966f; 
+  text-decoration: none; /* Remove underline from links */
+  font-size: 16px; /* Font size for navigation links */
+  font-weight: 400; /* Regular weight */
+  cursor: pointer; /* Pointer cursor on hover */
+  margin: 0 10px; /* Space between navigation items */
+  transition: color 0.3s ease, text-decoration 0.3s ease; /* Smooth transition for hover effects */
+  color: #2b966f; /* Green color for links */
 }
 
 #nav-buttons a:hover {
-  color: #2fb63a;
-  text-decoration: underline;
+  color: #2fb63a; /* Lighter green on hover */
+  text-decoration: underline; /* Underline links on hover */
 }
 
 .active-link {
-  font-weight: bold !important;
+  font-weight: bold !important; /* Bold the active link */
 }
 
+/* Container Styling */
 .container {
-  max-width: 1000px;
-  margin: 30px auto;
-  padding: 20px;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.6);
+  max-width: 1000px; /* Limit container width */
+  margin: 30px auto; /* Center container with margin */
+  padding: 20px; /* Padding inside the container */
+  background-color: #fff; /* White background */
+  border-radius: 8px; /* Rounded corners */
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.6); /* Dark shadow for depth */
 }
 
+/* Heading Styles */
 h1 {
-  text-align: center;
-  font-size: 24px;
-  margin-bottom: 20px;
-  color: #000000;
-  border-bottom: 2px solid #333;
-  padding-bottom: 10px;
+  text-align: center; /* Center the heading */
+  font-size: 24px; /* Set font size */
+  margin-bottom: 20px; /* Space below the heading */
+  color: #000000; /* Black color */
+  border-bottom: 2px solid #333; /* Dark grey border below the heading */
+  padding-bottom: 10px; /* Padding below the heading text */
 }
 
+/* Services Section */
 .services {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 20px;
+  display: flex; /* Flexbox for layout */
+  flex-wrap: wrap; /* Allow wrapping on smaller screens */
+  justify-content: center; /* Center the services */
+  gap: 20px; /* Space between services */
 }
 
 .service {
-  position: relative;
-  background-color: #fff;
-  border: 1px solid #ddd;
-  padding: 20px;
-  width: 150px;
-  height: 150px; /* Ensure square shape */
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  text-align: center;
-  transition: transform 0.3s, background-color 0.6s ease, color 0.6s ease;
-  border-radius: 8px;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
+  position: relative; /* For potential positioning */
+  background-color: #fff; /* White background */
+  border: 1px solid #ddd; /* Light grey border */
+  padding: 20px; /* Padding inside the service box */
+  width: 150px; /* Fixed width */
+  height: 150px; /* Fixed height to ensure a square shape */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  text-align: center; /* Center-align text */
+  transition: transform 0.3s, background-color 0.6s ease, color 0.6s ease; /* Smooth transition on hover */
+  border-radius: 8px; /* Rounded corners */
+  overflow: hidden; /* Prevent overflow */
+  display: flex; /* Flexbox inside */
+  flex-direction: column; /* Stack elements vertically */
+  justify-content: center; /* Center content */
+  align-items: center; /* Center horizontally */
 }
 
 .service:hover {
-  transform: translateY(-5px);
+  transform: translateY(-5px); /* Lift service on hover */
   background-color: #2b966f; /* Green background on hover */
-  color: #fff; /* White text color on hover */
+  color: #fff; /* White text on hover */
 }
 
 .service img {
-  width: 50px;
-  height: 50px;
-  margin-bottom: 10px;
+  width: 50px; /* Fixed width */
+  height: 50px; /* Fixed height */
+  margin-bottom: 10px; /* Space below the image */
 }
 
 .service a {
-  text-decoration: none;
-  color: #333;
-  font-weight: bold;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  text-decoration: none; /* No underline */
+  color: #333; /* Dark grey color */
+  font-weight: bold; /* Bold text */
+  display: flex; /* Flexbox layout */
+  flex-direction: column; /* Stack text and image */
+  align-items: center; /* Center align */
 }
 
 .service:hover .icon-small {
-  fill: #fff; /* White icon color on hover */
+  fill: #fff; /* White icon on hover */
 }
 
+/* Chart Container */
 .chart-container {
-  padding: 10px;
+  padding: 10px; /* Padding around the chart */
 }
 
-
+/* Severity Levels */
 .low {
-  background-color: #2b966f; /* Green */
+  background-color: #2b966f; /* Green for low severity */
 }
 
 .medium {
-  background-color: #ffeb3b; /* Yellow */
+  background-color: #ffeb3b; /* Yellow for medium severity */
 }
 
 .high {
-  background-color: #f44336; /* Red */
+  background-color: #f44336; /* Red for high severity */
 }
 
+/* Legend for Charts */
 .legend {
-  display: flex;
-  justify-content: space-around;
-  margin-top: 20px;
+  display: flex; /* Flexbox layout */
+  justify-content: space-around; /* Space between legend items */
+  margin-top: 20px; /* Space above the legend */
 }
 
-.legend-item {
-  display: flex;
-  align-items: center;
-}
-
-.color-box {
-  width: 18px;
-  height: 18px;
-  margin-right: 8px;
-  border-radius: 3px;
-}
-
+/* Back Button Styling */
 .back-btn {
-  display: block;
-  text-align: center;
-  padding: 10px 15px;
-  background-color: #2b966f;
-  color: #f0f0f0;
-  border: none;
-  border-radius: 4px;
-  text-decoration: none;
-  font-size: 14px;
-  margin-top: 20px;
-  transition: background-color 0.3s ease;
+  display: block; /* Ensure it's a block-level element */
+  text-align: center; /* Center text */
+  padding: 10px 15px; /* Padding inside the button */
+  background-color: #2b966f; /* Green background */
+  color: #f0f0f0; /* Light grey text */
+  border: none; /* Remove border */
+  border-radius: 4px; /* Rounded corners */
+  text-decoration: none; /* No underline */
+  font-size: 14px; /* Font size */
+  margin-top: 20px; /* Space above the button */
+  transition: background-color 0.3s ease; /* Smooth transition for hover */
 }
 
 .back-btn:hover {
-  background-color: #2b966f;
+  background-color: #2b966f; /* Slightly darker green on hover */
 }
 
 .icon-small {
-  width: 60px;
-  height: 60px;
+  width: 60px; /* Icon size */
+  height: 60px; /* Icon size */
 }
 
 .green-icon {
-  fill: #2b966f;
+  fill: #2b966f; /* Green fill for icons */
 }
 
 .service .icon-small {
@@ -187,6 +182,9 @@ h1 {
 }
 
 .service:hover a {
-  color: #fff; /* White text color for links on hover */
+  color: #fff; /* White text for links on hover */
 }
 
+.page-content {
+  display: none; /* Hide the content initially */
+}

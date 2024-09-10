@@ -1,40 +1,62 @@
+<!-- Path: client/html/register.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>FalconWatch | Sign Up</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Link to minified CSS for faster loading -->
     <link rel="stylesheet" href="/css/registerStyle.css">
 </head>
 <body class="align">
+    <!-- Grid container to center align the form -->
     <div class="grid align__item">
         <div class="register">
-            <img src="/img/logoFW.png" class="site__logo" alt="Logo">
+            <!-- Site logo with alt text for accessibility -->
+            <img src="/img/logoFW.png" class="site__logo" alt="FalconWatch Logo">
+            
+            <!-- Heading for the registration form -->
             <h2>Register</h2>
+            
+            <!-- Registration form -->
             <form id="register-form" class="form">
+                
+                <!-- Name input field with placeholder and required attribute -->
                 <div class="form__field">
                     <label for="name">Name</label>
                     <input type="text" id="name" name="name" placeholder="John Doe" required>
                 </div>
+                
+                <!-- Email input field with validation for proper email format -->
                 <div class="form__field">
                     <label for="email">Email</label>
                     <input type="email" id="email" name="email" placeholder="info@mailaddress.com" required>
                 </div>
+                
+                <!-- Phone number input field, expects valid UAE phone number -->
                 <div class="form__field">
                     <label for="phone">UAE Phone Number</label>
                     <input type="tel" id="phone" name="phone" placeholder="+971 50 123 4567" required>
                 </div>
+                
+                <!-- Password input field with placeholder and minimum requirements -->
                 <div class="form__field">
                     <label for="password">Password</label>
                     <input type="password" id="password" name="password" placeholder="••••••••••••" required>
                 </div>
+                
+                <!-- Submit button for form submission -->
                 <div class="form__field">
                     <input type="submit" value="Sign Up">
                 </div>
             </form>
+            
+            <!-- Redirect link for users who already have an account -->
             <p>Already have an account? <a href="/html/login.html">Log in</a></p>
         </div>
     </div>
+    
+    <!-- Link to external JavaScript file handling form submission -->
     <script src="/js/register.js"></script>
 </body>
 </html>

@@ -21,3 +21,7 @@ select {
     margin: 0 auto; /* Center it if needed */
     display: block; /* Ensure it behaves as a block element */
 }
+
+.page-content {
+    display: none; /* Hide the content initially */
+  }

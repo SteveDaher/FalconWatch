@@ -1,104 +1,108 @@
-/* Base Variables */
+/* Base Variables: Define reusable variables for colors, fonts, and layout */
 :root {
-  --base-bgcolor: hsl(0, 0%, 0%);
-  --base-color: #000000;
-  --base-font-weight: 300;
-  --base-font-size: 1rem;
-  --base-line-height: 1.5;
-  --base-font-family: Helvetica Neue, sans-serif;
-  --input-placeholder-color: #7e8ba3;
-  --grid-max-width: 25rem;
-  --grid-width: 100%;
-  --link-color: #7e8ba3;
-  --button-bg-color: #5e9363;
-  --button-hover-bg-color: #45a049;
-  --button-shadow-color: rgba(0, 0, 0, 0.3);
+  --base-bgcolor: hsl(0, 0%, 0%); /* Base background color */
+  --base-color: #000000; /* Base text color */
+  --base-font-weight: 300; /* Base font weight */
+  --base-font-size: 1rem; /* Base font size */
+  --base-line-height: 1.5; /* Base line height */
+  --base-font-family: Helvetica Neue, sans-serif; /* Base font family */
+  --input-placeholder-color: #7e8ba3; /* Input placeholder color */
+  --grid-max-width: 25rem; /* Maximum width for the grid */
+  --grid-width: 100%; /* Grid width */
+  --link-color: #7e8ba3; /* Default link color */
+  --button-bg-color: #5e9363; /* Button background color */
+  --button-hover-bg-color: #45a049; /* Button background color on hover */
+  --button-shadow-color: rgba(0, 0, 0, 0.3); /* Button shadow color */
 }
 
-/* Global Styles */
+/* Global Styles: Apply global settings to the entire document */
 * {
-  box-sizing: border-box;
+  box-sizing: border-box; /* Ensures padding and borders are included in element's total width/height */
 }
 
 html, body {
-  height: 100%;
-  margin: 0;
+  height: 100%; /* Set full height for html and body */
+  margin: 0; /* Remove default margin */
 }
 
 body {
-  background-image: url('/img/LoginBackground.png');
-  background-size: cover; 
-  background-position: center center;
-  background-repeat: no-repeat;
-  color: var(--base-color);
-  font: var(--base-font-weight) var(--base-font-size) / var(--base-line-height) var(--base-font-family);
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  background-image: url('/img/LoginBackground.png'); /* Background image for the body */
+  background-size: cover; /* Ensure background covers the whole page */
+  background-position: center center; /* Center the background image */
+  background-repeat: no-repeat; /* Prevent background from repeating */
+  color: var(--base-color); /* Use base text color */
+  font: var(--base-font-weight) var(--base-font-size) / var(--base-line-height) var(--base-font-family); /* Set base font styles */
+  display: flex; /* Flexbox layout to center content */
+  justify-content: center; /* Center content horizontally */
+  align-items: center; /* Center content vertically */
 }
 
+/* Flexbox Alignment: Utility class for aligning items in a row */
 .align {
   display: flex;
-  flex-direction: row;
-  align-items: center;
+  flex-direction: row; /* Align items in a row */
+  align-items: center; /* Vertically center items */
 }
 
+/* Grid Layout: Container for center-aligned content with fixed max-width */
 .grid {
   display: flex;
-  justify-content: center;
-  align-items: center;
-  width: var(--grid-width);
-  max-width: var(--grid-max-width);
-  height: 100vh;
+  justify-content: center; /* Center content horizontally */
+  align-items: center; /* Center content vertically */
+  width: var(--grid-width); /* Set grid width */
+  max-width: var(--grid-max-width); /* Set max grid width */
+  height: 100vh; /* Full viewport height */
 }
 
+/* Welcome Box: Styling for the welcome section */
 .welcome {
-  box-shadow: 0 0 30px var(--button-shadow-color);
-  text-align: center;
-  padding: 2rem;
-  background-color: rgba(255, 255, 255, 0.9);
-  border-radius: 10px;
-  backdrop-filter: blur(10px);
+  box-shadow: 0 0 30px var(--button-shadow-color); /* Shadow effect */
+  text-align: center; /* Center text */
+  padding: 2rem; /* Add padding */
+  background-color: rgba(255, 255, 255, 0.9); /* Semi-transparent white background */
+  border-radius: 10px; /* Rounded corners */
+  backdrop-filter: blur(10px); /* Add a blur effect */
 }
 
+/* Form Field: Margin spacing for form fields */
 .form__field {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.5rem; /* Add space below form fields */
 }
 
-/* Button Styles */
+/* Button Styles: Styling for menu buttons */
 .menu-button {
-  background: linear-gradient(160deg, #378f7b 0%, #378f7b 100%);
-  color: #fff;
-  border: none;
-  padding: 0.9rem 3rem;
-  text-align: center;
-  font-size: 1rem;
-  font-weight: bold;
-  cursor: pointer;
-  border-radius: 50px;
-  margin: 0.1rem;
-
+  background: linear-gradient(160deg, #378f7b 0%, #378f7b 100%); /* Gradient background */
+  color: #fff; /* White text color */
+  border: none; /* Remove border */
+  padding: 0.9rem 3rem; /* Button padding */
+  text-align: center; /* Center text */
+  font-size: 1rem; /* Font size */
+  font-weight: bold; /* Bold text */
+  cursor: pointer; /* Pointer cursor on hover */
+  border-radius: 50px; /* Rounded button */
+  margin: 0.1rem; /* Small margin */
 }
 
 .menu-button:hover {
-  background: linear-gradient(160deg, #45a049 0%, #45a049 100%);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(160deg, #45a049 0%, #45a049 100%); /* Change background on hover */
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3); /* Add shadow effect on hover */
 }
 
+/* Headings: Styling for h2 elements */
 h2 {
-  font-size: 2.75rem;
-  font-weight: 500;
-  margin: 0 0 1.5rem;
-  color: #354152;
+  font-size: 2.75rem; /* Large font size */
+  font-weight: 500; /* Semi-bold font weight */
+  margin: 0 0 1.5rem; /* Margin below heading */
+  color: #354152; /* Custom heading color */
 }
 
-/* Styling for the logo */
+/* Logo Styling: Ensure logo is responsive and well-aligned */
 .site__logo {
-  width: 100%;
-  max-width: 689px;
-  height: auto;
-  max-height: 362px;
-  object-fit: contain;
-  display: block;
-  margin: 0 auto;
+  width: 100%; /* Full width */
+  max-width: 689px; /* Max width */
+  height: auto; /* Auto height to maintain aspect ratio */
+  max-height: 362px; /* Max height */
+  object-fit: contain; /* Ensure image fits inside the container */
+  display: block; /* Block display for alignment */
+  margin: 0 auto; /* Center the logo horizontally */
 }

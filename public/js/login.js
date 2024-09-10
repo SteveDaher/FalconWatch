@@ -1,28 +1,37 @@
+// Path: client/public/js/login.js
+
+// Wait for the DOM to be fully loaded before executing script
 document.addEventListener('DOMContentLoaded', () => {
+    // Get the login form element
     const loginForm = document.getElementById('login-form');
 
+    // Attach event listener for form submission
     loginForm.addEventListener('submit', async (event) => {
-        event.preventDefault(); // Prevent the form from submitting the traditional way
+        event.preventDefault();  // Prevent default form submission behavior (page reload)
 
+        // Get input values and trim any excess whitespace
         const identifier = document.getElementById('identifier').value.trim();
         const password = document.getElementById('password').value.trim();
 
+        // Validate that both fields are filled
         if (!identifier || !password) {
             alert('Please fill in both identifier and password.');
-            return;
+            return;  // Stop further execution if fields are not filled
         }
 
         try {
+            // Send login request to the server
             const response = await fetch('/api/users/login', {
-                method: 'POST',
+                method: 'POST',  // Use POST method for login
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/json',  // Tell the server you're sending JSON
                 },
-                body: JSON.stringify({ identifier, password }),
+                body: JSON.stringify({ identifier, password })  // Send identifier and password as JSON
             });
 
+            // Handle different response statuses and show appropriate messages
             if (!response.ok) {
-                let errorMessage = 'Login failed';
+                let errorMessage = 'Login failed';  // Default error message
                 if (response.status === 401) {
                     errorMessage = 'Unauthorized: Incorrect email or password.';
                 } else if (response.status === 400) {
@@ -30,22 +39,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else if (response.status === 500) {
                     errorMessage = 'Server error. Please try again later.';
                 }
+
+                // Try to get a more specific error message from the server response
                 const errorData = await response.json();
-                alert(errorData.message || errorMessage);
-                return;
+                alert(errorData.message || errorMessage);  // Show error message to the user
+                return;  // Stop further execution on error
             }
 
+            // Parse the successful response data (expected to contain token and user info)
             const data = await response.json();
 
-            // Save JWT token and other user details in local storage
+            // Save the JWT token and user details in localStorage for later use
             localStorage.setItem('authToken', data.token);
             localStorage.setItem('userId', data.user.id);
             localStorage.setItem('name', data.user.name);
-            localStorage.setItem('role', data.user.role);  // Store the role in localStorage
+            localStorage.setItem('role', data.user.role);  // Store user role for role-based access
 
-            // Redirect to the main page
+            // Redirect the user to the main dashboard or homepage
             window.location.href = '/client/index.html';
         } catch (error) {
+            // Catch any network or processing errors and log them
             console.error('Error during login:', error);
             alert('An error occurred. Please try again.');
         }

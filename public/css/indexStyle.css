@@ -1,6 +1,7 @@
+/* Importing Roboto Font */
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
 
-/* Global Styles */
+/* Global Styles - Reset margins and set base font */
 body, html {
     margin: 0;
     padding: 0;
@@ -10,96 +11,98 @@ body, html {
 
 /* Header Styles */
 header {
-    position: fixed;
+    position: fixed; /* Fixes the header at the top */
     top: 0;
     left: 0;
-    width: 100%;
+    width: 100%; /* Full width */
     display: flex;
-    justify-content: space-between;
+    justify-content: space-between; /* Space between logo and nav */
     align-items: center;
     padding: 10px 20px;
-    background: transparent;
-    z-index: 2;
-    transition: background-color 0.3s ease;
-    background: linear-gradient(to bottom, black, transparent);
+    background: transparent; /* Transparent initially */
+    z-index: 2; /* Keeps it above other elements */
+    transition: background-color 0.3s ease; /* Smooth background change */
+    background: linear-gradient(to bottom, black, transparent); /* Gradient for initial look */
 }
 
+/* Scrolled Header Styles - Changes when the user scrolls */
 header.scrolled {
     background: white;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow when scrolling */
 }
 
+/* Adjust logo filter when scrolling */
 header.scrolled .logo img {
-    filter: none;
+    filter: none; /* Removes the filter on scroll */
 }
 
+/* Navigation Links Color on Scroll */
 header.scrolled nav ul li a {
-    color: black;
+    color: black; /* Changes link color to black on scroll */
 }
 
-/* Logo Styles */
+/* Logo Container */
 .logo {
     margin-left: 30px;
     margin-top: 10px;
 }
 
+/* Logo Image Styles */
 .logo img {
-    height: 70px;
-    filter: brightness(0) invert(1);
-    transition: filter 0.3s ease;
-}
-
-header.scrolled .logo img {
-    filter: none;
+    height: 70px; /* Logo height */
+    filter: brightness(0) invert(1); /* Inverts color for dark background */
+    transition: filter 0.3s ease; /* Smooth filter change on scroll */
 }
 
 /* Navigation Styles */
 nav {
     flex: 2;
     display: flex;
-    justify-content: right;
+    justify-content: right; /* Right-aligns the navigation */
     align-items: center;
     padding-top: 10px;
     margin-right: 30px;
 }
 
+/* Unordered List for Navigation */
 nav ul {
-    list-style: none;
+    list-style: none; /* Removes bullet points */
     margin: 0;
     padding: 0;
     display: flex;
     align-items: center;
 }
 
+/* Navigation List Items */
 nav ul li {
-    margin: 0 20px;
+    margin: 0 20px; /* Adds space between nav items */
 }
 
+/* Navigation Links */
 nav ul li a {
     text-decoration: none;
-    color: white;
+    color: white; /* White text for links */
     font-size: 1em;
-    font-weight: 700;
-    transition: color 0.3s ease;
+    font-weight: 700; /* Bold links */
+    transition: color 0.3s ease; /* Smooth color transition on hover */
 }
 
-header.scrolled nav ul li a {
-    color: black;
-}
-
+/* Dropdown Styles */
 nav ul li:hover .dropdown-content {
-    display: block;
+    display: block; /* Shows dropdown on hover */
 }
 
+/* Dropdown Menu Styling */
 .dropdown-content {
     display: none;
     position: absolute;
-    background-color: white;
+    background-color: white; /* White background for dropdown */
     min-width: 160px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Subtle shadow */
     z-index: 1;
 }
 
+/* Dropdown Links */
 .dropdown-content a {
     color: black;
     padding: 12px 16px;
@@ -107,75 +110,79 @@ nav ul li:hover .dropdown-content {
     display: block;
 }
 
+/* Hover Effect on Dropdown Links */
 .dropdown-content a:hover {
-    background-color: #ddd;
+    background-color: #ddd; /* Light gray on hover */
 }
 
-/* Welcome Message and Login/Signup Styles */
+/* Welcome Message and Login/Signup Links */
 #welcome-message {
     font-weight: bold;
-    color: #fff;
+    color: #fff; /* White text initially */
     margin-right: 20px;
     font-size: 1.2em;
-    transition: color 0.3s ease;
+    transition: color 0.3s ease; /* Smooth color transition */
 }
 
+/* Change Welcome Message Color on Scroll */
 header.scrolled #welcome-message {
-    color: #17820e;
+    color: #17820e; /* Green color after scroll */
 }
 
+/* Login Link Styles */
 #login-link {
     text-decoration: none;
-    color: #fff;
+    color: #fff; /* White text */
     font-weight: bold;
-    background-color: #2b966f;
+    background-color: #2b966f; /* Green background */
     padding: 10px 20px;
-    border-radius: 5px;
-    transition: background-color 0.3s ease, color 0.3s ease;
+    border-radius: 5px; /* Rounded corners */
+    transition: background-color 0.3s ease, color 0.3s ease; /* Smooth transitions */
 }
 
+/* Hover Effect for Login Link */
 #login-link:hover {
-    background-color: #4cb38d;
+    background-color: #4cb38d; /* Lighter green on hover */
 }
 
+/* Change Login Link Color on Scroll */
 header.scrolled #login-link {
-    color: #17820e;
+    color: #fff; /* White text after scroll*/
 }
 
-/* Video Container Styles */
+/* Video Container */
 .video-container {
     position: relative;
-    height: 100vh;
+    height: 100vh; /* Full screen height */
     width: 100%;
     overflow: hidden;
 }
 
+/* Background Video Styling */
 #background-video {
     position: absolute;
     top: 50%;
     left: 50%;
     width: 100%;
     height: 100%;
-    z-index: -1;
-    transform: translate(-50%, -50%);
-    object-fit: cover;
-    object-position: center;
-    filter: none; 
+    z-index: -1; /* Places video behind content */
+    transform: translate(-50%, -50%); /* Centers video */
+    object-fit: cover; /* Ensures video covers the container */
 }
 
-
+/* Main Content Positioned Over Video */
 .content {
     position: absolute;
     top: 45%;
     left: 7%;
     transform: translateY(-50%);
     text-align: left;
-    color: white;
+    color: white; /* White text over video */
     z-index: 1;
     padding: 0 15px;
 }
 
-/* Heading and Paragraph Styles */
+/* Main Heading Styling */
 h1 {
     font-size: 4.5em;
     margin-top: 90px;
@@ -183,33 +190,36 @@ h1 {
     margin-left: -35px;
 }
 
+/* Paragraph Styling */
 p {
     font-size: 1.5em;
     margin-top: 10px;
     margin-left: -35px;
 }
 
-/* Button Styles */
+/* Button Container */
 .button-box {
     margin-top: 40px;
     margin-left: -35px;
 }
 
+/* Button Styles */
 .btn {
     text-decoration: none;
     color: #fff;
     font-weight: bold;
-    background-color: #2b966f;
+    background-color: #2b966f; /* Green button */
     padding: 10px 20px;
-    border-radius: 5px;
+    border-radius: 5px; /* Rounded corners */
     transition: background-color 0.3s ease;
 }
 
+/* Hover Effect for Button */
 .btn:hover {
-    background-color: #4cb38d;
+    background-color: #4cb38d; /* Lighter green on hover */
 }
 
-/* New Section Styles */
+/* New Section Container */
 .new-section {
     position: relative;
     display: flex;
@@ -219,15 +229,17 @@ p {
     background-color: white;
 }
 
+/* Tab Above New Section */
 .new-section .tab {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 50px;
-    background-color: #acd5c6;
+    background-color: #acd5c6; /* Light green background */
 }
 
+/* Flex Container in New Section */
 .new-section .container {
     display: flex;
     max-width: 1200px;
@@ -235,6 +247,7 @@ p {
     padding-top: 20px;
 }
 
+/* Left Side of New Section */
 .new-section .left-side {
     flex: 1;
     display: flex;
@@ -243,6 +256,7 @@ p {
     position: relative;
 }
 
+/* Image on Left Side */
 .new-section .left-side img {
     max-width: 80%;
     height: auto;
@@ -251,28 +265,32 @@ p {
     margin-right: 100px;
 }
 
+/* Right Side of New Section */
 .new-section .right-side {
     flex: 1;
     padding-left: 50px;
 }
 
+/* Heading on Right Side */
 .new-section .right-side h2 {
     font-size: 2.5em;
-    color: #185f45;
+    color: #185f45; /* Dark green text */
     margin-bottom: 20px;
 }
 
+/* Paragraph on Right Side */
 .new-section .right-side p {
     font-size: 1.2em;
-    color: #185f45;
+    color: #185f45; /* Dark green text */
     line-height: 1.5;
     margin-bottom: 20px;
 }
 
+/* Narrow Paragraph Styling */
 .new-section .right-side .narrow-paragraph {
-    max-width: 500px; /* Adjust this value to make the paragraph narrower */
-    text-align: left; /* Align text to the left */
+    max-width: 500px; /* Restrict width */
+    text-align: left;
     margin-left: 10px;
-    color: #000000; /* Change the color to black */
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1); /* Extremely subtle shadow */
+    color: #000000; /* Black text */
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1); /* Subtle shadow */
 }

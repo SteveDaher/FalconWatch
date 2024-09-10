@@ -81,20 +81,6 @@ body {
     color: white; /* Ensure text remains visible on hover */
 }
 
-#login-btn {
-    margin-right: 10px;
-    text-decoration: none;
-    color: #2b966f;
-    font-size: 16px;
-    font-weight: bold; /* Make text bold */
-    cursor: pointer;
-    transition: color 0.3s ease;
-}
-
-#login-btn:hover {
-    color: #2fb63a;
-}
-
 #welcome-message {
     font-size: 16px;
     color: #333;

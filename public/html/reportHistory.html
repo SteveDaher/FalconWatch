@@ -1,46 +1,56 @@
+<!-- Path: client/html/reportHistory.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="/css/reportHistoryStyle.css">
-  <title>FalconWatch Report History</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FalconWatch Report History</title>
+    <!-- Link to external stylesheet for report history -->
+    <link rel="stylesheet" href="/css/reportHistoryStyle.css">
 </head>
 <body>
+    <div class="page-content"> <!-- Add wrapper to control visibility -->
+        <!-- Header section with logo and navigation buttons -->
+        <div id="header">
+            <img src="/img/logoFW.png" alt="FalconWatch Logo" id="logo"> <!-- Adjusted path -->
+            <div id="nav-buttons">
+                <a href="/html/main.html" class="active-link">Home</a> <!-- Adjusted path -->
+                <a href="/html/services.html" id="view-services">View Services</a> <!-- Adjusted path -->
+            </div>
+        </div>
 
-  <div id="header">
-    <img src="/img/logoFW.png" alt="Logo" id="logo">
-    <div id="nav-buttons">
-      <a href="/html/main.html" class="active-link">Home</a>
-      <a href="/html/services.html" id="view-services">View Services</a>
-    </div>
-  </div>
-  
-  <div class="container">
-    <h1>Report History</h1>
-    <div class="table-container">
-      <table id="report-table">
-        <thead>
-          <tr>
-            <th>Incident Number</th>
-            <th>Name</th>
-            <th>Severity</th>
-            <th>Description</th>
-            <th>Date</th>
-            <th>Location</th>
-            <th>Pin</th>
-          </tr>
-        </thead>
-        <tbody id="report-body">
-          <!-- Report rows will be dynamically generated here -->
-        </tbody>
-      </table>
-    </div>
-    <div class="pagination" id="pagination-controls">
-      <!-- Pagination controls will be dynamically generated here -->
-    </div>
-    <a href="/html/main.html" class="back-btn">Back to Map</a>
-  </div>
-  <script src="/js/reportHistory.js"></script>
+        <!-- Main container for report history content -->
+        <div class="container">
+            <h1>Report History</h1>
+            <div class="table-container">
+                <!-- Table to display report history -->
+                <table id="report-table">
+                    <thead>
+                        <tr>
+                            <th>Incident Number</th>
+                            <th>Name</th>
+                            <th>Severity</th>
+                            <th>Description</th>
+                            <th>Date</th>
+                            <th>Location</th>
+                            <th>Pin</th>
+                        </tr>
+                    </thead>
+                    <tbody id="report-body">
+                        <!-- Report rows will be dynamically populated via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            <!-- Pagination controls will be dynamically generated here -->
+            <div class="pagination" id="pagination-controls"></div>
 
-  
+            <!-- Button to go back to the map page -->
+            <a href="/html/main.html" class="back-btn">Back to Map</a> <!-- Adjusted path -->
+        </div>
+    </div> <!-- End of page-content -->
+
+    <!-- External JavaScript to handle report fetching and pagination -->
+    <script src="/js/reportHistory.js"></script> <!-- Adjusted path -->
+    <script src="/js/userVerify.js"></script> <!-- Use later for efficency path -->
+</body>
+</html>
