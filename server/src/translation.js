@@ -9,7 +9,7 @@ router.post('/translate', async (req, res) => {
         const { text, targetLanguage } = req.body;
 
         // Set your OpenAI API key directly here
-        const apiKey = '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';  // Replace this with your actual OpenAI API key
+        const apiKey = 'test'; 
         
         // Make the API request to OpenAI
         const response = await axios.post('https://api.openai.com/v1/chat/completions', {

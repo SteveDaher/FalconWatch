@@ -57,5 +57,26 @@ const authenticateRole = (role) => {
     };
 };
 
+const authenticateTokenForMapbox = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+        console.error('No token provided in the request');
+        return res.status(401).json({ message: 'Unauthorized: No token provided' });
+    }
+
+    jwt.verify(token, secretKey, (err) => {
+        if (err) {
+            console.error('Token verification failed for Mapbox:', err.message);
+            return res.status(403).json({ message: 'Forbidden: Invalid token' });
+        }
+
+        next(); // Proceed if the token is valid
+    });
+};
+
+
+
 // Export the middleware function for use in other parts of the application
-module.exports = { authenticateToken, authenticateRole };
+module.exports = { authenticateToken, authenticateTokenForMapbox, authenticateRole };

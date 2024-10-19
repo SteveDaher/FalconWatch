@@ -7,7 +7,7 @@ const authRoutes = require('./auth');
 const { setupSocket } = require('./socket');
 const multer = require('multer');
 const { classifyCrimeSeverity } = require('./severity_classifier');
-const { authenticateToken, authenticateRole } = require('./authMiddleware'); // Correctly destructure the middleware functions
+const { authenticateToken, authenticateRole, authenticateTokenForMapbox } = require('./authMiddleware'); // Correctly destructure the middleware functions
 const changelogRouter = require('./serverChangeLogs'); // Importing your changelog router
 const translationRouter = require('./translation');
 const { spawn } = require('child_process');
@@ -181,6 +181,18 @@ app.use((req, res, next) => {
         return next(); // Skip authentication for public routes
     }
     return authenticateToken(req, res, next); // Authenticate all other routes
+});
+
+
+app.get('/api/mapbox-token', authenticateTokenForMapbox, (req, res) => {
+    const mapboxToken = process.env.MAPBOX_ACCESS_TOKEN;
+
+    if (!mapboxToken) {
+        console.error('Mapbox access token is missing from environment variables');
+        return res.status(500).json({ message: 'Mapbox access token is not defined in the environment variables' });
+    }
+
+    res.json({ token: mapboxToken });
 });
 
 

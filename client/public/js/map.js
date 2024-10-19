@@ -1,4 +1,3 @@
-mapboxgl.accessToken = 'pk.eyJ1IjoiZmFsY29ud2F0Y2giLCJhIjoiY2x5ZWIwcDJhMDBxbTJqc2VnYWMxeWNvdCJ9.bijpr26vfErYoGhhlQnaFA';
 mapboxgl.setRTLTextPlugin('https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-rtl-text/v0.2.3/mapbox-gl-rtl-text.js');
 
 let geojsonSourceId = 'dubai-zones-source';
@@ -46,15 +45,22 @@ document.addEventListener('DOMContentLoaded', function () {
                 // Now that the user is authorized, show the page content
                 pageContent.style.display = 'block';
 
-                // Initialize the map and related functionalities only for police role
-                map = initializeMap();
-                setupMapStyleSwitcher(map);
-                setupLanguageControls(map);
-                trackUserLocation(userId, name, map, socket);
-                fetchReportsAndAddToMap(map);
-                listenForPoliceLocations(userId, map, socket);
-                listenForNewReports(map, socket);
-                handleShowPinFromURL(map);
+                // Fetch the Mapbox token first, then initialize the map
+                fetchMapboxToken()
+                    .then(mapboxToken => {
+                        map = initializeMap(mapboxToken); // Initialize map after token is fetched
+                        setupMapStyleSwitcher(map);
+                        setupLanguageControls(map);
+                        trackUserLocation(userId, name, map, socket);
+                        fetchReportsAndAddToMap(map);
+                        listenForPoliceLocations(userId, map, socket);
+                        listenForNewReports(map, socket);
+                        handleShowPinFromURL(map);
+                    })
+                    .catch(error => {
+                        console.error('Error fetching Mapbox token:', error);
+                        window.location.href = '/html/login.html';
+                    });
             } else {
                 console.error('Access denied: User role is not police.');
                 window.location.href = '/html/login.html';
@@ -83,9 +89,9 @@ document.addEventListener('DOMContentLoaded', function () {
             localStorage.removeItem('role'); // Remove role
             window.location.href = '/html/login.html'; // Redirect to login page
         });
-    } else {
     }
 });
+
 
 // Ensure initializeSocket is defined and correctly connects to your Socket.IO server
 function initializeSocket() {
@@ -95,8 +101,51 @@ function initializeSocket() {
     return socket;
 }
 
-// Initialize Mapbox
-function initializeMap() {
+
+function fetchMapboxToken() {
+    return new Promise((resolve, reject) => {
+        const authToken = localStorage.getItem('authToken');
+
+        if (!authToken) {
+            console.error('Authentication token is missing. Redirecting to login.');
+            window.location.href = '/html/login.html';
+            reject(new Error('No authentication token'));
+            return;
+        }
+
+        fetch('/api/mapbox-token', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${authToken}`,
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                if (response.status === 401 || response.status === 403) {
+                    console.error('Unauthorized or forbidden access. Redirecting to login.');
+                    window.location.href = '/html/login.html';
+                }
+                return reject(new Error('Failed to fetch Mapbox token'));
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.token) {
+                resolve(data.token); // Resolve with the token
+            } else {
+                reject(new Error('No token returned from server'));
+            }
+        })
+        .catch(error => {
+            reject(error);
+        });
+    });
+}
+
+
+function initializeMap(mapboxToken) {
+    mapboxgl.accessToken = mapboxToken; // Set the access token
+
     const mapState = getSavedMapState();
 
     const map = new mapboxgl.Map({
@@ -112,26 +161,24 @@ function initializeMap() {
 
     map.on('load', () => {
         setMapLightBasedOnTime();
-        setInterval(setMapLightBasedOnTime, 600000);  // Update every minute
+        setInterval(setMapLightBasedOnTime, 600000); // Update every 10 minutes
 
         restoreMapState(map); // Restore the map's previous state
-        
-        // Add a 4-second buffer before hiding the loading screen
+
         setTimeout(() => {
-            document.getElementById('loading-screen').style.display = 'none'; // Hide loading screen after 4 seconds
+            document.getElementById('loading-screen').style.display = 'none'; // Hide loading screen
             document.getElementById('content').style.display = 'block'; // Show the content
         }, 4000); // 4000 milliseconds = 4 seconds
-        
-        // Modify the event listeners for map movement
+
         map.on('zoomend', updateClusters);
         map.on('moveend', updateClusters);
     });
 
-    // Save map state on unload
     window.addEventListener('beforeunload', () => saveMapState(map));
 
     return map;
 }
+
 
 // Save map state to sessionStorage
 function saveMapState(map) {
