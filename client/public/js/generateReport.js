@@ -48,6 +48,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
+// Helper function to adjust time and ensure correct timezone (UTC+4 for Dubai)
+function convertToDubaiTime(date) {
+    const dubaiOffset = 4 * 60; // Dubai is UTC+4
+    const utcDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000); // Convert to UTC
+    const dubaiDate = new Date(utcDate.getTime() + dubaiOffset * 60000); // Apply Dubai offset
+
+    // Subtract 1 day
+    dubaiDate.setDate(dubaiDate.getDate() - 1);
+
+    return dubaiDate;
+}
+
 
 async function generateCrimeChart() {
     try {
@@ -84,8 +96,9 @@ async function generateCrimeChart() {
         // Group reports by category and date
         const crimeData = {};
         data.forEach(item => {
-            const date = new Date(item.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-            const hour = new Date(item.created_at).getHours(); // Extract the hour of the report
+            const dubaiDate = convertToDubaiTime(new Date(item.created_at));
+            const date = dubaiDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+            const hour = dubaiDate.getHours(); // Convert time to Dubai time
 
             if (!crimeData[item.category]) {
                 crimeData[item.category] = {

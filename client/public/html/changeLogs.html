@@ -1,0 +1,57 @@
+<!-- Path: client/html/changeLog.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FalconWatch Changelog</title>
+  <link rel="stylesheet" href="/css/changeLogStyle.css">
+  <!-- Quill CSS -->
+  <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+</head>
+<body>
+  <div class="body">
+    <!-- Header with logo and navigation buttons -->
+    <div id="header">
+      <div class="logo-container">
+        <img src="/img/logoFW.png" alt="Logo" class="heading-logo2">
+      </div>
+      <div id="nav-buttons">
+        <!-- Button for police users to create a new update -->
+        <div id="create-update-section" class="nav-button" style="display: none;">
+          <button id="create-update-btn" class="btn">Create Update</button>
+        </div>
+        <a href="/html/main.html" class="active-link">Home</a>
+        <a href="/html/login.html" id="sign-out" class="sign-out-btn">Sign Out</a>
+      </div>
+    </div>
+
+    <!-- Main container for changelog -->
+    <div class="container">
+      <div class="heading-logo-container">
+        <h1 class="insights-heading">FalconWatch <span class="fancy-text">Changelog</span></h1>
+        <img src="/img/logoFW.png" alt="Logo" class="heading-logo1">
+      </div>
+      <div class="divider"></div>
+
+      <!-- Display changelog updates -->
+      <div id="changelog-updates"></div>
+    </div>
+  </div>
+
+  <!-- Modal Popup for creating an update -->
+  <div id="updateModal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="close-popup">&times;</span>
+      <h2>Create New Update</h2>
+      <!-- Quill editor container -->
+      <div id="editor-container"></div>
+      <button class="btn" id="submit-update-btn">Submit Update</button>
+    </div>
+  </div>
+
+  <!-- Quill JS -->
+  <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+  <script src="/js/changeLogs.js"></script>
+</body>
+</html>

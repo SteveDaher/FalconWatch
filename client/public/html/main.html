@@ -9,6 +9,9 @@
     <!-- Mapbox GL JS and Directions CSS for rendering maps -->
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.css" rel="stylesheet">
     <link href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.0.0/mapbox-gl-directions.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+    <script src="https://unpkg.com/supercluster@7.1.0/dist/supercluster.min.js"></script>
+
 
     <!-- Custom stylesheet for the main page -->
     <link rel="stylesheet" href="/css/mainStyle.css"> <!-- Updated path to match the directory structure -->
@@ -128,11 +131,13 @@
                 <div class="dropdown">
                     <a href="#" id="map-styles" class="dropbtn">Map Styles</a>
                     <ul class="dropdown-content">
-                        <li><a href="#" id="satellite-map">Satellite Map</a></li>
+                        <li><a href="#" id="satellite-map-dark">Satellite Map [EN/AE]</a></li>
+                        <li><a href="#" id="street-map">Street Map [EN/AE]</a></li>
                         <li><a href="#" id="white-map">White Map [EN/AE]</a></li>
                         <li><a href="#" id="dark-map">Dark Map [EN/AE]</a></li>
-                        <li><a href="#" id="standard-map">Standard Map</a></li>
-                        <li><a href="#" id="arabic-map">Street Map [EN/AE]</a></li>
+                        <li><a href="#" id="standard-map-dynamic">Standard Map</a></li>
+                        <li><a href="#" id="dark-standard">Standard Map V2</a></li>
+
                     </ul>
                 </div>
 
@@ -144,6 +149,8 @@
                         <li><a href="#" id="ArabicLanguage">عربي</a></li>
                     </ul>
                 </div>
+                <button id="zone-mode-button">Zone Mode</button>
+
             </div>
 
             <!-- FalconWatch logo -->

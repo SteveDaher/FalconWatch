@@ -1,0 +1,65 @@
+<!-- Path: client/html/reportHistory.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="pageTitle">FalconWatch Report History</title>
+    <!-- Link to external stylesheet for report history -->
+    <link rel="stylesheet" href="/css/reportHistoryStyle.css">
+    <script src="https://unpkg.com/i18next@latest/i18next.js"></script>
+
+</head>
+<body>
+    <div class="page-content"> <!-- Add wrapper to control visibility -->
+        <!-- Header section with logo and navigation buttons -->
+        <div id="header">
+            <img src="/img/logoFW.png" alt="FalconWatch Logo" id="logo"> <!-- Adjusted path -->
+            <div id="nav-buttons">
+                <a href="/html/main.html" class="active-link btn" data-i18n="Home">Home</a> <!-- Ensure "Home" matches the key in translation resources -->
+                <div class="dropdown">
+                    <a href="#" id="Language" class="dropbtn btn" data-i18n="language">Language/لغة</a> <!-- Apply btn class -->
+                    <ul class="dropdown-content">
+                        <li><a href="#" id="EnglishLanguage" class="dropdown-link btn" data-i18n="English">English</a></li> <!-- Apply btn class -->
+                        <li><a href="#" id="ArabicLanguage" class="dropdown-link btn" data-i18n="Arabic">عربي</a></li> <!-- Apply btn class -->
+                    </ul>
+                </div>
+                <a href="/html/services.html" id="view-services" class="btn" data-i18n="ViewServices">View Services</a> 
+            </div>
+        </div>
+
+        <!-- Main container for report history content -->
+        <div class="container">
+            <h1 data-i18n="Report History">Report History</h1>
+            <div class="table-container">
+                <!-- Table to display report history -->
+                <table id="report-table">
+                    <thead>
+                        <tr>
+                            <th data-i18n="IncidentId">IncidentId</th>
+                            <th data-i18n="Name">Name</th>
+                            <th data-i18n="Severity">Severity</th>
+                            <th data-i18n="Description">Description</th>
+                            <th data-i18n="Date">Date</th>
+                            <th data-i18n="Location">Location</th>
+                            <th data-i18n="Pin">Pin</th>    
+                        </tr>
+                    </thead>
+                    <tbody id="report-body">
+                        <!-- Report rows will be dynamically populated via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            <!-- Pagination controls will be dynamically generated here -->
+            <div id="pagination-controls" class="pagination"></div>
+
+            <!-- Button to go back to the map page -->
+            <a href="/html/main.html" class="back-btn" data-i18n="backToMap">Back to Map</a> <!-- Adjusted path -->
+        </div>
+    </div> <!-- End of page-content -->
+
+    <!-- External JavaScript to handle report fetching and pagination -->
+    <script src="/js/reportHistory.js"></script> <!-- Adjusted path -->
+    <script src="/js/userVerify.js"></script> <!-- Use later for efficiency -->
+</body>
+</html>

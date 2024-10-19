@@ -45,13 +45,12 @@ body {
   cursor: pointer; /* Show pointer cursor on hover */
   margin: 0 10px; /* Space between navigation items */
   transition: color 0.3s ease, text-decoration 0.3s ease; /* Smooth transition for hover effects */
-  color: #17820e; /* Green text color */
+  color: #ffffff; /* Green text color */
 }
 
 /* Hover effect for navigation links */
 #nav-buttons a:hover {
-  color: #2fb63a; /* Lighter green on hover */
-  text-decoration: underline; /* Underline on hover */
+  color: #ffffff; /* Lighter green on hover */
 }
 
 /* Active link styling */
@@ -196,4 +195,81 @@ label {
 
 .page-content {
   display: none; /* Hide the content initially */
+}
+
+
+/* Button Container */
+.button-box {
+  margin-top: 40px;
+  margin-left: -35px;
+}
+
+/* Button Styles */
+.btn {
+  text-decoration: none;
+  color: #fff;
+  font-weight: bold;
+  background-color: #2b966f; /* Green button */
+  padding: 10px 20px;
+  border-radius: 5px; /* Rounded corners */
+  transition: background-color 0.3s ease;
+}
+
+/* Hover Effect for Button */
+.btn:hover {
+  background-color: #4cb38d; /* Lighter green on hover */
+}
+
+/* Dropdown button styled like a button */
+.dropbtn {
+  color: white;
+  font-weight: bold;
+  background-color: #2b966f;
+  padding: 10px 20px;
+  border-radius: 5px;
+  text-decoration: none;
+  display: inline-block;
+  transition: background-color 0.3s ease;
+  cursor: pointer;
+}
+
+.dropbtn:hover {
+  background-color: #4cb38d;
+}
+
+/* Dropdown menu content */
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: rgba(255, 255, 255, 0.99);
+  min-width: 190px;
+  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2); /* Light shadow */
+  z-index: 1;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  border-radius: 5px; /* Rounded corners */
+}
+
+/* Dropdown links styled like buttons */
+.dropdown-content li {
+  text-align: center;
+}
+
+.dropdown-link {
+  color: #2b966f; /* Green text for dropdown links */
+  text-decoration: none;
+  display: block;
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+  transition: background-color 0.3s ease;
+}
+
+.dropdown-link:hover {
+  background-color: #4cb38d; /* Lighter green on hover */
+}
+
+/* Show dropdown content when hovering */
+.dropdown:hover .dropdown-content {
+  display: block;
 }

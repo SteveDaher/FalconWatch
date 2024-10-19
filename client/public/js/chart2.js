@@ -3,10 +3,9 @@
 document.addEventListener('DOMContentLoaded', async () => {
     const token = localStorage.getItem('authToken'); // Retrieve the auth token from localStorage
 
-      // Hide content initially
-      const pageContent = document.querySelector('.page-content');
-      pageContent.style.display = 'none';
-
+    // Hide content initially
+    const pageContent = document.querySelector('.page-content');
+    pageContent.style.display = 'none';
 
     // Redirect to login if the user is not authenticated
     if (!token) {
@@ -39,22 +38,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Now that the user is authorized, show the page content
         pageContent.style.display = 'block';
 
+        // Set the current month as the default filter in the month dropdown
+        const currentDate = new Date();
+        const currentMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+        document.getElementById('monthFilter').value = currentMonth;
 
-    // Set the current month as the default filter in the month dropdown
-    const currentDate = new Date();
-    const currentMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
-    document.getElementById('monthFilter').value = currentMonth;
+        // Fetch initial data based on default filter (category and current month)
+        await fetchData('category', currentMonth);
 
-    // Populate the location filter options
-    await populateLocations();
-
-    // Fetch initial data based on default filter (category and current month)
-    await fetchData('category', currentMonth);
-
-} catch (error) {
-    console.error('Error during initialization:', error);
-    window.location.href = '/html/login.html'; // Redirect to login on error
-}
+    } catch (error) {
+        console.error('Error during initialization:', error);
+        window.location.href = '/html/login.html'; // Redirect to login on error
+    }
 
     // Handle changes to the month filter
     document.getElementById('monthFilter').addEventListener('change', async (event) => {
@@ -83,13 +78,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             updateTotalCrimes(0); // Reset total crimes to 0
         }
     });
-
-    // Handle changes to the location filter
-    document.getElementById('locationFilter').addEventListener('change', async () => {
-        const month = document.getElementById('monthFilter').value;
-        const type = document.getElementById('typeFilter').value;
-        await fetchData(type, month); // Fetch new data based on selected location
-    });
 });
 
 // Global variable to store the chart instance
@@ -115,53 +103,12 @@ const severityColors = {
     'high': '#F44336'
 };
 
-// Function to dynamically populate the location filter
-async function populateLocations() {
-    try {
-        const token = localStorage.getItem('authToken');
-        const response = await fetch('/api/locations', {
-            headers: {
-                'Authorization': `Bearer ${token}` // Attach the token to the request
-            }
-        });
-
-        // Log raw response to debug any HTML issues
-        const textResponse = await response.text();
-
-        // Parse the response as JSON
-        const coordinates = JSON.parse(textResponse);
-
-        const locationSelect = document.getElementById('locationFilter');
-        locationSelect.innerHTML = '<option value="">All Locations</option>'; // Default option
-
-        // Reverse geocode each coordinate and add it to the dropdown
-        for (const { lng, lat } of coordinates) {
-            const mapboxResponse = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=pk.eyJ1IjoiZmFsY29ud2F0Y2giLCJhIjoiY2x5ZWIwcDJhMDBxbTJqc2VnYWMxeWNvdCJ9.bijpr26vfErYoGhhlQnaFA`);
-            const data = await mapboxResponse.json();
-            const placeName = data.features[0]?.place_name || 'Unknown location';
-
-            const option = document.createElement('option');
-            option.value = `${lng},${lat}`;
-            option.textContent = placeName;
-            locationSelect.appendChild(option); // Add the option to the dropdown
-        }
-
-    } catch (error) {
-        console.error('Error fetching and reverse geocoding locations:', error);
-    }
-}
-
 // Function to fetch and display data based on selected filters
 async function fetchData(type, month = '') {
     try {
         const token = localStorage.getItem('authToken');
-        const location = document.getElementById('locationFilter').value; // Get the selected location
 
         let fetchUrl = `/api/chartData?month=${month}`;
-        if (location) {
-            const [lng, lat] = location.split(',');
-            fetchUrl += `&lng=${lng}&lat=${lat}`; // Add location filters
-        }
 
         const response = await fetch(fetchUrl, {
             headers: {

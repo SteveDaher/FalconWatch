@@ -6,7 +6,11 @@ const socketIo = require('socket.io');
 const authRoutes = require('./auth');
 const { setupSocket } = require('./socket');
 const multer = require('multer');
+const { classifyCrimeSeverity } = require('./severity_classifier');
 const { authenticateToken, authenticateRole } = require('./authMiddleware'); // Correctly destructure the middleware functions
+const changelogRouter = require('./serverChangeLogs'); // Importing your changelog router
+const translationRouter = require('./translation');
+const { spawn } = require('child_process');
 
 const { query, getUserByID } = require('./db');
 require('dotenv').config();  // Load environment variables
@@ -16,6 +20,14 @@ const server = http.createServer(app);
 const io = socketIo(server); // Initialize Socket.IO with the server
 const port = process.env.PORT || 3000;  // Set server port
 const UPLOAD_DIR = '/var/www/html/falconwatch/server/uploads';
+
+
+app.use(express.json({ limit: '100mb' })); // Increase JSON payload limit
+app.use(express.urlencoded({ limit: '100mb', extended: true })); // Increase URL-encoded data limit
+
+app.use('/api/serverChangeLogs', changelogRouter);
+
+app.use('/api', translationRouter);
 
 
 // Configure Multer for file uploads
@@ -43,7 +55,23 @@ const storage = multer.diskStorage({
     }
 });
 
-const upload = multer({ storage: storage }); // Initialize multer with the storage configuration
+// Add file size limit (e.g., 500MB) and file type filter
+const upload = multer({
+    storage: storage,
+    limits: { fileSize: 500 * 1024 * 1024 }, // 500MB file size limit
+    fileFilter: (req, file, cb) => {
+        const filetypes = /jpeg|jpg|png|mp4|avi|mkv/; // Allowed file types
+        const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+        const mimetype = filetypes.test(file.mimetype);
+
+        if (mimetype && extname) {
+            return cb(null, true);
+        } else {
+            cb(new Error('Only images and videos are allowed!'));
+        }
+    }
+}); 
+
 
 setupSocket(io); // Pass the Socket.IO instance to the setup function
 
@@ -53,8 +81,9 @@ const publicRoutes = [
     '/html/index.html',
     '/html/register.html',
     '/html/login.html',
-    '/api/users/login',  // Ensure login route is listed here
-    '/api/users/register'  // And register if applicable
+    '/html/changeLogs', 
+    '/api/users/login',  
+    '/api/users/register'
 ];
 
 // Publicly accessible routes (login, register, index)
@@ -144,8 +173,6 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Serve the Socket.IO client library
 app.use('/socket.io', express.static(path.join(__dirname, '../../node_modules/socket.io/client-dist')));
 
-// Serve static files from the 'client/public' directory
-// app.use(express.static(path.join(__dirname, '../../client/public')));
 
 
 // Apply authentication middleware to all routes except public routes
@@ -204,11 +231,21 @@ app.use('/uploads', authenticateToken, async (req, res, next) => {
 }, express.static('/var/www/html/falconwatch/server/uploads'));
 
 
-//POST (SUBMITTING A REPORT)
+
+
 app.post('/api/reports', authenticateToken, upload.single('crime-attachment'), async (req, res) => {
+    console.log(`Request made to /api/reports with method ${req.method}`);
     try {
-        const { category, description, coordinates, severity } = req.body;
+        console.log('Report submission started');
+        const { category, description, coordinates } = req.body;
         const userId = req.user.id;
+
+        if (!description || !coordinates) {
+            return res.status(400).json({ message: 'Description and coordinates are required.' });
+        }
+
+        // Classify crime severity using NLP model
+        const predictedSeverity = await classifyCrimeSeverity(description, category);
 
         let fileType = null;
         let filePath = null;
@@ -222,6 +259,7 @@ app.post('/api/reports', authenticateToken, upload.single('crime-attachment'), a
                 filePath = `/uploads/videos/${req.file.filename}`;
             }
 
+            console.log(`File uploaded as a ${fileType} to ${filePath}`);
         } else {
             console.log('No file uploaded');
         }
@@ -234,7 +272,7 @@ app.post('/api/reports', authenticateToken, upload.single('crime-attachment'), a
             [
                 category, 
                 description, 
-                severity || 'medium', 
+                predictedSeverity, 
                 lng, 
                 lat, 
                 userId, 
@@ -244,6 +282,8 @@ app.post('/api/reports', authenticateToken, upload.single('crime-attachment'), a
         );
 
         if (result.affectedRows > 0) {
+            console.log('Report successfully saved to the database');
+
             // Fetch the newly inserted report
             const [newReport] = await query(
                 `SELECT id, category, description, severity, ST_X(coordinates) AS lng, ST_Y(coordinates) AS lat, created_at, file_type, file_path 
@@ -256,6 +296,7 @@ app.post('/api/reports', authenticateToken, upload.single('crime-attachment'), a
 
             res.status(200).json({ message: 'Report submitted successfully.' });
         } else {
+            console.log('Failed to save the report to the database');
             res.status(500).json({ message: 'Failed to submit the report.' });
         }
     } catch (error) {
@@ -263,7 +304,6 @@ app.post('/api/reports', authenticateToken, upload.single('crime-attachment'), a
         res.status(500).json({ message: 'Internal Server Error' });
     }
 });
-
 
 //GET FETCHING A REPORT
 app.get('/api/reports', authenticateToken, async (req, res) => {
@@ -281,9 +321,18 @@ app.get('/api/reports', authenticateToken, async (req, res) => {
 
 
 
-// API endpoint to fetch report history, accessible only by authenticated users with the 'police' role
+// API endpoint to fetch report history with pagination
 app.get('/api/reportHistory', authenticateToken, authenticateRole('police'), async (req, res) => {
     try {
+        const page = parseInt(req.query.page) || 1; // Current page number
+        const limit = parseInt(req.query.limit) || 15; // Reports per page
+        const offset = (page - 1) * limit; // Calculate offset
+
+        // Get total number of reports
+        const totalReportsResult = await query('SELECT COUNT(*) AS count FROM reports');
+        const totalReports = totalReportsResult[0].count;
+
+        // Fetch reports with pagination
         const reports = await query(`
             SELECT 
                 id AS incidentId, 
@@ -294,19 +343,22 @@ app.get('/api/reportHistory', authenticateToken, authenticateRole('police'), asy
                 ST_Y(coordinates) AS lat, 
                 created_at AS date
             FROM reports
-        `);
+            ORDER BY date DESC
+            LIMIT ? OFFSET ?
+        `, [limit, offset]);
 
         // Ensure the reports are an array before sending
         if (!Array.isArray(reports)) {
             return res.status(500).json({ message: 'Internal Server Error: Reports data not an array' });
         }
 
-        res.json(reports);  // Return the reports array
+        res.json({ reports, totalReports });  // Return the reports array and total count
     } catch (error) {
         console.error('Error fetching reports:', error);
         res.status(500).json({ message: 'Internal Server Error' });
     }
 });
+
 
 // Define routes directly using app.get()
 app.get('/api/locations', authenticateToken, async (req, res) => {

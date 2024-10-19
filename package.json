@@ -1,0 +1,18 @@
+{
+  "name": "falconwatch",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node C:/Users/steve/OneDrive/Desktop/FalconWatch_Main/server/index.js",
+    "build": "babel C:/Users/steve/OneDrive/Desktop/FalconWatch_Main/client C:/Users/steve/OneDrive/Desktop/FalconWatch_Main/server --out-dir C:/Users/steve/OneDrive/Desktop/FalconWatch_Main/dist"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-core": "^6.26.3",
+    "babel-plugin-transform-remove-console": "^6.9.4"
+  }
+}

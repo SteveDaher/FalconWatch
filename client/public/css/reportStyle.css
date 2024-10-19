@@ -232,3 +232,8 @@ button[type="submit"]:hover {
 #map-controls select:hover {
     background-color: var(--button-hover-bg-color); /* Darker green on hover */
 }
+
+.mapbox-logo{ display: none; } .mapboxgl-ctrl-logo { display: none !important; } .mapbox-improve-map { display: none; } .mapboxgl-ctrl-compass { display: none;  
+} .mapboxgl-ctrl-bottom-right {
+  display: none; 
+}

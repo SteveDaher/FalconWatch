@@ -1,6 +1,9 @@
-// Path: client/public/js/map.js
 mapboxgl.accessToken = 'pk.eyJ1IjoiZmFsY29ud2F0Y2giLCJhIjoiY2x5ZWIwcDJhMDBxbTJqc2VnYWMxeWNvdCJ9.bijpr26vfErYoGhhlQnaFA';
 mapboxgl.setRTLTextPlugin('https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-rtl-text/v0.2.3/mapbox-gl-rtl-text.js');
+
+let geojsonSourceId = 'dubai-zones-source';
+let geojsonLayerId = 'dubai-zones-layer';
+let isZoneModeActive = false; // Moved this outside the function to global scope
 
 let map;  // Declare the map variable in the global scope
 let isZoomingToPin = false; // Flag to indicate if we are zooming to a pin
@@ -62,7 +65,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-
     socket.on('disconnect', () => {
         console.warn('Disconnected from server.');
         alert('Connection lost. Please check your internet connection.');
@@ -108,8 +110,6 @@ function initializeMap() {
         pitch: mapState.pitch || 0
     });
 
-
-    
     map.on('load', () => {
         setMapLightBasedOnTime();
         setInterval(setMapLightBasedOnTime, 600000);  // Update every minute
@@ -117,11 +117,14 @@ function initializeMap() {
         restoreMapState(map); // Restore the map's previous state
         
         // Add a 4-second buffer before hiding the loading screen
-    setTimeout(() => {
-        document.getElementById('loading-screen').style.display = 'none'; // Hide loading screen after 4 seconds
-        document.getElementById('content').style.display = 'block'; // Show the content
-    }, 4000); // 4000 milliseconds = 4 seconds
-
+        setTimeout(() => {
+            document.getElementById('loading-screen').style.display = 'none'; // Hide loading screen after 4 seconds
+            document.getElementById('content').style.display = 'block'; // Show the content
+        }, 4000); // 4000 milliseconds = 4 seconds
+        
+        // Modify the event listeners for map movement
+        map.on('zoomend', updateClusters);
+        map.on('moveend', updateClusters);
     });
 
     // Save map state on unload
@@ -176,7 +179,6 @@ function setMapLanguage(language, map) {
     });
 }
 
-
 // Function when the user clicks 'show pin'
 function handleShowPinFromURL(map) {
     const params = new URLSearchParams(window.location.search);
@@ -184,6 +186,7 @@ function handleShowPinFromURL(map) {
     const lat = parseFloat(params.get('lat'));
 
     if (!isNaN(lng) && !isNaN(lat)) {
+        showPinRedirect = true; // Set the flag indicating this is a "show pin" redirection
 
         if (map.isStyleLoaded()) {
             flyToPin(map, lng, lat);
@@ -192,7 +195,7 @@ function handleShowPinFromURL(map) {
                 flyToPin(map, lng, lat);
             });
         }
-    } 
+    }
 }
 
 // Function to fly to the pin's coordinates
@@ -207,18 +210,19 @@ function flyToPin(map, lng, lat) {
         .setLngLat([lng, lat])
         .setHTML('<p>Incident Location</p>')
         .addTo(map);
-
 }
 
 // Call the function after initializing the map
 document.addEventListener('DOMContentLoaded', function() {
     if (map) {
         handleShowPinFromURL(map);
-    } else {
     }
 });
 
-// Track user location
+let hasCenteredOnUser = false; // Flag to ensure the map only centers once on the user
+let showPinRedirect = false; // New flag to track if the user is being redirected to show pin
+
+// Track user location, but only if not redirected to "show pin"
 function trackUserLocation(userId, userName, map, socket) {
     if (!navigator.geolocation) {
         alert("Geolocation is not supported by this browser.");
@@ -231,11 +235,18 @@ function trackUserLocation(userId, userName, map, socket) {
         (position) => {
             const { latitude, longitude } = position.coords;
 
-            // Only center the map on the user's location if we're not zooming to a pin and there's no saved map state
-            if (!isZoomingToPin && !getSavedMapState().center) {
+            // Only center the map on the user's location if we're not zooming to a pin
+            // or being redirected by the "show pin" feature
+            if (!showPinRedirect && !isZoomingToPin && !getSavedMapState().center) {
                 map.once('moveend', () => {
                     map.setCenter([longitude, latitude]);
                 });
+            }
+
+            // Only center the map on the user's location if it's the first time and no "show pin" redirect
+            if (!hasCenteredOnUser && !showPinRedirect) {
+                map.setCenter([longitude, latitude]);
+                hasCenteredOnUser = true; // Mark as centered
             }
 
             // Update or create the user marker
@@ -277,7 +288,6 @@ function trackUserLocation(userId, userName, map, socket) {
     });
 }
 
-
 // Listen for location updates from other police users
 function listenForPoliceLocations(currentUserId, map, socket) {
     socket.on('locationUpdate', (data) => {
@@ -298,7 +308,6 @@ function listenForPoliceLocations(currentUserId, map, socket) {
         }
     });
 }
-
 
 // Update or add a marker for police locations with the officer's name
 function updateOrAddMarker(map, userId, latitude, longitude, userName) {
@@ -352,7 +361,14 @@ function removeMarker(map, userId) {
     }
 }
 
-// Function to actually add to the map
+let supercluster = new Supercluster({
+    radius: 40, // Radius of each cluster when the map is zoomed out.
+    maxZoom: 16, // Clustering will stop at zoom level 16.
+    minPoints: 4 // Minimum number of points to form a cluster.
+});
+
+let markers = {}; // Store the markers globally
+
 function fetchReportsAndAddToMap(map) {
     const storedToken = localStorage.getItem('authToken');
     
@@ -379,16 +395,28 @@ function fetchReportsAndAddToMap(map) {
     })
     .then(reports => {
         if (Array.isArray(reports)) {
-            // First, add reports to the map
-            reports.forEach(report => {
-                if (report.lng !== undefined && report.lat !== undefined) {
-                    addReportToMap(report, map);
-                } else {
-                    console.error('Missing coordinates in report:', report);
-                }
-            });
+            // Store all reports globally
+            window.allReports = reports;
 
-            // Then, update the filter list
+            // Convert reports to GeoJSON features and load them into the global supercluster
+            const features = reports.map(report => ({
+                type: 'Feature',
+                properties: { ...report },
+                geometry: {
+                    type: 'Point',
+                    coordinates: [report.lng, report.lat]
+                }
+            }));
+            
+            supercluster.load(features); // Load the reports into the global supercluster
+
+            // Call updateClusters to render clusters/markers on load
+            updateClusters();
+            // Attach event listeners to update clusters when zooming or moving
+            map.on('zoomend', updateClusters);
+            map.on('moveend', updateClusters);
+
+            // Update the filter list (if needed)
             addReportsToFilterList(reports);
         } else {
             console.error('Invalid response format for reports:', reports);
@@ -397,6 +425,97 @@ function fetchReportsAndAddToMap(map) {
     .catch(error => {
         console.error('Error fetching and adding reports to map:', error);
     });
+}
+
+let currentFilteredCategories = [];
+function updateClusters() {
+    if (!supercluster) {
+        console.error('Supercluster is not initialized.');
+        return;
+    }
+
+    const zoom = map.getZoom();
+    const bounds = map.getBounds().toArray().flat();
+    const clusters = supercluster.getClusters(bounds, Math.floor(zoom));
+
+    // Clear existing markers and render new clusters/markers
+    clearClusterMarkers();
+    hideIndividualMarkers();
+
+    clusters.forEach(cluster => {
+        const [longitude, latitude] = cluster.geometry.coordinates;
+        const properties = cluster.properties;
+
+        if (properties.cluster) {
+            // This is a cluster, not an individual report
+            const clusterId = properties.cluster_id;
+            const allClusterReports = supercluster.getLeaves(clusterId, Infinity); // Get all reports in the cluster
+
+            // Filter reports in the cluster based on the selected categories
+            const filteredReports = allClusterReports.filter(report => {
+                const category = report.properties.category.toLowerCase();
+                return currentFilteredCategories.length === 0 || currentFilteredCategories.includes(category);
+            });
+
+            const filteredCount = filteredReports.length;
+
+            if (filteredCount > 0) {
+                // Create a cluster marker
+                const el = document.createElement('div');
+                el.className = 'cluster-marker';
+                el.textContent = filteredCount; // Display the filtered count
+
+                const marker = new mapboxgl.Marker(el)
+                    .setLngLat([longitude, latitude])
+                    .addTo(map);
+
+                // Add event listener for zooming into the cluster
+                marker.getElement().addEventListener('click', () => {
+                    map.flyTo({
+                        center: [longitude, latitude],
+                        zoom: Math.min(zoom + 2, supercluster.getClusterExpansionZoom(clusterId)),
+                    });
+                });
+
+                // Store the cluster marker by ID
+                markers[clusterId] = marker;
+            }
+        } else {
+            // This is an individual report, check if it should be displayed based on current filter
+            if (currentFilteredCategories.length === 0 || currentFilteredCategories.includes(properties.category.toLowerCase())) {
+                addReportToMap(properties, map);
+            }
+        }
+    });
+}
+
+function clearClusterMarkers() {
+    for (let id in markers) {
+        const marker = markers[id];
+        if (marker && marker.getElement().classList.contains('cluster-marker')) {
+            marker.remove(); // Remove cluster markers
+            delete markers[id]; // Remove from global marker store
+        }
+    }
+}
+
+function hideIndividualMarkers() {
+    for (let id in markers) {
+        const marker = markers[id];
+        if (marker && !marker.getElement().classList.contains('cluster-marker')) {
+            marker.remove(); // Hide individual markers
+        }
+    }
+}
+
+function clearMarkers() {
+    // Only remove cluster markers, not individual report markers
+    for (let id in markers) {
+        if (markers[id] && markers[id].getElement().classList.contains('cluster-marker')) {
+            markers[id].remove(); // Remove cluster markers only
+            delete markers[id]; // Remove them from the global marker store
+        }
+    }
 }
 
 // Helper function to capitalize the category names
@@ -455,14 +574,8 @@ function addReportToMap(report, map) {
         .setDOMContent(popupContent))
         .addTo(map);
 
-
-    // Store the marker in a global object for filtering
-    if (!window.mapMarkers) {
-        window.mapMarkers = {};
-    }
-    window.mapMarkers[report.id] = marker;  // Log storing the marker
+    markers[report.id] = marker;  // Store marker by report ID
 }
-
 
 // Function to create custom popup content
 function createPopupContent({ category, severity, description, createdAt, filePath, fileType, coordinates }) {
@@ -587,7 +700,6 @@ function updateETA(eta) {
     // Update the content of the ETA element
     etaElement.textContent = `ETA: ${eta}`;
 }
-
 
 // Auto Direct Functionality
 let directionsControl = null;
@@ -726,7 +838,6 @@ userLocationWatcherId = navigator.geolocation.watchPosition(
             longitude: position.coords.longitude
         };
 
-
         // Update route if Auto Direct is active
         if (isAutoDirecting) {
             // Update the route with the new user location
@@ -807,85 +918,257 @@ function showAttachmentInContainer(filePath, fileType) {
     });
 }
 
-
+// Listener
 function listenForNewReports(map, socket) {
     socket.on('newReport', (report) => {
         if (report.lng !== undefined && report.lat !== undefined) {
-            addReportToMap(report, map);
+            // Add the new report to the global reports array
+            if (!window.allReports) {
+                window.allReports = [];
+            }
+            window.allReports.push(report);
+
+            // Convert the new report to GeoJSON feature and load it into supercluster
+            const newFeature = {
+                type: 'Feature',
+                properties: { ...report },
+                geometry: {
+                    type: 'Point',
+                    coordinates: [report.lng, report.lat]
+                }
+            };
+
+            // Add the new feature to the existing supercluster
+            const features = window.allReports.map(rep => ({
+                type: 'Feature',
+                properties: { ...rep },
+                geometry: {
+                    type: 'Point',
+                    coordinates: [rep.lng, rep.lat]
+                }
+            }));
+
+            // Reload supercluster with all features, including the new one
+            supercluster.load(features);
+
+            // Update clusters to reflect the new report
+            updateClusters();
+
+            // Re-apply filters to include the new report if it matches the selected categories
+            filterReports();
         } else {
             console.error('Missing coordinates in report:', report);
         }
     });
 }
 
-
-
 // Setup map style switcher
 function setupMapStyleSwitcher(map) {
     const styles = {
-        'satellite-map': 'mapbox://styles/mapbox/satellite-v9',
+        'satellite-map-dark': 'mapbox://styles/falconwatch/cm0qnadi200nd01qk1e36dr2i',
         'white-map': 'mapbox://styles/mapbox/light-v11',
         'dark-map': 'mapbox://styles/mapbox/dark-v11',
-        'standard-map': 'mapbox://styles/mapbox/standard',
-        'arabic-map': 'mapbox://styles/mapbox/satellite-streets-v12'
+        'standard-map-dynamic': 'mapbox://styles/mapbox/standard', 
+        'street-map': 'mapbox://styles/mapbox/satellite-streets-v12',
+        'dark-standard': 'mapbox://styles/falconwatch/cm0y15wx0011901qofja0525j'
     };
 
     Object.keys(styles).forEach(id => {
         const styleButton = document.getElementById(id);
         if (styleButton) {
             styleButton.addEventListener('click', () => {
+                // Apply the style normally
                 map.setStyle(styles[id]);
             });
         } else {
             console.warn(`Style button with ID "${id}" not found.`);
         }
     });
-}
 
+    // Zone Mode button functionality
+    const zoneModeButton = document.getElementById('zone-mode-button');
+    if (zoneModeButton) {
+        zoneModeButton.addEventListener('click', () => {
+            if (isZoneModeActive) {
+                removeGeoJSON(map);
+                zoneModeButton.textContent = 'Zone Mode';
+            } else {
+                loadGeoJSON(map);
+                if (window.allReports) {
+                    processZonesAndReports(map, window.allReports);
+                }
+                zoneModeButton.textContent = 'Disable Zone Mode';
+            }
+            isZoneModeActive = !isZoneModeActive;
+        });
+    }
+} // <-- Ensure this closing brace is added
 
-function getDubaiTimeOfDay() {
-    const dubaiTime = new Date().toLocaleString("en-US", { timeZone: "Asia/Dubai" });
-    const hours = new Date(dubaiTime).getHours();
-
-    if (hours >= 5 && hours < 12) {
-        return 'dawn';
-    } else if (hours >= 12 && hours < 15) {
-        return 'day';
-    } else if (hours >= 15 && hours < 18) { 
-        return 'dusk';
+// Load GeoJSON data
+function loadGeoJSON(map) {
+    if (map.isStyleLoaded()) {
+        addGeoJSONSourceAndLayer(map);
     } else {
-        return 'night';
+        map.once('styledata', () => {
+            addGeoJSONSourceAndLayer(map);
+        });
     }
 }
 
+// Helper function to add source and layer
+function addGeoJSONSourceAndLayer(map) {
+    fetch('/js/geojson/dubaiZones.geojson')
+        .then(response => response.json())
+        .then(geojsonData => {
+            window.zonesData = geojsonData; // Store globally
 
-let lastAppliedLightPreset = '';
+            if (!map.getSource(geojsonSourceId)) {
+                map.addSource(geojsonSourceId, {
+                    type: 'geojson',
+                    data: geojsonData
+                });
+            }
 
-function setMapLightBasedOnTime() {
-    // Check if the map is initialized and loaded before proceeding
-    if (!map || !map.isStyleLoaded()) {
+            if (!map.getLayer(geojsonLayerId)) {
+                map.addLayer({
+                    'id': geojsonLayerId,
+                    'type': 'fill',
+                    'source': geojsonSourceId,
+                    'paint': {
+                        'fill-color': '#888888',
+                        'fill-opacity': 0.4,
+                        'fill-outline-color': '#000000'
+                    }
+                });
+            }
+
+            // Process the reports with zones after the layer is added
+            if (window.allReports) {
+                processZonesAndReports(map, window.allReports, geojsonData);
+            }
+
+            // Set up the click listener for zones after adding the layer
+            setupZoneClickListener(map);
+
+        })
+        .catch(error => {
+            console.error('Error loading GeoJSON data:', error);
+        });
+}
+
+// Remove GeoJSON data
+function removeGeoJSON(map) {
+    if (map.getLayer(geojsonLayerId)) {
+        map.removeLayer(geojsonLayerId);
+        // Remove event listeners
+        if (zoneClickHandler) {
+            map.off('click', geojsonLayerId, zoneClickHandler);
+            zoneClickHandler = null;
+        }
+        if (zoneMouseEnterHandler) {
+            map.off('mouseenter', geojsonLayerId, zoneMouseEnterHandler);
+            zoneMouseEnterHandler = null;
+        }
+        if (zoneMouseLeaveHandler) {
+            map.off('mouseleave', geojsonLayerId, zoneMouseLeaveHandler);
+            zoneMouseLeaveHandler = null;
+        }
+    }
+    if (map.getSource(geojsonSourceId)) {
+        map.removeSource(geojsonSourceId);
+    }
+}
+function processZonesAndReports(map, reports, zonesData = window.zonesData) {
+    if (!zonesData) {
+        console.error('Zones data not found.');
         return;
     }
 
-    const timeOfDay = getDubaiTimeOfDay();
-    
-    if (timeOfDay === lastAppliedLightPreset) {
-        return; // Exit early if the preset hasn't changed
+    if (!reports || reports.length === 0) {
+        console.warn('No reports data available.');
+        // Reset zones to default color and clear properties
+        zonesData.features.forEach(zone => {
+            zone.properties.majoritySeverity = null;
+            zone.properties.totalCrimes = 0;
+            zone.properties.categoryCounts = '{}';
+        });
+        map.getSource(geojsonSourceId).setData(zonesData);
+        updateZoneColors(map);
+        return;
     }
 
-    lastAppliedLightPreset = timeOfDay;
+    zonesData.features.forEach(zone => {
+        const severityCounts = { high: 0, medium: 0, low: 0 };
+        let totalCrimes = 0;
+        const categoryCounts = {};
 
-    map.setConfigProperty('basemap', 'lightPreset', timeOfDay);
+        reports.forEach(report => {
+            const point = turf.point([report.lng, report.lat]);
+            const isInside = turf.booleanPointInPolygon(point, zone);
+
+            if (isInside) {
+                totalCrimes++;
+
+                // Count severity
+                const severity = report.severity.toLowerCase();
+                if (severityCounts.hasOwnProperty(severity)) {
+                    severityCounts[severity]++;
+                }
+
+                // Count categories
+                const category = report.category.toLowerCase();
+                if (!categoryCounts[category]) {
+                    categoryCounts[category] = 0;
+                }
+                categoryCounts[category]++;
+            }
+        });
+
+        const majoritySeverity = getMajoritySeverity(severityCounts);
+        zone.properties.majoritySeverity = majoritySeverity;
+        zone.properties.totalCrimes = totalCrimes;
+
+        // Serialize categoryCounts before assigning
+        zone.properties.categoryCounts = JSON.stringify(categoryCounts);
+    });
+
+    map.getSource(geojsonSourceId).setData(zonesData);
+    updateZoneColors(map);
 }
 
-// Call this function whenever you need to update the map lighting based on time
-setMapLightBasedOnTime();
+// Helper function
+function getMajoritySeverity(severityCounts) {
+    const { high, medium, low } = severityCounts;
+    const maxCount = Math.max(high, medium, low);
 
-// Optionally, set up a timer to periodically check and update the lighting
-setInterval(setMapLightBasedOnTime, 600000); // Check every minute
+    if (maxCount === 0) {
+        return null; // No reports in this zone
+    }
 
+    if (high === maxCount) {
+        return 'high';
+    } else if (medium === maxCount) {
+        return 'medium';
+    } else if (low === maxCount) {
+        return 'low';
+    }
+    return null;
+}
 
-// Fetch and add reports to timeline
+// Helper function
+function updateZoneColors(map) {
+    if (map.getLayer(geojsonLayerId)) {
+        map.setPaintProperty(geojsonLayerId, 'fill-color', [
+            'case',
+            ['==', ['get', 'majoritySeverity'], 'high'], '#FF0000',    // Red for high severity
+            ['==', ['get', 'majoritySeverity'], 'medium'], '#FFA500', // Orange for medium severity
+            ['==', ['get', 'majoritySeverity'], 'low'], '#008000',    // Green for low severity
+            '#888888' // Default color
+        ]);
+    }
+}
+
+// Function to fetch and add reports to timeline
 function fetchReports() {
     const token = localStorage.getItem('authToken');
     if (!token) {
@@ -923,26 +1206,22 @@ function fetchReports() {
     });
 }
 
-
 // Show crime details in a popup
 function showNewCrimeDetailsPopup(report) {
-    const popupContent = `
-        <div class="popup-content">
+    const popupContent = 
+        `<div class="popup-content">
             <h3>Incident Details</h3>
             <p><strong>Report ID:</strong> ${report.id}</p>
             <p><strong>Severity:</strong> ${report.severity}</p>
             <p><strong>Description:</strong> ${report.description}</p>
             <p><strong>Created At:</strong> ${new Date(report.created_at).toLocaleString()}</p>
-        </div>
-    `;
+        </div>`;
 
     new mapboxgl.Popup()
         .setLngLat([report.longitude, report.latitude])
         .setHTML(popupContent)
         .addTo(map);
 }
-
-
 
 // Add reports to filter list with crime counts
 function addReportsToFilterList(reports) {
@@ -966,10 +1245,9 @@ function addReportsToFilterList(reports) {
     for (const category in categoryCounts) {
         const count = categoryCounts[category];
         const label = document.createElement('label');
-        label.innerHTML = `
-            <input type="checkbox" value="${category}" class="crime-filter" checked>
-            ${capitalize(category)} <span class="filter-count">(${count})</span>
-        `;
+        label.innerHTML = 
+            `<input type="checkbox" value="${category}" class="crime-filter" checked>
+            ${capitalize(category)} <span class="filter-count">(${count})</span>`;
         filterContainer.appendChild(label);
     }
 
@@ -982,43 +1260,58 @@ function addReportsToFilterList(reports) {
     filterReports(); // Call this to apply the initial visibility state
 }
 
-
-
-
 // Filter reports based on selected categories
 function filterReports() {
-    const selectedCategories = Array.from(document.querySelectorAll('.crime-filter:checked')).map(input => input.value);
-    
-    if (!window.mapMarkers) return;
+    currentFilteredCategories = Array.from(document.querySelectorAll('.crime-filter:checked')).map(input => input.value);
 
-    for (const markerId in window.mapMarkers) {
-        const marker = window.mapMarkers[markerId];
+    if (!markers || !window.allReports) {
+        console.error("Markers or reports are not initialized.");
+        return;
+    }
+
+    const filteredReports = window.allReports.filter(report => 
+        currentFilteredCategories.includes(report.category.toLowerCase())
+    );
+
+    // Update markers visibility
+    for (const markerId in markers) {
+        const marker = markers[markerId];
         const markerCategory = marker.getElement().getAttribute('data-category');
 
-        if (selectedCategories.includes(markerCategory)) {
-            marker.addTo(map); // Show the marker
+        if (currentFilteredCategories.includes(markerCategory)) {
+            marker.getElement().style.display = 'block';
+            marker.addTo(map);
         } else {
-            marker.remove(); // Hide the marker
-        }
+            marker.getElement().style.display = 'none';
+            marker.remove();
+        }   
     }
+
+    // Reprocess zones with the filtered reports
+    if (isZoneModeActive) {
+        processZonesAndReports(map, filteredReports);
+    }
+    updateClusters();
 }
 
+// Update event listeners to use filterReports
 document.querySelectorAll('.crime-filter').forEach(input => {
     input.addEventListener('change', filterReports);
 });
 
+// Updated showMarker function
 function showMarker(markerId) {
-    if (window.mapMarkers && window.mapMarkers[markerId]) {
-        window.mapMarkers[markerId].addTo(map);
+    if (markers && markers[markerId]) {
+        markers[markerId].addTo(map);
     }
 }
 
+// Updated hideMarker function
 function hideMarker(markerId) {
-    if (window.mapMarkers && window.mapMarkers[markerId]) {
-        window.mapMarkers[markerId].remove();
+    if (markers && markers[markerId]) {
+        markers[markerId].remove();
     }
 }
-
 
 // Toggle filter visibility
 const toggleFilterTab = document.getElementById('toggle-filter-tab');
@@ -1113,3 +1406,181 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 });
+
+// Declare variables to store event handlers
+let zoneClickHandler = null;
+let zoneMouseEnterHandler = null;
+let zoneMouseLeaveHandler = null;
+
+// Function to handle zone click events and display popups
+function setupZoneClickListener(map) {
+    // Remove existing event handlers if they exist
+    if (zoneClickHandler) {
+        map.off('click', geojsonLayerId, zoneClickHandler);
+        zoneClickHandler = null;
+    }
+
+    zoneClickHandler = function (e) {
+        const features = map.queryRenderedFeatures(e.point, {
+            layers: [geojsonLayerId]
+        });
+
+        if (!features.length) {
+            return;
+        }
+
+        const zone = features[0];
+        const coordinates = e.lngLat;
+        const properties = zone.properties;
+
+        // Create the basic popup content
+        const popupContent = document.createElement('div');
+        popupContent.className = 'zone-popup';
+
+        const title = document.createElement('h3');
+        title.textContent = properties.CNAME_E || 'Zone'; // Use 'CNAME_E' for zone name
+        popupContent.appendChild(title);
+
+        const crimeCount = document.createElement('p');
+        crimeCount.textContent = `Total Crimes: ${properties.totalCrimes || 0}`;
+        popupContent.appendChild(crimeCount);
+
+        // Add 'Advanced View' button
+        const advancedButton = document.createElement('button');
+        advancedButton.classList.add('view-attachment-btn'); // Apply the same class
+        advancedButton.textContent = 'Advanced View';
+        advancedButton.onclick = () => {
+            showAdvancedZonePopup(properties);
+        };
+        popupContent.appendChild(advancedButton);
+
+        // Create and show the popup
+        new mapboxgl.Popup()
+            .setLngLat(coordinates)
+            .setDOMContent(popupContent)
+            .addTo(map);
+    };
+
+    // Attach the click handler
+    map.on('click', geojsonLayerId, zoneClickHandler);
+
+    // Optionally, handle mouse events for pointer changes
+    map.on('mouseenter', geojsonLayerId, () => {
+        map.getCanvas().style.cursor = 'pointer';
+    });
+
+    map.on('mouseleave', geojsonLayerId, () => {
+        map.getCanvas().style.cursor = '';
+    });
+}
+
+function showAdvancedZonePopup(properties) {
+    // Remove any existing modal
+    const existingModal = document.querySelector('.zone-advanced-modal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+
+    // Create a modal container
+    const modal = document.createElement('div');
+    modal.className = 'zone-advanced-modal';
+
+    const modalContent = document.createElement('div');
+    modalContent.className = 'zone-advanced-content';
+
+    // Close button
+    const closeButton = document.createElement('span');
+    closeButton.className = 'zone-advanced-close';
+    closeButton.innerHTML = '&times;';
+    closeButton.onclick = () => {
+        modal.remove();
+    };
+    modalContent.appendChild(closeButton);
+
+    // Title
+    const title = document.createElement('h2');
+    title.textContent = properties.CNAME_E || 'Zone Details'; // Use 'CNAME_E' for zone name
+    modalContent.appendChild(title);
+
+    // Total crimes
+    const totalCrimes = document.createElement('p');
+    totalCrimes.textContent = `Total Crimes: ${properties.totalCrimes || 0}`;
+    modalContent.appendChild(totalCrimes);
+
+    // Parse categoryCounts if it's a string
+    let categoryCounts = properties.categoryCounts || '{}';
+    if (typeof categoryCounts === 'string') {
+        try {
+            categoryCounts = JSON.parse(categoryCounts);
+        } catch (e) {
+            console.error('Error parsing categoryCounts:', e);
+            categoryCounts = {};
+        }
+    }
+
+    // Detailed category counts
+    const categoryList = document.createElement('ul');
+
+    for (const [category, count] of Object.entries(categoryCounts)) {
+        const listItem = document.createElement('li');
+        listItem.textContent = `${capitalize(category)}: ${count}`;
+        categoryList.appendChild(listItem);
+    }
+
+    modalContent.appendChild(categoryList);
+
+    // Append content to modal and modal to body
+    modal.appendChild(modalContent);
+    document.body.appendChild(modal);
+}
+
+function capitalize(str) {
+    return str
+        .split('_')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+}
+
+let lastAppliedLightPreset = ''; // Keeps track of the last applied light preset
+
+function setMapLightBasedOnTime() {
+    // Check if the map is initialized and loaded before proceeding
+    if (!map || !map.isStyleLoaded()) {
+        return;
+    }
+
+    const timeOfDay = getDubaiTimeOfDay();
+    
+    // Only update the map light preset if it's different from the last applied one
+    if (timeOfDay === lastAppliedLightPreset) {
+        return; // Exit early if the preset hasn't changed
+    }
+
+    lastAppliedLightPreset = timeOfDay; // Update the last applied preset
+
+    map.setConfigProperty('basemap', 'lightPreset', timeOfDay);
+}
+
+
+// Call this function whenever you need to update the map lighting based on time
+setMapLightBasedOnTime();
+
+// Optionally, set up a timer to periodically check and update the lighting
+setInterval(setMapLightBasedOnTime, 600000); // Check every 10 minutes
+
+// Helper function to get the current time of day in Dubai
+function getDubaiTimeOfDay() {
+    const dubaiTime = new Date().toLocaleString("en-US", { timeZone: "Asia/Dubai" });
+    const hours = new Date(dubaiTime).getHours();
+
+    if (hours >= 5 && hours < 12) {
+        return 'dawn';
+    } else if (hours >= 12 && hours < 15) {
+        return 'day';
+    } else if (hours >= 15 && hours < 16) { 
+        return 'dusk';
+    } else {
+        return 'night';
+    }
+}
+
