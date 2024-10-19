@@ -397,6 +397,7 @@ function fetchReportsAndAddToMap(map) {
         if (Array.isArray(reports)) {
             // Store all reports globally
             window.allReports = reports;
+            window.filteredReports = reports; // Initialize filteredReports with all reports
 
             // Convert reports to GeoJSON features and load them into the global supercluster
             const features = reports.map(report => ({
@@ -426,6 +427,7 @@ function fetchReportsAndAddToMap(map) {
         console.error('Error fetching and adding reports to map:', error);
     });
 }
+
 
 let currentFilteredCategories = [];
 function updateClusters() {
@@ -994,9 +996,6 @@ function setupMapStyleSwitcher(map) {
                 zoneModeButton.textContent = 'Zone Mode';
             } else {
                 loadGeoJSON(map);
-                if (window.allReports) {
-                    processZonesAndReports(map, window.allReports);
-                }
                 zoneModeButton.textContent = 'Disable Zone Mode';
             }
             isZoneModeActive = !isZoneModeActive;
@@ -1007,54 +1006,64 @@ function setupMapStyleSwitcher(map) {
 // Load GeoJSON data
 function loadGeoJSON(map) {
     if (map.isStyleLoaded()) {
-        addGeoJSONSourceAndLayer(map);
+        if (!window.zonesData) {
+            fetch('/js/geojson/dubaiZones.geojson')
+                .then(response => response.json())
+                .then(geojsonData => {
+                    window.zonesData = geojsonData; // Store globally
+                    addGeoJSONSourceAndLayer(map);
+                    // Process zones with filtered reports
+                    processZonesAndReports(map, window.filteredReports || window.allReports);
+                })
+                .catch(error => {
+                    console.error('Error loading GeoJSON data:', error);
+                });
+        } else {
+            addGeoJSONSourceAndLayer(map);
+            // Process zones with filtered reports
+            processZonesAndReports(map, window.filteredReports || window.allReports);
+        }
     } else {
         map.once('styledata', () => {
-            addGeoJSONSourceAndLayer(map);
+            loadGeoJSON(map);
         });
     }
 }
 
+
+
 // Helper function to add source and layer
 function addGeoJSONSourceAndLayer(map) {
-    fetch('/js/geojson/dubaiZones.geojson')
-        .then(response => response.json())
-        .then(geojsonData => {
-            window.zonesData = geojsonData; // Store globally
-
-            if (!map.getSource(geojsonSourceId)) {
-                map.addSource(geojsonSourceId, {
-                    type: 'geojson',
-                    data: geojsonData
-                });
-            }
-
-            if (!map.getLayer(geojsonLayerId)) {
-                map.addLayer({
-                    'id': geojsonLayerId,
-                    'type': 'fill',
-                    'source': geojsonSourceId,
-                    'paint': {
-                        'fill-color': '#888888',
-                        'fill-opacity': 0.4,
-                        'fill-outline-color': '#000000'
-                    }
-                });
-            }
-
-            // Process the reports with zones after the layer is added
-            if (window.allReports) {
-                processZonesAndReports(map, window.allReports, geojsonData);
-            }
-
-            // Set up the click listener for zones after adding the layer
-            setupZoneClickListener(map);
-
-        })
-        .catch(error => {
-            console.error('Error loading GeoJSON data:', error);
+    if (!map.getSource(geojsonSourceId)) {
+        map.addSource(geojsonSourceId, {
+            type: 'geojson',
+            data: window.zonesData
         });
+    }
+
+    if (!map.getLayer(geojsonLayerId)) {
+        map.addLayer({
+            'id': geojsonLayerId,
+            'type': 'fill',
+            'source': geojsonSourceId,
+            'paint': {
+                'fill-color': '#888888',
+                'fill-opacity': 0.4,
+                'fill-outline-color': '#000000'
+            }
+        });
+    }
+
+    // Process the reports with zones after the layer is added
+    if (window.allReports) {
+        let reportsToProcess = (window.filteredReports && window.filteredReports.length > 0) ? window.filteredReports : window.allReports;
+        processZonesAndReports(map, reportsToProcess);
+    }
+
+    // Set up the click listener for zones after adding the layer
+    setupZoneClickListener(map);
 }
+
 
 // Remove GeoJSON data
 function removeGeoJSON(map) {
@@ -1084,14 +1093,15 @@ function processZonesAndReports(map, reports, zonesData = window.zonesData) {
         return;
     }
 
+    // Reset zone properties before processing
+    zonesData.features.forEach(zone => {
+        zone.properties.majoritySeverity = null;
+        zone.properties.totalCrimes = 0;
+        zone.properties.categoryCounts = '{}';
+    });
+
     if (!reports || reports.length === 0) {
         console.warn('No reports data available.');
-        // Reset zones to default color and clear properties
-        zonesData.features.forEach(zone => {
-            zone.properties.majoritySeverity = null;
-            zone.properties.totalCrimes = 0;
-            zone.properties.categoryCounts = '{}';
-        });
         map.getSource(geojsonSourceId).setData(zonesData);
         updateZoneColors(map);
         return;
@@ -1135,6 +1145,7 @@ function processZonesAndReports(map, reports, zonesData = window.zonesData) {
     map.getSource(geojsonSourceId).setData(zonesData);
     updateZoneColors(map);
 }
+
 
 // Helper function
 function getMajoritySeverity(severityCounts) {
@@ -1269,16 +1280,19 @@ function filterReports() {
         return;
     }
 
-    const filteredReports = window.allReports.filter(report => 
-        currentFilteredCategories.includes(report.category.toLowerCase())
-    );
+    // Filter reports based on selected categories
+    window.filteredReports = currentFilteredCategories.length === 0
+        ? window.allReports
+        : window.allReports.filter(report => 
+            currentFilteredCategories.includes(report.category.toLowerCase())
+        );
 
     // Update markers visibility
     for (const markerId in markers) {
         const marker = markers[markerId];
         const markerCategory = marker.getElement().getAttribute('data-category');
 
-        if (currentFilteredCategories.includes(markerCategory)) {
+        if (currentFilteredCategories.length === 0 || currentFilteredCategories.includes(markerCategory)) {
             marker.getElement().style.display = 'block';
             marker.addTo(map);
         } else {
@@ -1287,10 +1301,11 @@ function filterReports() {
         }   
     }
 
-    // Reprocess zones with the filtered reports
+    // Update zones if zone mode is active
     if (isZoneModeActive) {
-        processZonesAndReports(map, filteredReports);
+        processZonesAndReports(map, window.filteredReports);
     }
+
     updateClusters();
 }
 
