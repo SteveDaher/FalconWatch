@@ -150,7 +150,9 @@
                     </ul>
                 </div>
                 <button id="zone-mode-button">Zone Mode</button>
-
+                <button id="report-notifications-button" class="btn">Report Notifications</button>
+                <button id="patrol-mode-button" class="btn">Activate Patrol Mode</button>
+                
             </div>
 
             <!-- FalconWatch logo -->
@@ -172,6 +174,35 @@
             <!-- Map container -->
             <div id="map"></div>
 
+            <!-- Report Notifications Panel -->
+            <div id="report-notifications-panel" class="notifications-panel">
+                <div class="panel-header">
+                    <h2>Report Notifications</h2>
+                    <span id="close-notifications" class="close-button">&times;</span>
+                </div>
+                
+                <!-- Sorting Controls -->
+                <div class="sorting-controls">
+                    <label for="sort-category">Filter by Category:</label>
+                    <select id="sort-category">
+                        <option value="default">Check Filter-list for Categories</option>
+                        <!-- Categories will be dynamically populated -->
+                    </select>
+
+                    <label for="sort-time">Sort by Time:</label>
+                    <select id="sort-time">
+                        <option value="default">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                    </select>
+                    <button id="reset-sorting-button">Reset Sorting</button>
+                </div>
+                
+            
+                <div class="panel-content" id="notifications-content">
+                    <!-- Real-time reports will be appended here -->
+                </div>
+            </div>
+
             <!-- Filter list and toggle button -->
             <div id="filter-container" class="filter-hidden"> <!-- Initially hidden -->
                 <div id="filter-header">
@@ -191,7 +222,8 @@
             </div>
         </div>
     </div> <!-- End of page-content -->
-
+    
+    <audio id="alert-sound" src="/js/sound/Alerts.mp3" loop></audio>
     <!-- Defer script loading so that video plays first while scripts load in the background -->
     <script defer src="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.js"></script>
     <script defer src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-language/v1.0.0/mapbox-gl-language.js"></script>

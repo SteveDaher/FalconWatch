@@ -104,6 +104,7 @@ const protectedHtmlRoutes = [
     { path: '/main', role: 'police' },
     { path: '/reportHistory', role: 'police' },
     { path: '/services', role: 'police' }
+    
 ];
 
 const protectedJsRoutes = [
@@ -607,6 +608,28 @@ app.post('/assign-badge', authenticateToken, authenticateRole('police'), async (
     }
 });
 
+app.delete('/api/reports/:id', authenticateToken, authenticateRole('police'), async (req, res) => {
+    const reportId = req.params.id;
+
+    if (!reportId) {
+        return res.status(400).json({ message: 'Report ID is required.' });
+    }
+
+    try {
+        const result = await query('DELETE FROM reports WHERE id = ?', [reportId]);
+
+        if (result.affectedRows > 0) {
+            res.json({ message: 'Report deleted successfully.' });
+        } else {
+            res.status(404).json({ message: 'Report not found.' });
+        }
+    } catch (error) {
+        console.error('Error deleting report:', error);
+        res.status(500).json({ message: 'Internal server error.' });
+    }
+});
+
+
 // Serve the main HTML file (index.html) for all other routes
 app.get('*', (req, res, next) => {
     if (req.path.startsWith('/socket.io')) {
@@ -628,3 +651,5 @@ app.get('*', (req, res, next) => {
 server.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });
+
+

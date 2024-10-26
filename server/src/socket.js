@@ -47,6 +47,10 @@ function setupSocket(io) {
             }
         });
 
+        function emitNewReport(report) {
+            io.emit('newReport', report);
+        }
+
         /**
          * Event: 'locationUpdate'
          * Handles location updates from the client

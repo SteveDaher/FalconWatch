@@ -172,7 +172,7 @@ async function renderCrimeTable(reports, language = 'en') {
 
     const textArray = [];
     for (const report of reports) {
-        textArray.push(report.category, report.description, report.severity, 'Show Pin');
+        textArray.push(report.category, report.description, report.severity, 'Show Pin', 'Delete');
     }
 
     const translatedTexts = (language === 'ar') ? await translateMultipleTexts(textArray, 'ar') : textArray;
@@ -187,21 +187,62 @@ async function renderCrimeTable(reports, language = 'en') {
         const description = translatedTexts[translationIndex++];
         const severity = translatedTexts[translationIndex++];
         const showPin = translatedTexts[translationIndex++];
+        const deleteText = translatedTexts[translationIndex++];
 
         // Insert report data into table row
         row.innerHTML = `
         <td>${report.incidentId}</td>
-        <td>${category}</td> <!-- Translated or original category -->
-        <td class="${getPriorityClass(report.severity)}">${severity}</td> <!-- Translated or original severity -->
-        <td>${description}</td> <!-- Translated or original description -->
+        <td>${category}</td>
+        <td class="${getPriorityClass(report.severity)}">${severity}</td>
+        <td>${description}</td>
         <td>${formatDate(report.date)}</td>
-        <td>${report.locationName || `${lng}, ${lat}`}</td> <!-- Human-readable location or fallback to coordinates -->
-        <td><a href="/html/main.html?lng=${lng}&lat=${lat}" class="view-pin-btn">${showPin}</a></td> <!-- Translated "Show Pin" -->
+        <td>${report.locationName || `${lng}, ${lat}`}</td>
+        <td><a href="/html/main.html?lng=${lng}&lat=${lat}" class="view-pin-btn">${showPin}</a></td>
+        <td><button class="delete-report-btn" data-report-id="${report.incidentId}">${deleteText}</button></td> <!-- Delete button -->
         `;
 
+        // Append the row to the table body
         tbody.appendChild(row);
     }
+
+    // Attach event listeners to all delete buttons
+    document.querySelectorAll('.delete-report-btn').forEach(button => {
+        button.addEventListener('click', async (event) => {
+            const reportId = event.target.getAttribute('data-report-id');
+            await deleteReport(reportId);
+        });
+    });
 }
+
+// Function to delete a report by its ID
+async function deleteReport(reportId) {
+    const confirmation = confirm('Are you sure you want to delete this report?');
+    if (!confirmation) return;
+
+    try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(`/api/reports/${reportId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            alert('Report deleted successfully.');
+            // Reload the table after deleting the report
+            fetchCrimeReports(currentPage, i18next.language);
+        } else {
+            const errorData = await response.json();
+            alert(`Error deleting report: ${errorData.message}`);
+        }
+    } catch (error) {
+        console.error('Error deleting report:', error);
+        alert('An error occurred while deleting the report.');
+    }
+}
+
 
 
 

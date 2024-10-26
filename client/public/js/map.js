@@ -7,7 +7,11 @@ let isZoneModeActive = false; // Moved this outside the function to global scope
 let map;  // Declare the map variable in the global scope
 let isZoomingToPin = false; // Flag to indicate if we are zooming to a pin
 
+let socket; // Declare socket globally
+
 document.addEventListener('DOMContentLoaded', function () {
+
+    socket = initializeSocket();
 
     // Hide the page content initially
     const pageContent = document.querySelector('.page-content');
@@ -24,8 +28,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Set up the Socket.IO connection
-    const socket = initializeSocket();
-
     socket.emit('authenticate', { token });
 
     socket.on('authenticated', (data) => {
@@ -52,10 +54,13 @@ document.addEventListener('DOMContentLoaded', function () {
                         setupMapStyleSwitcher(map);
                         setupLanguageControls(map);
                         trackUserLocation(userId, name, map, socket);
-                        fetchReportsAndAddToMap(map);
+                        fetchReportsAndAddToMap(map, socket);
                         listenForPoliceLocations(userId, map, socket);
                         listenForNewReports(map, socket);
                         handleShowPinFromURL(map);
+                        initializeReportNotifications(map, socket);
+                        initializeSortingControls();
+                        reapplySavedFilters();
                     })
                     .catch(error => {
                         console.error('Error fetching Mapbox token:', error);
@@ -90,6 +95,34 @@ document.addEventListener('DOMContentLoaded', function () {
             window.location.href = '/html/login.html'; // Redirect to login page
         });
     }
+
+    // Add event listeners for Report Notifications button and close button
+      const reportNotificationsButton = document.getElementById('report-notifications-button');
+      const reportNotificationsPanel = document.getElementById('report-notifications-panel');
+      const closeNotificationsButton = document.getElementById('close-notifications');
+  
+      reportNotificationsButton.addEventListener('click', (event) => {
+          event.stopPropagation(); // Prevent the click from propagating to the document
+          reportNotificationsPanel.classList.toggle('open');
+          manageAlertSound(); // Update the alert sound based on the new panel state
+      });
+  
+      closeNotificationsButton.addEventListener('click', (event) => {
+          event.stopPropagation(); // Prevent the click from propagating to the document
+          reportNotificationsPanel.classList.remove('open');
+          manageAlertSound(); // Update the alert sound based on the new panel state
+      });
+
+       // Bind Patrol Mode toggle button event
+    document.getElementById('patrol-mode-button').addEventListener('click', () => {
+        if (socket) {
+            togglePatrolMode(socket); // Toggle Patrol Mode on/off
+        } else {
+            console.error('Socket is not initialized.');
+        }
+    });
+
+          
 });
 
 
@@ -100,7 +133,6 @@ function initializeSocket() {
     });
     return socket;
 }
-
 
 function fetchMapboxToken() {
     return new Promise((resolve, reject) => {
@@ -250,8 +282,9 @@ function flyToPin(map, lng, lat) {
     map.flyTo({
         center: [lng, lat],
         zoom: 16, // Adjust the zoom level as needed
-        essential: true
+        essential: true // This ensures the animation happens even during a busy render cycle
     });
+
 
     new mapboxgl.Popup({ offset: 25 })
         .setLngLat([lng, lat])
@@ -259,12 +292,7 @@ function flyToPin(map, lng, lat) {
         .addTo(map);
 }
 
-// Call the function after initializing the map
-document.addEventListener('DOMContentLoaded', function() {
-    if (map) {
-        handleShowPinFromURL(map);
-    }
-});
+
 
 let hasCenteredOnUser = false; // Flag to ensure the map only centers once on the user
 let showPinRedirect = false; // New flag to track if the user is being redirected to show pin
@@ -415,8 +443,10 @@ let supercluster = new Supercluster({
 });
 
 let markers = {}; // Store the markers globally
+window.allReports = [];
+window.filteredReports = [];
 
-function fetchReportsAndAddToMap(map) {
+function fetchReportsAndAddToMap(map, socket) {
     const storedToken = localStorage.getItem('authToken');
     
     if (!storedToken) {
@@ -424,6 +454,11 @@ function fetchReportsAndAddToMap(map) {
         window.location.replace("/html/login.html");
         return;
     }
+
+    // Reset global state
+    window.allReports = [];
+    window.filteredReports = [];
+    clearMarkers();
 
     fetch('/api/reports', {
         method: 'GET',
@@ -442,12 +477,17 @@ function fetchReportsAndAddToMap(map) {
     })
     .then(reports => {
         if (Array.isArray(reports)) {
-            // Store all reports globally
-            window.allReports = reports;
-            window.filteredReports = reports; // Initialize filteredReports with all reports
+            // Process and store reports
+            window.allReports = reports.map(report => ({
+                ...report,
+                acknowledged: isReportAcknowledged(report.id)
+            }));
 
-            // Convert reports to GeoJSON features and load them into the global supercluster
-            const features = reports.map(report => ({
+            // Initialize filtered reports with all reports
+            window.filteredReports = [...window.allReports];
+
+            // Convert reports to GeoJSON features for clustering
+            const features = window.allReports.map(report => ({
                 type: 'Feature',
                 properties: { ...report },
                 geometry: {
@@ -456,25 +496,179 @@ function fetchReportsAndAddToMap(map) {
                 }
             }));
             
-            supercluster.load(features); // Load the reports into the global supercluster
+            // Reset and reload supercluster
+            supercluster = new Supercluster({
+                radius: 40,
+                maxZoom: 16,
+                minPoints: 4
+            });
+            supercluster.load(features);
 
-            // Call updateClusters to render clusters/markers on load
+            // Initialize UI components
+            initializeFilters();         // Initialize filters after reports are available
+            reapplySavedFilters();       // Reapply any saved filters
             updateClusters();
-            // Attach event listeners to update clusters when zooming or moving
-            map.on('zoomend', updateClusters);
-            map.on('moveend', updateClusters);
-
-            // Update the filter list (if needed)
-            addReportsToFilterList(reports);
-        } else {
-            console.error('Invalid response format for reports:', reports);
+            renderReportNotifications();
         }
     })
     .catch(error => {
-        console.error('Error fetching and adding reports to map:', error);
+        console.error('Error fetching reports:', error);
     });
 }
 
+// New function to initialize category filters
+function initializeFilters() {
+    const categories = new Set(window.allReports.map(report => report.category.toLowerCase()));
+    const filterContainer = document.getElementById('category-filters');
+    
+    if (!filterContainer) return;
+    
+    filterContainer.innerHTML = ''; // Clear existing filters
+    
+    // Create category counts
+    const categoryCounts = {};
+    window.allReports.forEach(report => {
+        const category = report.category.toLowerCase();
+        categoryCounts[category] = (categoryCounts[category] || 0) + 1;
+    });
+
+    // Create and add filter checkboxes
+    Array.from(categories).sort().forEach(category => {
+        const count = categoryCounts[category] || 0;
+        const label = document.createElement('label');
+        label.innerHTML = `
+            <input type="checkbox" value="${category}" class="crime-filter">
+            ${capitalize(category)} <span class="filter-count">(${count})</span>
+        `;
+        filterContainer.appendChild(label);
+    });
+
+    // Add event listeners to filters
+    document.querySelectorAll('.crime-filter').forEach(input => {
+        input.checked = true; // Set all checkboxes to checked by default
+        input.addEventListener('change', filterReports);
+    });
+}
+
+
+
+
+// Modified function to initialize sorting controls
+function initializeSortingControls() {
+    const sortCategory = document.getElementById('sort-category');
+    const sortTime = document.getElementById('sort-time');
+
+    if (!sortCategory || !sortTime) {
+        console.error('Sorting controls not found');
+        return;
+    }
+
+    // Load saved preferences
+    sortCategory.value = localStorage.getItem('sortCategory') || 'default';
+    sortTime.value = localStorage.getItem('sortTime') || 'default';
+
+    // Add event listeners
+    sortCategory.addEventListener('change', sortReports);
+    sortTime.addEventListener('change', sortReports);
+
+    // Reset button functionality
+    const resetSortingButton = document.getElementById('reset-sorting-button');
+    if (resetSortingButton) {
+        resetSortingButton.addEventListener('click', () => {
+            // Reset sort controls
+            sortCategory.value = 'default';
+            sortTime.value = 'default';
+            
+            // Clear local storage
+            localStorage.removeItem('sortCategory');
+            localStorage.removeItem('sortTime');
+            
+            // Reset to all reports
+            window.filteredReports = [...window.allReports];
+            
+            // Apply current category filters
+            filterReports();
+            
+            // Update display
+            renderReportNotifications();
+        });
+    }
+
+    // Apply initial sorting
+    applySorting();
+}
+
+
+// Function to sort reports based on selected criteria
+function sortReports() {
+    const sortCategory = document.getElementById('sort-category').value;
+    const sortTime = document.getElementById('sort-time').value;
+
+    // Save sort preferences
+    localStorage.setItem('sortCategory', sortCategory);
+    localStorage.setItem('sortTime', sortTime);
+
+    // Apply the sorting
+    applySorting();
+
+    // Update the notifications panel
+    renderReportNotifications();
+}
+
+
+// New function to apply sorting
+
+// Function to apply sorting
+function applySorting() {
+    const sortCategory = document.getElementById('sort-category').value;
+    const sortTime = document.getElementById('sort-time').value;
+
+    let sortedReports = [...window.filteredReports];
+
+    // Apply category filter if selected
+    if (sortCategory !== 'default') {
+        sortedReports = sortedReports.filter(report => 
+            report.category.toLowerCase() === sortCategory.toLowerCase()
+        );
+    }
+
+    // Apply time sorting (default is newest first)
+    if (sortTime === 'oldest') {
+        sortedReports.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    } else {
+        // Default or 'newest' case
+        sortedReports.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    }
+
+    // Update filtered reports with sorted results
+    window.filteredReports = sortedReports;
+}
+
+
+
+// Function to render the Report Notifications Panel based on filteredReports
+function renderReportNotifications() {
+    const notificationsContent = document.getElementById('notifications-content');
+    if (!notificationsContent) return;
+    
+    // Clear existing content
+    notificationsContent.innerHTML = '';
+    
+    // Create a Set to track unique report IDs
+    const renderedReportIds = new Set();
+    
+    // Use the filtered and sorted reports
+    window.filteredReports.forEach(report => {
+        if (!renderedReportIds.has(report.id)) {
+            const reportItem = createReportItem(report);
+            notificationsContent.appendChild(reportItem);
+            renderedReportIds.add(report.id);
+        }
+    });
+
+    // Update alert sound status
+    manageAlertSound();
+}
 
 let currentFilteredCategories = [];
 function updateClusters() {
@@ -616,12 +810,26 @@ function addReportToMap(report, map) {
         coordinates
     });
 
-    // Create and add the marker to the map with the custom popup content
+    // Create the popup with modified options
+    const popup = new mapboxgl.Popup({
+        offset: 25,
+        closeOnClick: false,     // Prevent closing when clicking inside popup
+        closeOnMove: false,      // Prevent closing when map moves
+        closeButton: true,       // Show a close button for manual closing
+        className: 'persistent-popup' // Add a custom class for styling if needed
+    }).setDOMContent(popupContent);
+
+    // Create and add the marker to the map with the custom popup
     const marker = new mapboxgl.Marker(markerElement)
         .setLngLat(coordinates)
-        .setPopup(new mapboxgl.Popup({ offset: 25 })
-        .setDOMContent(popupContent))
+        .setPopup(popup)
         .addTo(map);
+
+    // Add click handler to marker element to ensure popup stays open
+    markerElement.addEventListener('click', (e) => {
+        e.stopPropagation();
+        popup.addTo(map);
+    });
 
     markers[report.id] = marker;  // Store marker by report ID
 }
@@ -631,6 +839,11 @@ function createPopupContent({ category, severity, description, createdAt, filePa
     const popupContent = document.createElement('div');
     popupContent.className = 'report-popup'; // Apply the custom CSS class
 
+     // Stop click events from propagating and closing the popup
+     popupContent.addEventListener('click', (e) => {
+        e.stopPropagation();
+    });
+    
     // Create and append the category element
     const categoryElement = document.createElement('h3');
     categoryElement.textContent = category;
@@ -681,7 +894,9 @@ function createPopupContent({ category, severity, description, createdAt, filePa
     autoDirectButton.classList.add('auto-direct-btn');
     autoDirectButton.textContent = isAutoDirecting ? 'Cancel Auto-Direct' : 'Auto-Direct';
     autoDirectButton.style.flex = '1'; // Make the button take up equal space
-    autoDirectButton.onclick = () => {
+    autoDirectButton.onclick = (event) => {
+        event.stopPropagation();  // Prevent the popup from closing
+    
         if (isAutoDirecting) {
             cancelAutoDirect(map);
             autoDirectButton.textContent = 'Auto-Direct';
@@ -750,6 +965,15 @@ function updateETA(eta) {
     etaElement.textContent = `ETA: ${eta}`;
 }
 
+
+function updateETA2(eta) {
+    const etaDisplay = document.getElementById('etaDisplayCustom');
+    if (etaDisplay) {
+        etaDisplay.innerHTML = `<strong>ETA:</strong> ${eta}`;
+    }
+}
+
+
 // Auto Direct Functionality
 let directionsControl = null;
 let userLocation = null;
@@ -763,8 +987,17 @@ function directToMarker(map, lng, lat) {
         return;
     }
 
+    // Create and set up the popup before initiating flyTo
+    const popup = new mapboxgl.Popup({
+        offset: 25,
+        closeOnClick: false,     // Prevent closing when clicking inside popup
+        closeOnMove: false,      // Prevent closing when map moves
+        closeButton: true,       // Show a close button for manual closing
+        className: 'persistent-popup' // Custom class for styling if needed
+    }).setLngLat([lng, lat])
+    .setHTML('<p>Incident Location</p>'); // Customize the popup content as needed
+
     if (!isAutoDirecting) {
-        // Fetch the route from the user's location to the destination with traffic data
         if (userLocation) {
             const url = `https://api.mapbox.com/directions/v5/mapbox/driving-traffic/${userLocation.longitude},${userLocation.latitude};${lng},${lat}?geometries=geojson&overview=full&access_token=${mapboxgl.accessToken}`;
 
@@ -780,10 +1013,8 @@ function directToMarker(map, lng, lat) {
                     const duration = data.routes[0].duration; // in seconds
                     const eta = formatDuration(duration);
 
-                    // Update the ETA display
                     updateETA(eta);
 
-                    // Add the route to the map
                     if (map.getSource(routeLayerId)) {
                         map.getSource(routeLayerId).setData(route);
                     } else {
@@ -807,18 +1038,26 @@ function directToMarker(map, lng, lat) {
                         });
                     }
 
-                    // Fly to the destination
                     map.flyTo({
                         center: [lng, lat],
                         zoom: 16,
                         essential: true
                     });
 
-                    // Update button text to "Cancel Auto Direct"
+                    // Ensure popup is visible after flyTo completes
+                    map.once('moveend', () => {
+                        popup.addTo(map);
+                    });
+
                     const autoDirectButton = document.getElementById('auto-direct-button');
-                    autoDirectButton.textContent = 'Cancel Auto Direct';
+                    if (autoDirectButton) {
+                        autoDirectButton.textContent = 'Cancel Auto Direct';
+                    } else {
+                        console.warn('Auto Direct button not found in the DOM.');
+                    }
 
                     isAutoDirecting = true;
+                    console.log('Auto-direct started');
                 })
                 .catch(error => {
                     console.error('Error fetching route:', error);
@@ -831,12 +1070,20 @@ function directToMarker(map, lng, lat) {
     }
 }
 
+
 // Function to format duration (in seconds) into a readable format
-function formatDuration(duration) {
-    const minutes = Math.floor(duration / 60);
-    const seconds = Math.floor(duration % 60);
-    return `${minutes} min ${seconds} sec`;
+function formatDuration(seconds) {
+    if (seconds < 60) {
+        return `${Math.round(seconds)} seconds`;
+    } else if (seconds < 3600) {
+        return `${Math.round(seconds / 60)} minutes`;
+    } else {
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.round((seconds % 3600) / 60);
+        return `${hours} hour${hours !== 1 ? 's' : ''} ${minutes} minute${minutes !== 1 ? 's' : ''}`;
+    }
 }
+
 
 function clearETA() {
     const etaElement = document.getElementById('eta-display');
@@ -846,10 +1093,13 @@ function clearETA() {
 }
 
 function cancelAutoDirect(map) {
+    console.log('Executing cancelAutoDirect...'); // Debug log
+
     // Remove the route layer from the map
     if (map.getLayer(routeLayerId)) {
         map.removeLayer(routeLayerId);
         map.removeSource(routeLayerId);
+        console.log('Route layer removed.');
     } else {
         console.warn("Route layer not found on the map.");
     }
@@ -865,16 +1115,22 @@ function cancelAutoDirect(map) {
         console.warn("Auto Direct button not found.");
     }
 
-    // Stop auto-directing
+    // Reset auto-direct state
     isAutoDirecting = false;  
-    // Remove the directions control if it exists
+    console.log('isAutoDirecting set to false.');
+
+    // Remove directions control if it exists
     if (directionsControl) {
         map.removeControl(directionsControl);
         directionsControl = null;
+        console.log('Directions control removed.');
+    } else {
+        console.log('Directions control was not active.');
     }
 
     // Stop tracking user location for auto-direct
     navigator.geolocation.clearWatch(userLocationWatcherId);
+    console.log('User location watch cleared.');
 }
 
 let userLocationWatcherId;
@@ -969,47 +1225,143 @@ function showAttachmentInContainer(filePath, fileType) {
 
 // Listener
 function listenForNewReports(map, socket) {
+    socket.off('newReport'); // Remove any existing listeners first
+    
     socket.on('newReport', (report) => {
-        if (report.lng !== undefined && report.lat !== undefined) {
-            // Add the new report to the global reports array
-            if (!window.allReports) {
-                window.allReports = [];
-            }
-            window.allReports.push(report);
+        if (!report.lng || !report.lat) {
+            console.error('Missing coordinates in report:', report);
+            return;
+        }
 
-            // Convert the new report to GeoJSON feature and load it into supercluster
-            const newFeature = {
-                type: 'Feature',
-                properties: { ...report },
-                geometry: {
-                    type: 'Point',
-                    coordinates: [report.lng, report.lat]
-                }
+        // Check if report already exists
+        const existingReport = window.allReports.find(r => r.id === report.id);
+        
+        if (!existingReport) {
+            const processedReport = {
+                ...report,
+                acknowledged: isReportAcknowledged(report.id)
             };
 
-            // Add the new feature to the existing supercluster
-            const features = window.allReports.map(rep => ({
-                type: 'Feature',
-                properties: { ...rep },
-                geometry: {
-                    type: 'Point',
-                    coordinates: [rep.lng, rep.lat]
-                }
-            }));
-
-            // Reload supercluster with all features, including the new one
-            supercluster.load(features);
-
-            // Update clusters to reflect the new report
-            updateClusters();
-
-            // Re-apply filters to include the new report if it matches the selected categories
+            // Add to global arrays
+            window.allReports.push(processedReport);
+            
+            // Update the filter list with new counts
+            updateFilterList();
+            
+            // Update category filters and apply current filters
+            updateCategoryFilters();
             filterReports();
-        } else {
-            console.error('Missing coordinates in report:', report);
+            
+            // Only show patrol mode notification if patrol mode is active
+            if (isPatrolModeActive) {
+                showCrimeNotification(processedReport);
+                playAlertSound();
+            }
+
+            // Manage alert sound for non-patrol mode
+            if (!isPatrolModeActive) {
+                manageAlertSound();
+            }
         }
     });
 }
+
+// New function to update filter list counts
+function updateFilterList() {
+    const filterContainer = document.getElementById('category-filters');
+    if (!filterContainer) return;
+
+    // Store the current checked states
+    const currentCheckedStates = {};
+    filterContainer.querySelectorAll('input.crime-filter').forEach(input => {
+        currentCheckedStates[input.value] = input.checked;
+    });
+
+    // Get all current categories and their counts
+    const categoryCounts = {};
+    window.allReports.forEach(report => {
+        const category = report.category.toLowerCase();
+        categoryCounts[category] = (categoryCounts[category] || 0) + 1;
+    });
+
+    // Update existing category counts or add new categories
+    Object.entries(categoryCounts).sort().forEach(([category, count]) => {
+        // Look for existing label for this category
+        const existingLabel = filterContainer.querySelector(`label input[value="${category}"]`)?.parentElement;
+
+        if (existingLabel) {
+            // Update count for existing category
+            const countSpan = existingLabel.querySelector('.filter-count');
+            if (countSpan) {
+                countSpan.textContent = `(${count})`;
+            }
+        } else {
+            // Add new category
+            const label = document.createElement('label');
+            label.innerHTML = `
+                <input type="checkbox" value="${category}" class="crime-filter">
+                ${capitalize(category)} <span class="filter-count">(${count})</span>
+            `;
+            filterContainer.appendChild(label);
+
+            // Add event listener to new checkbox
+            const input = label.querySelector('.crime-filter');
+            input.addEventListener('change', filterReports);
+        }
+    });
+
+    // Re-apply the checked states or default to checked
+    const hasCheckedState = Object.keys(currentCheckedStates).length > 0;
+
+    filterContainer.querySelectorAll('input.crime-filter').forEach(input => {
+        if (hasCheckedState) {
+            if (currentCheckedStates.hasOwnProperty(input.value)) {
+                input.checked = currentCheckedStates[input.value];
+            } else {
+                // For new categories, default to checked
+                input.checked = true;
+            }
+        } else {
+            // On initial load, default all to checked
+            input.checked = true;
+        }
+    });
+}   
+
+
+// Modified function to update category filters
+function updateCategoryFilters() {
+    const filterContainer = document.getElementById('category-filters');
+    const sortCategory = document.getElementById('sort-category');
+    
+    if (!filterContainer || !sortCategory) return;
+
+    // Get all unique categories from current reports
+    const categories = new Set(window.allReports.map(report => report.category.toLowerCase()));
+    
+    // Count reports per category
+    const categoryCounts = {};
+    window.allReports.forEach(report => {
+        const category = report.category.toLowerCase();
+        categoryCounts[category] = (categoryCounts[category] || 0) + 1;
+    });
+
+    // Update dropdown options
+    sortCategory.innerHTML = '<option value="default">All Categories</option>';
+    Array.from(categories).sort().forEach(category => {
+        const option = document.createElement('option');
+        option.value = category;
+        option.textContent = capitalize(category);
+        sortCategory.appendChild(option);
+    });
+
+    // Restore selected value if exists
+    const savedCategory = localStorage.getItem('sortCategory');
+    if (savedCategory && sortCategory.querySelector(`option[value="${savedCategory}"]`)) {
+        sortCategory.value = savedCategory;
+    }
+}
+
 
 // Setup map style switcher
 function setupMapStyleSwitcher(map) {
@@ -1226,7 +1578,7 @@ function updateZoneColors(map) {
     }
 }
 
-// Function to fetch and add reports to timeline
+// Function to fetch 
 function fetchReports() {
     const token = localStorage.getItem('authToken');
     if (!token) {
@@ -1283,77 +1635,125 @@ function showNewCrimeDetailsPopup(report) {
 
 // Add reports to filter list with crime counts
 function addReportsToFilterList(reports) {
-    const filterList = document.getElementById('filter-list');
-    filterList.innerHTML = ''; // Clear existing reports
-
-    const categoryCounts = {};
-
-    // Count reports per category
-    reports.forEach(report => {
-        const category = report.category.toLowerCase();
-        if (!categoryCounts[category]) {
-            categoryCounts[category] = 0;
-        }
-        categoryCounts[category]++;
-    });
-
     const filterContainer = document.getElementById('category-filters');
+    if (!filterContainer) return;
+
     filterContainer.innerHTML = ''; // Clear existing filters
 
-    for (const category in categoryCounts) {
-        const count = categoryCounts[category];
-        const label = document.createElement('label');
-        label.innerHTML = 
-            `<input type="checkbox" value="${category}" class="crime-filter" checked>
-            ${capitalize(category)} <span class="filter-count">(${count})</span>`;
-        filterContainer.appendChild(label);
-    }
-
-    // Reattach event listeners for filtering
-    document.querySelectorAll('.crime-filter').forEach(input => {
-        input.addEventListener('change', filterReports);
+    const categoryCounts = {};
+    reports.forEach(report => {
+        const category = report.category.toLowerCase();
+        categoryCounts[category] = (categoryCounts[category] || 0) + 1;
     });
 
-    // Initially show all markers on the map
-    filterReports(); // Call this to apply the initial visibility state
+    Object.entries(categoryCounts).sort().forEach(([category, count]) => {
+        const label = document.createElement('label');
+        label.innerHTML = `
+            <input type="checkbox" value="${category}" class="crime-filter" checked>
+            ${capitalize(category)} <span class="filter-count">(${count})</span>
+        `;
+        filterContainer.appendChild(label);
+    });
+
+    // Add event listeners
+    document.querySelectorAll('.crime-filter').forEach(input => {
+        input.addEventListener('change', () => {
+            filterReports();
+            updateClusters();
+        });
+    });
 }
 
 // Filter reports based on selected categories
+
+// Modified filter function
+// Modified filterReports function to work with sorting
 function filterReports() {
-    currentFilteredCategories = Array.from(document.querySelectorAll('.crime-filter:checked')).map(input => input.value);
+    // Get currently selected categories
+    currentFilteredCategories = Array.from(document.querySelectorAll('.crime-filter:checked'))
+        .map(input => input.value);
 
-    if (!markers || !window.allReports) {
-        console.error("Markers or reports are not initialized.");
-        return;
-    }
+    // Clear existing markers
+    clearMarkers();
 
-    // Filter reports based on selected categories
-    window.filteredReports = currentFilteredCategories.length === 0
-        ? window.allReports
-        : window.allReports.filter(report => 
+    // If no categories are selected, show no reports
+    if (currentFilteredCategories.length === 0) {
+        window.filteredReports = [];
+    } else {
+        // Filter reports based on selected categories
+        window.filteredReports = window.allReports.filter(report => 
             currentFilteredCategories.includes(report.category.toLowerCase())
         );
-
-    // Update markers visibility
-    for (const markerId in markers) {
-        const marker = markers[markerId];
-        const markerCategory = marker.getElement().getAttribute('data-category');
-
-        if (currentFilteredCategories.length === 0 || currentFilteredCategories.includes(markerCategory)) {
-            marker.getElement().style.display = 'block';
-            marker.addTo(map);
-        } else {
-            marker.getElement().style.display = 'none';
-            marker.remove();
-        }   
     }
 
+    // Apply sorting (this will ensure newest first by default)
+    applySorting();
+
+    // Update features for clustering
+    const features = window.filteredReports.map(report => ({
+        type: 'Feature',
+        properties: { ...report },
+        geometry: {
+            type: 'Point',
+            coordinates: [report.lng, report.lat]
+        }
+    }));
+
+    // Reset and reload supercluster with filtered data
+    supercluster.load(features);
+
+    // Update the map display
+    updateClusters();
+
     // Update zones if zone mode is active
-    if (isZoneModeActive) {
+    if (isZoneModeActive && map.getSource(geojsonSourceId)) {
         processZonesAndReports(map, window.filteredReports);
     }
 
-    updateClusters();
+    // Save filter state
+    saveFilterState();
+
+    // Update notifications panel
+    renderReportNotifications();
+}
+
+
+
+// New function to save filter state
+function saveFilterState() {
+    const filterState = Array.from(document.querySelectorAll('.crime-filter:checked'))
+        .map(input => input.value);
+    localStorage.setItem('savedFilters', JSON.stringify(filterState));
+}
+
+// New function to reapply saved filters
+function reapplySavedFilters() {
+    const savedFilters = localStorage.getItem('savedFilters');
+    const filterInputs = document.querySelectorAll('.crime-filter');
+
+    if (savedFilters) {
+        const filterState = JSON.parse(savedFilters);
+
+        if (filterState.length > 0) {
+            // Apply saved filter states
+            filterInputs.forEach(input => {
+                input.checked = filterState.includes(input.value);
+            });
+        } else {
+            // If savedFilters is an empty array, check all filters
+            filterInputs.forEach(input => {
+                input.checked = true;
+            });
+        }
+    } else {
+        // No saved filters, check all filters by default
+        filterInputs.forEach(input => {
+            input.checked = true;
+        });
+    }
+
+    // Apply filters
+    filterReports();
 }
 
 // Update event listeners to use filterReports
@@ -1646,3 +2046,539 @@ function getDubaiTimeOfDay() {
     }
 }
 
+// Function to initialize Report Notifications
+function initializeReportNotifications(map, socket) {
+    const notificationsContent = document.getElementById('notifications-content');
+    
+    // Clear existing notifications first
+    if (notificationsContent) {
+        notificationsContent.innerHTML = '';
+    }
+
+    // Only render the reports that are already in window.allReports
+    // Remove the separate fetch since reports are already loaded
+    if (window.allReports && Array.isArray(window.allReports)) {
+        renderReportNotifications();
+    }
+}
+
+// Function to create a report item element (Defined globally)
+function createReportItem(report) {
+    const reportDiv = document.createElement('div');
+    reportDiv.classList.add('report-item');
+    reportDiv.setAttribute('data-report-id', report.id); // Add data attribute for easy reference
+    
+    // Category
+    const category = document.createElement('div');
+    category.classList.add('report-category');
+    category.textContent = `Category: ${report.category}`;
+    reportDiv.appendChild(category);
+
+    // Severity
+    const severity = document.createElement('div');
+    severity.classList.add('report-severity', report.severity.toLowerCase());
+    severity.textContent = `Severity: ${report.severity}`;
+    reportDiv.appendChild(severity);
+
+    // Description
+    const description = document.createElement('div');
+    description.textContent = `Description: ${report.description}`;
+    reportDiv.appendChild(description);
+
+    // Time
+    const time = document.createElement('div');
+    const reportTime = new Date(report.created_at).toLocaleString();
+    time.textContent = `Time: ${reportTime}`;
+    reportDiv.appendChild(time);
+
+    // Button Container
+    const buttonContainer = document.createElement('div');
+    buttonContainer.classList.add('button-container');
+
+    // Show Pin Button
+    const showPinBtn = document.createElement('button');
+    showPinBtn.classList.add('show-pin-btn');
+    showPinBtn.textContent = 'Show Pin';
+    showPinBtn.setAttribute('aria-label', 'Show Incident Pin on Map');
+    showPinBtn.addEventListener('click', () => {
+        flyToReportPin(map, report.lng, report.lat);
+        // Optional: Close the panel after clicking
+        // reportNotificationsPanel.classList.remove('open');
+    });
+    buttonContainer.appendChild(showPinBtn);
+
+    // Check if the report is already acknowledged
+    const isAcknowledged = isReportAcknowledged(report.id);
+
+    // If the report is of HIGH severity and not acknowledged, add the "Acknowledge" button
+    if (report.severity.toLowerCase() === 'high' && !isAcknowledged) {
+        const acknowledgeBtn = document.createElement('button');
+        acknowledgeBtn.classList.add('acknowledge-btn', 'pulse'); // 'pulse' class for animation
+        acknowledgeBtn.textContent = 'Acknowledge';
+        acknowledgeBtn.setAttribute('aria-label', 'Acknowledge High Severity Report');
+
+        // Event Listener for Acknowledge Button
+        acknowledgeBtn.addEventListener('click', () => {
+            acknowledgeReport(report.id, acknowledgeBtn);
+        });
+
+        buttonContainer.appendChild(acknowledgeBtn);
+
+        // Report is unacknowledged
+        report.acknowledged = false;
+
+        // Manage the alert sound based on this report
+        manageAlertSound();
+    } else if (report.severity.toLowerCase() === 'high' && isAcknowledged) {
+        // If acknowledged, show an 'Acknowledged' label/button
+        const acknowledgedLabel = document.createElement('button');
+        acknowledgedLabel.classList.add('acknowledge-btn', 'acknowledged'); // 'acknowledged' class for styles
+        acknowledgedLabel.textContent = 'Acknowledged';
+        acknowledgedLabel.setAttribute('aria-label', 'Acknowledged Report');
+        acknowledgedLabel.disabled = true; // Disable the button
+        buttonContainer.appendChild(acknowledgedLabel);
+    }
+
+    reportDiv.appendChild(buttonContainer);
+
+    return reportDiv;
+}
+
+// Function to append a report to the panel (Defined globally)
+function appendReport(report) {
+    const notificationsContent = document.getElementById('notifications-content');
+    if (!notificationsContent) {
+        console.error('Notifications content element not found.');
+        return;
+    }
+    const reportItem = createReportItem(report);
+    // Prepend to show the latest reports on top
+    notificationsContent.prepend(reportItem);
+}
+
+
+// Function to fly to the report's pin on the map
+function flyToReportPin(map, lng, lat) {
+    map.flyTo({
+        center: [lng, lat],
+        zoom: 16, // Adjust zoom level as needed
+        essential: true
+    });
+
+    // Optional: Open a popup at the report's location
+    new mapboxgl.Popup({ offset: 25 })
+        .setLngLat([lng, lat])
+        .setHTML('<p>Incident Location</p>')
+        .addTo(map);
+}
+
+
+let alertSoundPlaying = false;
+
+// Function to play the alert sound
+function playAlertSound() {
+    if (!alertSoundPlaying) {
+        const alertSound = document.getElementById('alert-sound');
+        if (alertSound) {
+            alertSound.play()
+                .then(() => {
+                    alertSoundPlaying = true;
+                })
+                .catch(error => {
+                    console.error('Error playing alert sound:', error);
+                    // Optional: Notify the user to allow sound playback
+                });
+        } else {
+            console.error('Alert sound element not found.');
+        }
+    }
+}
+
+// Function to stop the alert sound
+function stopAlertSound() {
+    if (alertSoundPlaying) {
+        const alertSound = document.getElementById('alert-sound');
+        if (alertSound) {
+            alertSound.pause();
+            alertSound.currentTime = 0; // Reset to the beginning
+            alertSoundPlaying = false;
+        } else {
+            console.error('Alert sound element not found.');
+        }
+    }
+}
+
+// Function to check and manage alert sound based on unacknowledged HIGH severity reports
+function manageAlertSound() {
+    const reportNotificationsPanel = document.getElementById('report-notifications-panel');
+    const isPanelOpen = reportNotificationsPanel.classList.contains('open');
+
+    if (!isPanelOpen) {
+        // Panel is not open, stop the alert sound
+        stopAlertSound();
+        return;
+    }
+
+    const unacknowledgedHighReports = window.allReports.filter(report => 
+        report.severity.toLowerCase() === 'high' && !isReportAcknowledged(report.id)
+    );
+    
+    if (unacknowledgedHighReports.length > 0) {
+        playAlertSound();
+    } else {
+        stopAlertSound();
+    }
+}
+
+
+/// Function to acknowledge a high severity report
+function acknowledgeReport(reportId, acknowledgeBtn) {
+    // Find the report in the global reports array
+    const report = window.allReports.find(r => r.id === reportId);
+    if (report) {
+        report.acknowledged = true; // Mark as acknowledged
+
+        // Update the button appearance
+        acknowledgeBtn.classList.remove('pulse'); // Stop pulsing
+        acknowledgeBtn.classList.add('acknowledged'); // Apply acknowledged styles
+        acknowledgeBtn.textContent = 'Acknowledged';
+        acknowledgeBtn.disabled = true; // Disable the button
+
+        // Persist the acknowledgment in localStorage
+        addAcknowledgedReport(reportId);
+    } else {
+        console.error(`Report with ID ${reportId} not found.`);
+    }
+
+    // Manage the alert sound based on the current state of reports
+    manageAlertSound();
+}
+
+
+// Retrieve acknowledged report IDs from localStorage
+function getAcknowledgedReports() {
+    const acknowledged = localStorage.getItem('acknowledgedReports');
+    return acknowledged ? JSON.parse(acknowledged) : [];
+}
+
+// Add a report ID to the acknowledged list
+function addAcknowledgedReport(reportId) {
+    const acknowledged = getAcknowledgedReports();
+    if (!acknowledged.includes(reportId)) {
+        acknowledged.push(reportId);
+        localStorage.setItem('acknowledgedReports', JSON.stringify(acknowledged));
+    }
+}
+
+// Check if a report is acknowledged
+function isReportAcknowledged(reportId) {
+    const acknowledged = getAcknowledgedReports();
+    return acknowledged.includes(reportId);
+}
+
+let isPatrolModeActive = false;
+let assignedCrime = null; // Store the crime assigned to the officer
+let patrolModeListener = null; // Store the listener reference
+
+// Toggle Patrol Mode function
+
+function togglePatrolMode(socket) {
+    const patrolModeButton = document.getElementById('patrol-mode-button');
+
+    if (!isPatrolModeActive) {
+        // Activate Patrol Mode
+        alert('Patrol Mode Activated');
+        isPatrolModeActive = true;
+        patrolModeButton.textContent = 'Deactivate Patrol Mode';
+    } else {
+        // Deactivate Patrol Mode
+        alert('Patrol Mode Deactivated');
+        isPatrolModeActive = false;
+        patrolModeButton.textContent = 'Activate Patrol Mode';
+        stopPatrolMode(socket);
+    }
+}
+
+
+// Simplify stopPatrolMode since we don't need to remove listeners anymore
+function stopPatrolMode(socket) {
+    stopAlertSound();
+}
+
+
+// Function to handle media display in patrol mode notifications
+function showPatrolModeMedia(filePath, fileType) {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+        console.error('No auth token found.');
+        return Promise.reject('No auth token found');
+    }
+
+    return fetch(filePath, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`Failed to fetch file: ${response.statusText}`);
+        }
+        return response.blob();
+    })
+    .then(blob => {
+        const mediaUrl = URL.createObjectURL(blob);
+        
+        if (fileType === 'image') {
+            return `<div class="popupMediaContainerCustom">
+                        <img src="${mediaUrl}" alt="Crime Scene Image" class="popupMediaCustom"/>
+                    </div>`;
+        } else if (fileType === 'video') {
+            return `<div class="popupMediaContainerCustom">
+                        <video controls class="popupMediaCustom">
+                            <source src="${mediaUrl}" type="video/mp4"/>
+                            Your browser does not support the video tag.
+                        </video>
+                    </div>`;
+        }
+        return '<p>Unsupported media type.</p>';
+    })
+    .catch(error => {
+        console.error('Error loading media:', error);
+        return '<p>Failed to load media.</p>';
+    });
+}
+
+function showCrimeNotification(report) {
+    // First calculate ETA, then show the modal with the result
+    if (!userLocation) {
+        showNotificationWithETA(report, "Location unavailable");
+        return;
+    }
+
+    const url = `https://api.mapbox.com/directions/v5/mapbox/driving-traffic/${userLocation.longitude},${userLocation.latitude};${report.lng},${report.lat}?geometries=geojson&overview=full&access_token=${mapboxgl.accessToken}`;
+
+    fetch(url)
+        .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.json();
+        })
+        .then(data => {
+            if (data.routes && data.routes.length > 0) {
+                const duration = data.routes[0].duration;
+                const eta = formatDuration(duration);
+                showNotificationWithETA(report, eta);
+            } else {
+                throw new Error("No routes found");
+            }
+        })
+        .catch(error => {
+            console.error("Error calculating ETA:", error);
+            showNotificationWithETA(report, "Error calculating ETA");
+        });
+}
+
+
+function showNotificationWithETA(report, eta) {
+    const modal = document.createElement('div');
+    modal.className = 'crimeModalCustom';
+
+    modal.innerHTML = `
+        <div class="crimePopupCustom">
+            <h2 class="popupCategoryCustom">${report.category}</h2>  
+            <div id="mediaPlaceholder">Loading media...</div>
+            <p class="popupDescriptionCustom"><strong>Description:</strong> ${report.description || 'No description provided'}</p>
+            <p class="popupSeverityCustom"><strong>Severity:</strong> 
+                <span class="${getSeverityClass(report.severity)}">${report.severity}</span>
+            </p>
+            <p class="popupTimeCustom"><strong>Reported Time:</strong> ${new Date(report.created_at).toLocaleTimeString()}</p>
+            <div id="etaDisplayCustom"><strong>ETA:</strong> ${eta}</div>
+            <div class="popupActionsCustom">
+                <button class="popupBtnCustom acknowledge-btn">Acknowledge</button>
+                <button class="popupBtnCustom respond-btn">Respond</button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Load media if available
+    if (report.file_path) {
+        showPatrolModeMedia(report.file_path, report.file_type)
+            .then(mediaHtml => {
+                const mediaPlaceholder = modal.querySelector('#mediaPlaceholder');
+                if (mediaPlaceholder) {
+                    mediaPlaceholder.outerHTML = mediaHtml;
+                }
+            });
+    } else {
+        const mediaPlaceholder = modal.querySelector('#mediaPlaceholder');
+        if (mediaPlaceholder) {
+            mediaPlaceholder.outerHTML = '<p>No media available.</p>';
+        }
+    }
+
+    // Add event listeners
+    const acknowledgeBtn = modal.querySelector('.acknowledge-btn');
+    const respondBtn = modal.querySelector('.respond-btn');
+
+    if (acknowledgeBtn) {
+        acknowledgeBtn.addEventListener('click', () => {
+            stopAlertSound();
+            modal.remove();
+        });
+    }
+
+    if (respondBtn) {
+        respondBtn.addEventListener('click', () => {
+            stopAlertSound();
+            modal.remove();
+
+            // Store the assigned crime
+            assignedCrime = report;
+
+            // Display the assigned crime widget
+            displayAssignedCrime(report);
+
+            // Initialize auto-direct to the crime location
+            if (report.lng && report.lat) {
+                initiateAutoDirect(report);
+            }
+        });
+    }
+}
+
+function initiateAutoDirect(report) {
+    if (!report || !report.lng || !report.lat) {
+        console.error('Invalid report data for auto-direct.');
+        return;
+    }
+
+    // Fly to the report's location
+    flyToReportPin(map, report.lng, report.lat);
+
+    // Enable auto-direct by fetching and displaying the route
+    directToMarker(map, report.lng, report.lat);
+
+    // Optionally, notify the officer that auto-direct is active
+    alert(`Auto-Direct to Report ID: ${report.id} is now active.`);
+}
+
+
+function calculateETA(destinationLng, destinationLat) {
+    if (!userLocation) {
+        console.warn("User location is not available for ETA calculation.");
+        updateETA2("Location unavailable");
+        return;
+    }
+
+    const url = `https://api.mapbox.com/directions/v5/mapbox/driving-traffic/${userLocation.longitude},${userLocation.latitude};${destinationLng},${destinationLat}?geometries=geojson&overview=full&access_token=${mapboxgl.accessToken}`;
+
+    fetch(url)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.routes && data.routes.length > 0) {
+                const duration = data.routes[0].duration;
+                const eta = formatDuration(duration);
+                
+                // Update ETA in patrol mode notification
+                const etaDisplay = document.getElementById('etaDisplayCustom');
+                if (etaDisplay) {
+                    etaDisplay.innerHTML = `<strong>ETA:</strong> ${eta}`;
+                }
+                
+                // Update ETA in assigned crime widget
+                const etaDisplayWidget = document.getElementById('eta-display-widget');
+                if (etaDisplayWidget) {
+                    etaDisplayWidget.innerHTML = `<strong>ETA:</strong> ${eta}`;
+                }
+            } else {
+                throw new Error("No routes found");
+            }
+        })
+        .catch(error => {
+            console.error("Error calculating ETA:", error);
+            updateETA2("Error calculating ETA");
+        });
+}
+
+
+// Show the assigned crime in the corner of the screen
+function displayAssignedCrime(report) {
+    // Remove any existing assigned crime display
+    const existingDisplay = document.querySelector('.assigned-crime-display');
+    if (existingDisplay) {
+        existingDisplay.remove();
+    }
+
+    const assignedCrimeDisplay = document.createElement('div');
+    assignedCrimeDisplay.className = 'assigned-crime-display';
+    assignedCrimeDisplay.innerHTML = `
+        <div class="assigned-crime-details">
+            <h3>Assigned Crime #${report.id}</h3>
+            <p><strong>Category:</strong> ${report.category}</p>
+            <p><strong>Severity:</strong> <span class="${getSeverityClass(report.severity)}">${report.severity}</span></p>
+            <p><strong>Description:</strong> ${report.description}</p>
+            <div id="eta-display-widget"><strong>ETA:</strong> Calculating...</div>
+            <button id="conclude-btn" class="conclude-button">Conclude Response</button>
+        </div>
+    `;
+
+    document.body.appendChild(assignedCrimeDisplay);
+
+    // Calculate initial ETA immediately
+    if (report.lng && report.lat) {
+        calculateETA(report.lng, report.lat);
+        
+        // Update ETA every 30 seconds
+        const etaInterval = setInterval(() => {
+            if (assignedCrime) {
+                calculateETA(report.lng, report.lat);
+            } else {
+                clearInterval(etaInterval);
+            }
+        }, 30000);
+    }
+
+    // Set up conclude button functionality
+    const concludeBtn = document.getElementById('conclude-btn');
+    if (concludeBtn) {
+        concludeBtn.addEventListener('click', () => {
+            if (isAutoDirecting) {
+                cancelAutoDirect(map);
+            }
+            assignedCrime = null;
+            assignedCrimeDisplay.remove();
+        });
+    }
+
+    // Position the display
+    assignedCrimeDisplay.style.position = 'fixed';
+    assignedCrimeDisplay.style.bottom = '20px';
+    assignedCrimeDisplay.style.right = '20px';
+    assignedCrimeDisplay.style.zIndex = '1000';
+    assignedCrimeDisplay.style.backgroundColor = '#ffffff';
+    assignedCrimeDisplay.style.padding = '15px';
+    assignedCrimeDisplay.style.borderRadius = '8px';
+    assignedCrimeDisplay.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
+    assignedCrimeDisplay.style.maxWidth = '300px';
+}
+
+
+function getSeverityClass(severity) {
+    switch (severity.toLowerCase()) {
+        case 'high':
+            return 'severityHighCustom';
+        case 'medium':
+            return 'severityMediumCustom';
+        case 'low':
+            return 'severityLowCustom';
+        default:
+            return '';
+    }
+}

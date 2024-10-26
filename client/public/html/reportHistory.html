@@ -11,17 +11,17 @@
 
 </head>
 <body>
-    <div class="page-content"> <!-- Add wrapper to control visibility -->
+    <div class="page-content">
         <!-- Header section with logo and navigation buttons -->
         <div id="header">
-            <img src="/img/logoFW.png" alt="FalconWatch Logo" id="logo"> <!-- Adjusted path -->
+            <img src="/img/logoFW.png" alt="FalconWatch Logo" id="logo">
             <div id="nav-buttons">
-                <a href="/html/main.html" class="active-link btn" data-i18n="Home">Home</a> <!-- Ensure "Home" matches the key in translation resources -->
+                <a href="/html/main.html" class="active-link btn" data-i18n="Home">Home</a>
                 <div class="dropdown">
-                    <a href="#" id="Language" class="dropbtn btn" data-i18n="language">Language/لغة</a> <!-- Apply btn class -->
+                    <a href="#" id="Language" class="dropbtn btn" data-i18n="language">Language/لغة</a>
                     <ul class="dropdown-content">
-                        <li><a href="#" id="EnglishLanguage" class="dropdown-link btn" data-i18n="English">English</a></li> <!-- Apply btn class -->
-                        <li><a href="#" id="ArabicLanguage" class="dropdown-link btn" data-i18n="Arabic">عربي</a></li> <!-- Apply btn class -->
+                        <li><a href="#" id="EnglishLanguage" class="dropdown-link btn" data-i18n="English">English</a></li>
+                        <li><a href="#" id="ArabicLanguage" class="dropdown-link btn" data-i18n="Arabic">عربي</a></li>
                     </ul>
                 </div>
                 <a href="/html/services.html" id="view-services" class="btn" data-i18n="ViewServices">View Services</a> 
@@ -42,7 +42,8 @@
                             <th data-i18n="Description">Description</th>
                             <th data-i18n="Date">Date</th>
                             <th data-i18n="Location">Location</th>
-                            <th data-i18n="Pin">Pin</th>    
+                            <th data-i18n="Pin">Pin</th>
+                            <th data-i18n="Delete">Delete</th> <!-- Added Delete column -->
                         </tr>
                     </thead>
                     <tbody id="report-body">
@@ -54,12 +55,12 @@
             <div id="pagination-controls" class="pagination"></div>
 
             <!-- Button to go back to the map page -->
-            <a href="/html/main.html" class="back-btn" data-i18n="backToMap">Back to Map</a> <!-- Adjusted path -->
+            <a href="/html/main.html" class="back-btn" data-i18n="backToMap">Back to Map</a>
         </div>
     </div> <!-- End of page-content -->
 
     <!-- External JavaScript to handle report fetching and pagination -->
-    <script src="/js/reportHistory.js"></script> <!-- Adjusted path -->
-    <script src="/js/userVerify.js"></script> <!-- Use later for efficiency -->
+    <script src="/js/reportHistory.js"></script>
+    <script src="/js/userVerify.js"></script>
 </body>
 </html>
