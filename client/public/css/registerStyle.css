@@ -160,3 +160,12 @@ a {
     margin: 0 auto; /* Center the logo */
 }
 
+.error-message {
+    color: red;
+    font-size: 12px;
+    margin-top: 5px;
+    min-height: 15px;
+}
+.form__field {
+    margin-bottom: 5px;
+}
