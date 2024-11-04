@@ -55,8 +55,12 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('name', data.user.name);
             localStorage.setItem('role', data.user.role);  // Store user role for role-based access
 
-            // Redirect the user to the main dashboard or homepage
-            window.location.href = '/client/index.html';
+            const userRole = data.user.role;
+            if (userRole === 'police') {
+                window.location.href = '/html/services.html';  // Police role redirect
+            } else {
+                window.location.href = '/client/index.html';  // Non-police users redirect to the homepage
+            }
         } catch (error) {
             // Catch any network or processing errors and log them
             console.error('Error during login:', error);

@@ -9,55 +9,292 @@ body {
 
 /* Header Styling */
 #header {
-  display: flex; /* Flexbox for layout */
-  justify-content: space-between; /* Space out elements */
-  align-items: center; /* Vertically align items */
-  padding: 15px 30px; /* Padding around the header */
-  background: rgba(255, 255, 255, 0.9); /* Semi-transparent white background */
-  border-bottom: 2px solid #40ac0e; /* Green border at the bottom */
-  position: relative; /* Ensure z-index works */
-  z-index: 9999; /* Keep header above other content */
-  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.3); /* Subtle shadow for depth */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 30px;
+  background: #ffffff;
+  border-bottom: 2px solid #2b966f;
+  gap: 20px;
+  z-index: 999;
 }
 
-/* Adjust logo to be at the left side */
-#header img {
-  height: 60px; /* Set logo height */
-  width: auto; /* Maintain aspect ratio */
-  max-width: 250px; /* Set maximum width */
-  max-height: 250px; /* Set maximum height */
-  object-fit: contain; /* Ensure the image fits within its container */
-  margin-right: auto; /* Aligns the logo to the left */
+#logo {
+  height: 60px;
+  width: auto;
 }
 
-/* Navigation Buttons in Header */
+#right-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+/* Navigation buttons */
 #nav-buttons {
   display: flex;
   align-items: center;
-  order: 2; /* Specifies the order of the navigation buttons */
+  gap: 10px;
 }
 
-/* Individual Navigation Links */
 #nav-buttons a {
-  text-decoration: none; /* Removes underlines from links */
-  font-size: 16px;
-  font-weight: 400;
+  text-decoration: none;
+  font-size: 18px;
+  font-weight: 500;
   cursor: pointer;
-  margin: 0 10px; /* Adds spacing between the links */
-  transition: color 0.3s ease, text-decoration 0.3s ease; /* Smooth transition effects */
-  color: #17820e; /* Green text color for links */
+  margin: 0 10px;
+  transition: color 0.3s ease, text-decoration 0.3s ease;
+  color: #2b966f; /* Green color */
 }
 
-/* Hover Effect for Navigation Links */
 #nav-buttons a:hover {
-  color: #2fb63a; /* Lighter green on hover */
-  text-decoration: underline; /* Underline effect on hover */
+  color: #31b283; /* Lighter green on hover */
 }
 
+/* Dropdown button styling */
+.dropbtn {
+  font-size: 18px;
+  font-weight: 500;
+  color: #2b966f;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
 
-/* Style for Active Link */
+/* Dropdown container for button and content */
+.dropdown-container {
+  position: relative;
+}
+
+/* Dropdown content styling */
+.dropdown-content {
+  display: none; /* Hide by default */
+  position: absolute;
+  top: 100%; /* Position directly below the button */
+  left: 0;
+  background-color: rgba(255, 255, 255, 0.99);
+  min-width: 140px;
+  padding: 5px 0;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  z-index: 1000;
+}
+
+/* Show dropdown when hovering over the container */
+.dropdown-container:hover .dropdown-content {
+  display: block;
+}
+
+/* Links inside the dropdown */
+.dropdown-content a {
+  color: #2b966f;
+  padding: 8px 16px;
+  text-decoration: none;
+  display: block;
+  font-size: 16px;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/* Hover effect for dropdown links */
+.dropdown-content a:hover {
+  background-color: #f1f1f1;
+  color: #31b283;
+}
+
+/* Language dropdown styling */
+#language-dropdown {
+  display: flex;
+  align-items: center;
+}
+
+/* Dropdown content styling */
+#language-dropdown .dropdown-content {
+  display: none; /* Hidden by default */
+  position: absolute;
+  top: 100%; /* Aligns directly below the button */
+  left: 0;
+  background-color: rgba(255, 255, 255, 0.99);
+  min-width: 140px;
+  padding: 5px 0;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  z-index: 1000;
+  list-style: none;
+  text-align: left;
+}
+
+/* Show dropdown content when hovering over button or dropdown content */
+#language-dropdown:hover .dropdown-content,
+#language-dropdown .dropdown-content:hover {
+  display: block;
+}
+
+/* Links inside the language dropdown */
+#language-dropdown .dropdown-content a {
+  color: #2b966f;
+  padding: 8px 16px;
+  text-decoration: none;
+  display: block;
+  font-size: 16px;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/* Hover effect for language dropdown links */
+#language-dropdown .dropdown-content a:hover {
+  background-color: #f1f1f1;
+  color: #31b283;
+}
+
+#language-dropdown .dropbtn {
+  font-size: 18px;
+  font-weight: 500;
+  color: #2b966f;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+/* User info section for profile dropdown */
+#user-info {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-left: 20px;
+  cursor: pointer;
+}
+
+/* User Info and Language Dropdown */
+/* General Dropdown Styling */
+.user-menu-dropdown, #language-dropdown .dropdown-content {
+  display: none;
+  position: absolute;
+  top: 100%; /* Directly below the button */
+  left: 0;
+  background-color: rgba(255, 255, 255, 0.99);
+  min-width: 140px;
+  padding: 5px 0;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  z-index: 1000;
+  list-style: none;
+  text-align: left;
+}
+
+/* Keep dropdown visible on hover */
+.user-dropdown:hover .user-menu-dropdown,
+#language-dropdown:hover .dropdown-content,
+#language-dropdown .dropdown-content:hover,
+#language-dropdown .dropbtn:hover + .dropdown-content {
+  display: block;
+}
+
+/* Style all links in user dropdown */
+.user-menu-dropdown a {
+  color: #333;
+  padding: 8px 16px;
+  text-decoration: none;
+  display: block;
+  font-size: 16px; /* Increase font size */
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/* Specific hover effect for "Sign Out" */
+#signout-link {
+  color: #000000 !important; /* Red color for "Sign Out" link */
+  font-weight: bold;
+}
+
+#signout-link:hover {
+  background-color: #ffcccc; /* Light red background */
+  color: #ff0000 !important; /* Bright red text on hover */
+}
+
+/* Style language dropdown links separately */
+#language-dropdown .dropdown-content a {
+  color: #2b966f;
+  padding: 8px 16px;
+  text-decoration: none;
+  display: block;
+  font-size: 16px;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+#language-dropdown .dropdown-content a:hover {
+  background-color: #f1f1f1;
+  color: #31b283;
+}
+
 .active-link {
-  font-weight: bold !important; /* Bolds the active link */
+  font-weight: bold !important; /* Bold active link */
+}
+
+/* User info section in the header */
+#user-info {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-left: 20px;
+  cursor: pointer;
+}
+
+/* Dropdown menu for user profile */
+#user-menu {
+  display: none; /* Hidden by default */
+  position: absolute;
+  top: 100%; /* Position below the user info */
+  right: 0;
+  background-color: rgba(255, 255, 255, 0.99); /* Light background */
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+  z-index: 1000; /* Ensure it appears above other elements */
+  border-radius: 8px;
+}
+
+/* Links in user dropdown */
+#user-menu a {
+  color: #333;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+  font-size: 14px !important;
+  border-bottom: 1px solid #f1f1f1;
+}
+
+/* Hover effect for user dropdown links */
+#user-menu a:hover {
+  background-color: #f1f1f1;
+}
+
+/* Display dropdown when hovering over #user-info */
+#user-info:hover #user-menu {
+  display: block;
+}
+
+/* User icon styling */
+#user-icon {
+  height: 40px;
+  width: 40px;
+  margin-right: 10px; /* Space between user icon and username */
+  vertical-align: middle; /* Aligns with the text */
+}
+
+/* Username styling with margin */
+#user-name {
+  margin-right: 20px; /* Space between username and the next link */
+  font-size: 16px;
+  font-weight: bold !important;
+  color: #2b966f;
+}
+
+/* Sign out button styling */
+.sign-out-btn {
+  padding: 10px 20px;
+  color: #ff2020 !important; /* Red color for sign out */
+  text-decoration: none;
+  border-radius: 5px;
+  margin-left: 10px;
+}
+
+.sign-out-btn:hover {
+  color: #ff0000 !important; /* Green color on hover */
 }
 
 /* Main Content Container */
@@ -73,12 +310,21 @@ body {
 /* Heading Styles */
 h1 {
   text-align: center; /* Centers the heading text */
-  font-size: 24px;
+  font-size: 26px;
   margin-bottom: 20px;
   color: #000000; /* Black text color */
-  border-bottom: 2px solid #333; /* Dark border under the heading */
   padding-bottom: 10px;
 }
+
+h1::after {
+  content: "";
+  display: block;
+  width: 40%; /* Adjust the width here */
+  height: 3px; /* Match the height of the border */
+  background-color: #2b966f; /* Border color */
+  margin: 10px auto 0; /* Center it and add some space above */
+}
+
 
 /* Chart Container */
 .chart-container {
@@ -129,15 +375,17 @@ h1 {
 /* Back Button Styles */
 .back-btn {
   display: block;
+  width: 120px;
   text-align: center;
   padding: 10px 15px;
-  background-color: #17820e; /* Green background for the button */
+  background-color: #005f3c; /* Green background for the button */
   color: #f0f0f0; /* Light text color */
   border: none;
-  border-radius: 4px; /* Rounded corners */
+  border-radius: 8px; /* Rounded corners */
   text-decoration: none; /* Removes underline from the link */
   font-size: 14px;
   margin-top: 20px;
+  margin-left: 45px;
   transition: background-color 0.3s ease; /* Smooth background color transition */
 }
 

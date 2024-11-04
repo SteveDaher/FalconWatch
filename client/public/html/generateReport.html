@@ -13,29 +13,38 @@
 
   <!-- D3.js library for creating dynamic charts -->
   <script src="https://d3js.org/d3.v7.min.js"></script>
-
-  <style>
-    /* Hide the whole page by default */
-    body {
-        display: none;
-    }
-</style>
-
-
 </head>
 <body>
   <div class="body"> <!-- Add this wrapper to control visibility -->
     <!-- Header with logo and navigation buttons -->
     <div id="header">
-      <div class="logo-container">
-        <img src="/img/logoFW.png" alt="Logo" class="heading-logo2"> <!-- FalconWatch logo -->
-      </div>
       <div id="nav-buttons">
-        <a href="/html/main.html" class="active-link">Home</a>
-        <a href="/html/services.html" id="view-services">View Services</a>
-        <a href="/html/login.html" id="sign-out" class="sign-out-btn">Sign Out</a>
+          <div id="user-info" class="user-dropdown">
+              <img src="/img/free-user-icon-3296-thumb.png" alt="User Icon" id="user-icon">
+              <span id="user-name">Username</span>
+              <div id="user-menu" class="user-menu-dropdown">
+                <a href="/html/userpage.html">View Profile</a>
+                  <a href="#" id="signout-link">Sign Out</a>
+              </div>
+          </div>
+          <a href="/public/index.html">Home</a>
+          <a href="/html/services.html" id="view-services">Dashboard</a>
       </div>
-    </div>
+  
+      <!-- New wrapper for language and logo -->
+      <div id="right-header">
+          <div id="language-dropdown" class="dropdown">
+              <div class="dropdown-container">
+                  <a href="#" id="Language" class="dropbtn">Language/لغة</a>
+                  <div class="dropdown-content">
+                      <a href="#" id="EnglishLanguage">English</a>
+                      <a href="#" id="ArabicLanguage">عربي</a>
+                  </div>
+              </div>
+          </div>
+          <img src="/img/logoFW.png" alt="FalconWatch Logo" id="logo">
+      </div>
+  </div>
 
     <!-- Main container for insights report -->
     <div class="container">
@@ -72,8 +81,19 @@
       
       <!-- Additional sections for crime areas and summary -->
       <h2>Areas with the Highest Crime Types</h2>
+
+
+
       <h2>Crime Summary (Index, Rate, Count, Trend)</h2>
-      <p class="placeholder-text">[This section will display the crime summary, including index, rate, count, and trend analysis.]</p>
+      <div class="crime-summary-section">
+        <div class="crime-summary-text">
+            <!-- This paragraph will be populated dynamically by fetchCrimeSummaryDetails() -->
+            <div class="crime-summary">Loading weekly summary...</div>
+        </div>
+        <div class="crime-summary-chart" id="severityChart"></div>
+    </div>
+
+
 
       <!-- Back button to navigate back to services -->
       <a href="/html/services.html" class="back-btn">Back to Services</a>

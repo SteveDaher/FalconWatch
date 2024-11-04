@@ -11,7 +11,8 @@
     <link href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.0.0/mapbox-gl-directions.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
     <script src="https://unpkg.com/supercluster@7.1.0/dist/supercluster.min.js"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
     <!-- Custom stylesheet for the main page -->
     <link rel="stylesheet" href="/css/mainStyle.css"> <!-- Updated path to match the directory structure -->
@@ -26,38 +27,6 @@
             height: 100vh;
             display: flex;
             flex-direction: column;
-        }
-
-        #header {
-            height: 60px; /* Adjust based on your header height */
-            width: 100%;
-            z-index: 100;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background-color: #fff;
-            padding: 0 20px;
-        }
-
-        #nav-buttons {
-            display: flex;
-            align-items: center;
-        }
-
-        /* Style for the Auto-Direct button */
-        #auto-direct-button {
-            margin-left: 15px;
-            padding: 8px 16px;
-            background-color: #007bff;
-            color: #fff;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        #auto-direct-button:hover {
-            background-color: #0056b3;  
         }
 
         /* Loading screen styles */
@@ -104,56 +73,32 @@
         <div id="header">
             <div id="nav-buttons">
                 <div id="user-info" class="user-dropdown">
-                    <img src="/img/free-user-icon-3296-thumb.png" alt="User Icon" id="user-icon"> <!-- Updated path -->
-                    <span id="user-name"></span>
+                    <img src="/img/free-user-icon-3296-thumb.png" alt="User Icon" id="user-icon">
+                    <span id="user-name">Username</span>
+                    
+                    
                     <div id="user-menu" class="user-menu-dropdown">
-                        <a href="#" id="signout-link">Sign Out</a> <!-- Sign out link -->
+                        <a href="/html/userpage.html">View Profile</a>
+                        <a href="#" id="signout-link">Sign Out</a>  
                     </div>
                 </div>
+                
 
                 <!-- Navigation links -->
-                <a href="/html/main.html" class="active-link">Home</a>
-                <a href="#">Simulations</a>
-                <a href="/html/services.html" id="view-services">View Services</a>
-
-                <!-- Dropdown for viewing reports -->
-                <div class="dropdown">
-                    <a href="#" id="view-reports" class="dropbtn">View Reports</a>
-                    <ul class="dropdown-content">
-                        <li><a href="/html/chart.html">Crime Severity Statistics</a></li>
-                        <li><a href="/html/chart2.html">Crime Category Statistics</a></li>
-                        <li><a href="/html/chart3.html">Crime Type vs Time of Day</a></li>
-                        <li><a href="/html/chart4.html">Crime Trends</a></li>
-                    </ul>
-                </div>
-
-                <!-- Dropdown for map styles -->
-                <div class="dropdown">
-                    <a href="#" id="map-styles" class="dropbtn">Map Styles</a>
-                    <ul class="dropdown-content">
-                        <li><a href="#" id="satellite-map-dark">Satellite Map [EN/AE]</a></li>
-                        <li><a href="#" id="street-map">Street Map [EN/AE]</a></li>
-                        <li><a href="#" id="white-map">White Map [EN/AE]</a></li>
-                        <li><a href="#" id="dark-map">Dark Map [EN/AE]</a></li>
-                        <li><a href="#" id="standard-map-dynamic">Standard Map</a></li>
-                        <li><a href="#" id="dark-standard">Standard Map V2</a></li>
-
-                    </ul>
-                </div>
-
-                <!-- Dropdown for language selection -->
-                <div class="dropdown">
-                    <a href="#" id="Language" class="dropbtn">Language/لغة</a>
-                    <ul class="dropdown-content">
-                        <li><a href="#" id="EnglishLanguage">English</a></li>
-                        <li><a href="#" id="ArabicLanguage">عربي</a></li>
-                    </ul>
-                </div>
-                <button id="zone-mode-button">Zone Mode</button>
-                <button id="report-notifications-button" class="btn">Report Notifications</button>
-                <button id="patrol-mode-button" class="btn">Activate Patrol Mode</button>
+                <a href="/public/index.html">Home</a>
+                <a href="/html/services.html" id="view-services">Dashboard</a>
                 
             </div>
+
+            <div id="language-dropdown" class="dropdown">
+                <div class="dropdown-container">
+                    <a href="#" id="Language" class="dropbtn">Language/لغة</a>
+                    <div class="dropdown-content">
+                        <a href="#" id="EnglishLanguage">English</a>
+                        <a href="#" id="ArabicLanguage">عربي</a>
+                    </div>
+                </div>
+            </div>         
 
             <!-- FalconWatch logo -->
             <img src="/img/logoFW.png" alt="Logo" id="logo"> <!-- Updated path -->
@@ -172,10 +117,38 @@
         <!-- Main content including the map and filter options -->
         <div id="content">
             <!-- Map container -->
-            <div id="map"></div>
+            <div id="map">
+                <div id="map-buttons">
+                    <button id="zone-mode-button">Zone Mode</button>
+                    <button id="report-notifications-button" class="btn">Report Notifications</button>
+                    <button id="statistics-button" class="btn">Statistics</button>
+                    <button id="patrol-mode-button" class="btn">Activate Patrol Mode</button>
+                </div>
+            </div>
+   
+            <div id="map-style-container">
+                <button id="map-style-button">Map Style</button>
+                <div id="map-style-options">
+                    <a href="#" data-style="satellite-map-dark">
+                        <img src="/img/Satelitemap.png" alt="Satellite Map" class="map-icon"> Satellite 
+                    </a>
+                    <a href="#" data-style="white-map">
+                        <img src="/img/whitemap.png" alt="White Map" class="map-icon"> White 
+                    </a>
+                    <a href="#" data-style="dark-map">
+                        <img src="/img/darkMap.png" alt="Dark Map" class="map-icon"> Dark 
+                    </a>
+                    <a href="#" data-style="standard-map-dynamic">
+                        <img src="/img/standarmap.png" alt="Standard Map" class="map-icon"> Standard 
+                    </a>
+                    <a href="#" data-style="street-map">
+                        <img src="/img/streetmap.png" alt="Street Map" class="map-icon"> Street 
+                    </a>
+                </div>
+            </div>
 
             <!-- Report Notifications Panel -->
-            <div id="report-notifications-panel" class="notifications-panel">
+             <div id="report-notifications-panel" class="notifications-panel">
                 <div class="panel-header">
                     <h2>Report Notifications</h2>
                     <span id="close-notifications" class="close-button">&times;</span>
@@ -185,7 +158,7 @@
                 <div class="sorting-controls">
                     <label for="sort-category">Filter by Category:</label>
                     <select id="sort-category">
-                        <option value="default">Check Filter-list for Categories</option>
+                        <option value="default">Check Filter-list</option>
                         <!-- Categories will be dynamically populated -->
                     </select>
 
@@ -203,22 +176,58 @@
                 </div>
             </div>
 
+            <!-- STATS PANEL -->
+            <div id="statistics-panel" class="notifications-panel">
+                <div class="panel-header">
+                    <h2>Statistics</h2>
+                    <span id="close-statistics" class="close-button">&times;</span>
+                </div>
+                <div class="panel-content" id="statistics-content">
+                    
+                    <!-- Chart 1: Severity Over Time -->
+                    <div class="chart-container">
+                        <div class="chart-title"><a href="/html/chart.html">Severity Over Time</a></div>
+                        <!-- <div class="chart-title">Severity Over Time</div> -->
+                        <canvas id="myBarChart" width="300" height="250"></canvas>
+                    </div>
+                    
+                    <!-- Chart 3: Crime by Time of Day -->
+                    <div class="chart-container">
+                        <div class="chart-title"><a href="/html/chart3.html">Crime by Time of Day</a></div>
+                        <canvas id="timeOfDayChart" width="300" height="200"></canvas>
+                    </div>
+            
+                    <!-- Chart 4: Crime Trends by Severity -->
+                    <div class="chart-container">
+                        <div class="chart-title"><a href="/html/chart4.html">Crime Trends by Severity</a></div>
+                        <canvas id="crimeTrendsChart" width="400" height="300"></canvas>
+                    </div>
+
+                    <div class="weekly-report">
+                        <h3>Weekly Report Summary</h3>
+                        <p id="weekly-report-summary">[Fetching summary...]</p>
+                        <a href="/html/generateReport.html" id="view-more-details" class="view-details-link">View More Details</a>
+                    </div>
+            
+                </div>
+            </div>
+            
+            
+            
+       
             <!-- Filter list and toggle button -->
             <div id="filter-container" class="filter-hidden"> <!-- Initially hidden -->
                 <div id="filter-header">
                     <h2>Filter List</h2>
-                    <div id="category-filters">
-                        <!-- Filters will be dynamically generated by JavaScript -->
-                    </div>
                 </div>
-                <div id="filter-list">
-                    <div id="filter-line"></div>
+                <div id="category-filters">
+                    <!-- Filters will be dynamically generated by JavaScript -->
                 </div>
             </div>
 
             <!-- Toggle button to show/hide the filter list -->
             <div id="toggle-filter-tab">
-                <span id="toggle-arrow">&#9650;</span> <!-- Upward arrow to toggle -->
+                <span id="toggle-arrow">Filter</span> <!-- Upward arrow to toggle -->
             </div>
         </div>
     </div> <!-- End of page-content -->

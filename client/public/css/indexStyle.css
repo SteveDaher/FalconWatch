@@ -168,6 +168,7 @@ header.scrolled #login-link {
     z-index: -1; /* Places video behind content */
     transform: translate(-50%, -50%); /* Centers video */
     object-fit: cover; /* Ensures video covers the container */
+    filter: blur(1px);
 }
 
 /* Main Content Positioned Over Video */
@@ -263,6 +264,7 @@ p {
     position: absolute;
     top: 45px;
     margin-right: 100px;
+    margin-bottom: 50px;
 }
 
 /* Right Side of New Section */
@@ -294,3 +296,87 @@ p {
     color: #000000; /* Black text */
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1); /* Subtle shadow */
 }
+
+@media only screen and (max-width: 768px) {
+    /* Header adjustments */
+    header {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        padding: 10px 15px;
+    }
+
+    .logo {
+        display: none; /* Hide logo on mobile to create more space */
+    }
+
+    nav {
+        flex: 1;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    #welcome-message {
+        font-size: 1em;
+        margin-right: 5px;
+        white-space: nowrap; /* Prevent text wrapping */
+    }
+
+    #login-link {
+        font-size: 0.85em; /* Adjust font size slightly */
+        padding: 8px 12px; /* Compact padding */
+    }
+
+    /* Video Container adjustments */
+    .video-container {
+        height: 50vh; /* Adjusted height for mobile */
+        margin-top: 20px;
+    }
+
+    .content h1 {
+        font-size: 2.3em;
+        margin: 5px 0;
+    }
+
+    .content p {
+        font-size: 1em;
+    }
+
+    /* Bottom Section (New Section) adjustments */
+    .new-section {
+        padding: 20px;
+        display: flex;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .new-section .left-side img {
+        display: none; /* Hide the image */
+    }
+
+    .new-section .right-side {
+        max-width: 90%; /* Center content and limit width */
+        margin: 0 auto;
+        text-align: center;
+    }
+
+    .new-section .right-side h2 {
+        font-size: 1.5em;
+        margin-bottom: 10px;
+    }
+
+    .new-section .right-side p {
+        font-size: 1em;
+        line-height: 1.5;
+        margin: 0 auto;
+    }
+}
+
+
+
+
+
+
+
+

@@ -14,19 +14,40 @@
     <div class="page-content">
         <!-- Header section with logo and navigation buttons -->
         <div id="header">
-            <img src="/img/logoFW.png" alt="FalconWatch Logo" id="logo">
             <div id="nav-buttons">
-                <a href="/html/main.html" class="active-link btn" data-i18n="Home">Home</a>
-                <div class="dropdown">
-                    <a href="#" id="Language" class="dropbtn btn" data-i18n="language">Language/لغة</a>
-                    <ul class="dropdown-content">
-                        <li><a href="#" id="EnglishLanguage" class="dropdown-link btn" data-i18n="English">English</a></li>
-                        <li><a href="#" id="ArabicLanguage" class="dropdown-link btn" data-i18n="Arabic">عربي</a></li>
-                    </ul>
+                <div id="user-info" class="user-dropdown">
+                    <img src="/img/free-user-icon-3296-thumb.png" alt="User Icon" id="user-icon">
+                    <span id="user-name">Username</span>
+                    
+                    
+                    <div id="user-menu" class="user-menu-dropdown">
+                        <a href="/html/userpage.html">View Profile</a>
+                        <a href="#" id="signout-link">Sign Out</a>
+                    </div>
                 </div>
-                <a href="/html/services.html" id="view-services" class="btn" data-i18n="ViewServices">View Services</a> 
+                
+
+                <!-- Navigation links -->
+                <a href="/public/index.html">Home</a>
+                <a href="/html/services.html" id="view-services">Dashboard</a>
+                
             </div>
+
+            <div id="language-dropdown" class="dropdown">
+                <div class="dropdown-container">
+                    <a href="#" id="Language" class="dropbtn">Language/لغة</a>
+                    <div class="dropdown-content">
+                        <a href="#" id="EnglishLanguage">English</a>
+                        <a href="#" id="ArabicLanguage">عربي</a>
+                    </div>
+                </div>
+            </div>         
+
+            <!-- FalconWatch logo -->
+            <img src="/img/logoFW.png" alt="Logo" id="logo"> <!-- Updated path -->
         </div>
+        
+        <div id="popup-container"></div>
 
         <!-- Main container for report history content -->
         <div class="container">
@@ -37,7 +58,7 @@
                     <thead>
                         <tr>
                             <th data-i18n="IncidentId">IncidentId</th>
-                            <th data-i18n="Name">Name</th>
+                            <th data-i18n="Category">Name</th>
                             <th data-i18n="Severity">Severity</th>
                             <th data-i18n="Description">Description</th>
                             <th data-i18n="Date">Date</th>

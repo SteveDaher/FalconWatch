@@ -11,26 +11,70 @@
 <body>
     <!-- Header Section -->
     <div id="header">
-        <div id="logo-and-nav">
-          <img src="/img/logoFW.png" alt="Logo" id="logo">
-          <div id="nav-buttons">
-            <a href="/public/index.html" class="active-link">Home</a>
-            <a href="/html/report.html">Report a Crime</a>
-          </div>
+        <div id="nav-buttons">
+            <div id="user-info" class="user-dropdown">
+                <img src="/img/free-user-icon-3296-thumb.png" alt="User Icon" id="user-icon">
+                <span id="user-name">Username</span>
+                <div id="user-menu" class="user-menu-dropdown">
+                    <a href="#" id="signout-link">Sign Out</a>
+                </div>
+            </div>
+    
+            <!-- Navigation links -->
+            <a href="/public/index.html">Home</a>
+            <a href="/html/services.html" id="view-services">Dashboard</a>
         </div>
-        <div id="user-info">
-          <select id="language-selector">
-            <option value="en">English</option>
-            <option value="ar">العربية</option>
-          </select>
-          <span id="welcome-message">Welcome, Guest</span> <!-- This will be updated by JavaScript -->
+    
+        <!-- Language Dropdown -->
+        <div id="language-dropdown" class="dropdown">
+            <div class="dropdown-container">
+                <a href="#" id="Language" class="dropbtn">Language/لغة</a>
+                <div class="dropdown-content">
+                    <a href="#" id="EnglishLanguage">English</a>
+                    <a href="#" id="ArabicLanguage">عربي</a>
+                </div>
+            </div>
         </div>
-      </div>  
+    
+        <!-- FalconWatch logo -->
+        <img src="/img/logoFW.png" alt="Logo" id="logo">
+    </div>
+
+    <div id="success-popup" class="popup hidden">
+        <div class="popup-content">
+            <!-- Move the image here, above the text -->
+            <div class="popup-image">
+                <img src="/img/successlogo.png" alt="Your Image" class="popup-image-element">
+            </div>
+            <p id="incident-id-display"></p>
+            <p>Report submitted successfully!</p>
+            <button id="popup-ok-btn">Go To Homepage</button>
+        </div>
+    </div>
+<!--
+    <div id="success-popup" class="popup hidden">
+    
+        <div class="success-icon">
+            <img src="/img/successlogo.png" alt="Success Icon">
+        </div>
 
 
+        <p class="message">Report Submitted Successfully!</p>
+        
+        
+
+        <a href="/html/main.html" class="dashboard-button">Go To Dashboard</a>
+    </div>
+-->
     <!-- Report Container -->
     <div class="report-container">
-        <h2>Report a Crime</h2>
+        <div class="titlepart">
+            <h1>Report</h1>
+            <hr>
+            <p>Together we can keep this city a safe place for everyone!,<br> Help us by reporting any violations you witnessed.</p>
+        </div>
+    
+       
         <form id="crime-report-form" enctype="multipart/form-data">
             <!-- Embedded map within the form -->
             <div id="map" style="position:relative;">
@@ -40,23 +84,24 @@
                     </svg>
                 </button>
 
-                <div id="map-controls">
-                    <div id="menu">
-                        <input id="satellite-streets-v12" type="radio" name="rtoggle" value="satellite-streets-v12" checked="checked">
-                        <label for="satellite-streets-v12">Satellite Streets</label>
                 
-                        <input id="light-v11" type="radio" name="rtoggle" value="light-v11">
-                        <label for="light-v11">Light</label>
-                
-                        <input id="dark-v11" type="radio" name="rtoggle" value="dark-v11">
-                        <label for="dark-v11">Dark</label>
-                
-                        <input id="streets-v12" type="radio" name="rtoggle" value="streets-v12">
-                        <label for="streets-v12">Streets</label>
-                
-                        <input id="outdoors-v12" type="radio" name="rtoggle" value="outdoors-v12">
-                        <label for="outdoors-v12">Outdoors</label>
-                    </div>
+            </div>
+            <div id="map-controls">
+                <div id="menu">
+                    <input id="satellite-streets-v12" type="radio" name="rtoggle" value="satellite-streets-v12" checked="checked">
+                    <label for="satellite-streets-v12">Satellite</label>
+            
+                    <input id="light-v11" type="radio" name="rtoggle" value="light-v11">
+                    <label for="light-v11">Light</label>
+            
+                    <input id="dark-v11" type="radio" name="rtoggle" value="dark-v11">
+                    <label for="dark-v11">Dark</label>
+            
+                    <input id="streets-v12" type="radio" name="rtoggle" value="streets-v12">
+                    <label for="streets-v12">Streets</label>
+            
+                    <input id="outdoors-v12" type="radio" name="rtoggle" value="outdoors-v12">
+                    <label for="outdoors-v12">Outdoors</label>
                 </div>
             </div>
 
@@ -83,11 +128,13 @@
             <input type="file" id="crime-attachment" name="crime-attachment" accept="image/*,video/*">
 
             <button type="submit">Submit</button>
+
         </form>
     </div>
 
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.js"></script>
     <script src="/socket.io/socket.io.js"></script> <!-- Load Socket.IO -->
     <script src="/js/report.js"></script>
+    <script src="/js/reportHistory.js"></script>
 </body>
 </html>

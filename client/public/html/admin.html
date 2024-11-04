@@ -19,10 +19,22 @@
 <body>
     <!-- Header section with logo and navigation buttons -->
     <div id="header">
-        <img src="/img/logoFW.png" alt="FalconWatch Logo" id="logo"> <!-- Adjusted path for logo -->
         <div id="nav-buttons">
-            <a href="/html/main.html" class="active-link">Home</a> <!-- Adjusted path for home -->
-            <a href="/html/services.html" id="view-services">View Services</a> <!-- Adjusted path for services -->
+            <div id="user-info" class="user-dropdown">
+                <img src="/img/free-user-icon-3296-thumb.png" alt="User Icon" id="user-icon">
+                <span id="user-name">Username</span>
+                <div id="user-menu" class="user-menu-dropdown">
+                    <a href="/html/userpage.html">View Profile</a>
+                    <a href="#" id="signout-link">Sign Out</a>
+                </div>
+            </div>
+            <a href="/public/index.html">Home</a>
+            <a href="/html/services.html" id="view-services">Dashboard</a>
+        </div>
+    
+        <!-- New wrapper for language and logo -->
+        <div id="right-header">
+            <img src="/img/logoFW.png" alt="FalconWatch Logo" id="logo">
         </div>
     </div>
 

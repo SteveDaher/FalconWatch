@@ -96,33 +96,330 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    const mapStyleButton = document.getElementById('map-style-button');
+    const mapStyleOptions = document.getElementById('map-style-options');
+
+
+    // Toggle display of map style options
+    mapStyleButton.addEventListener('click', () => {
+        mapStyleOptions.style.display = mapStyleOptions.style.display === 'block' ? 'none' : 'block';
+    });
+
+    // Change map style on option click
+    mapStyleOptions.addEventListener('click', (event) => {
+        event.preventDefault();
+        const target = event.target.tagName === 'IMG' ? event.target.parentElement : event.target;
+
+        const styleId = target.getAttribute('data-style');
+
+        const styles = {
+            'satellite-map-dark': 'mapbox://styles/falconwatch/cm0qnadi200nd01qk1e36dr2i',
+            'white-map': 'mapbox://styles/mapbox/light-v11',
+            'dark-map': 'mapbox://styles/mapbox/dark-v11',
+            'standard-map-dynamic': 'mapbox://styles/mapbox/standard',
+            'street-map': 'mapbox://styles/mapbox/satellite-streets-v12',
+        };
+
+        if (styles[styleId]) {
+            map.setStyle(styles[styleId]);
+            mapStyleOptions.style.display = 'none'; // Close options after selection
+        }
+    });
+
     // Add event listeners for Report Notifications button and close button
       const reportNotificationsButton = document.getElementById('report-notifications-button');
       const reportNotificationsPanel = document.getElementById('report-notifications-panel');
       const closeNotificationsButton = document.getElementById('close-notifications');
+      const statisticsPanel = document.getElementById('statistics-panel');
+      const statisticsButton = document.getElementById('statistics-button');
+      const closeStatisticsButton = document.getElementById('close-statistics');
   
-      reportNotificationsButton.addEventListener('click', (event) => {
-          event.stopPropagation(); // Prevent the click from propagating to the document
-          reportNotificationsPanel.classList.toggle('open');
-          manageAlertSound(); // Update the alert sound based on the new panel state
-      });
-  
-      closeNotificationsButton.addEventListener('click', (event) => {
-          event.stopPropagation(); // Prevent the click from propagating to the document
-          reportNotificationsPanel.classList.remove('open');
-          manageAlertSound(); // Update the alert sound based on the new panel state
-      });
+      function closeAllPanels() {
+        reportNotificationsPanel.classList.remove('open');
+        statisticsPanel.classList.remove('open');
+        manageAlertSound(false); // Ensure sound is off when all panels are closed
+    }
 
-       // Bind Patrol Mode toggle button event
-    document.getElementById('patrol-mode-button').addEventListener('click', () => {
-        if (socket) {
-            togglePatrolMode(socket); // Toggle Patrol Mode on/off
-        } else {
-            console.error('Socket is not initialized.');
+    // Function to toggle a specific panel
+function togglePanel(panelToToggle, soundHandler = () => {}) {
+    // If the panel is already open, close it
+    if (panelToToggle.classList.contains('open')) {
+        panelToToggle.classList.remove('open');
+        soundHandler(false); // Turn off sound if closing Report Notifications panel
+    } else {
+        // Close only other panels (not all panels) and open the requested one
+        if (panelToToggle === reportNotificationsPanel) statisticsPanel.classList.remove('open');
+        else if (panelToToggle === statisticsPanel) reportNotificationsPanel.classList.remove('open');
+
+        panelToToggle.classList.add('open');
+        if (panelToToggle === reportNotificationsPanel) soundHandler(true);
+    }
+}
+
+
+    // Toggle Report Notifications panel on button click
+// Toggle Report Notifications panel
+reportNotificationsButton.addEventListener('click', (event) => {
+    event.stopPropagation();
+    togglePanel(reportNotificationsPanel, manageAlertSound);
+});
+
+// Close Report Notifications panel via the close button
+closeNotificationsButton.addEventListener('click', (event) => {
+    event.stopPropagation();
+    reportNotificationsPanel.classList.remove('open');
+    manageAlertSound(false);
+});
+
+// Toggle Statistics panel
+statisticsButton.addEventListener('click', (event) => {
+    event.stopPropagation();
+    togglePanel(statisticsPanel);
+    initializeCharts();
+});
+
+// Close Statistics panel via the close button
+closeStatisticsButton.addEventListener('click', (event) => {
+    event.stopPropagation();
+    statisticsPanel.classList.remove('open');
+});
+
+// Prevent closing the report notifications panel when clicking inside it
+reportNotificationsPanel.addEventListener('click', (event) => {
+    event.stopPropagation(); // Stops the event from propagating to the outside click listener
+});
+
+// Prevent closing the statistics panel when clicking inside it
+statisticsPanel.addEventListener('click', (event) => {
+    event.stopPropagation();
+});
+
+
+
+    // Close all panels when clicking outside
+    document.addEventListener('click', closeAllPanels);
+
+    async function initializeCharts() {
+        await renderMyBarChart();      // Chart 1: Severity over time
+        await renderTimeOfDayChart();  // Chart 3: Crime by time of day
+        await renderCrimeTrendsChart(); // Chart 4: Crime trends by severity over time
+
+        fetchWeeklyReportSummary();
+    }
+
+    async function fetchWeeklyReportSummary() {
+        try {
+            const response = await fetch('/api/chartData?type=crime-summary', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                }
+            });
+    
+            const data = await response.json();
+            const totals = {
+                low: 0,
+                medium: 0,
+                high: 0,
+                totalReports: 0
+            };
+    
+            data.forEach(item => {
+                totals.totalReports += item.count;
+                if (item.severity === 'low') totals.low += item.count;
+                if (item.severity === 'medium') totals.medium += item.count;
+                if (item.severity === 'high') totals.high += item.count;
+            });
+    
+            const summaryText = `
+                <div><strong>Total incidents this week:</strong> <span class="severity-total">${totals.totalReports}</span></div>
+                <div><strong>High-severity cases:</strong> <span class="severity-high">${totals.high}</span></div>
+                <div><strong>Medium-severity cases:</strong> <span class="severity-medium">${totals.medium}</span></div>
+                <div><strong>Low-severity cases:</strong> <span class="severity-low">${totals.low}</span></div>
+            `;
+            document.getElementById('weekly-report-summary').innerHTML = summaryText;
+    
+        } catch (error) {
+            console.error('Error fetching weekly report summary:', error);
+            document.getElementById('weekly-report-summary').textContent = 'Unable to fetch summary.';
         }
-    });
+    }
 
-          
+    // Chart 1: Severity over time (from `chart.js`)
+    async function renderMyBarChart() {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch('/api/chartData', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+
+        const monthlyData = {};
+        data.forEach(item => {
+            const month = `${item.year}-${item.month.toString().padStart(2, '0')}`;
+            if (!monthlyData[month]) {
+                monthlyData[month] = { low: 0, medium: 0, high: 0 };
+            }
+            monthlyData[month][item.severity.toLowerCase()] += item.count;
+        });
+
+        const labels = Object.keys(monthlyData);
+        const lowData = labels.map(month => monthlyData[month].low || 0);
+        const mediumData = labels.map(month => monthlyData[month].medium || 0);
+        const highData = labels.map(month => monthlyData[month].high || 0);
+
+        const ctx = document.getElementById('myBarChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels,
+                datasets: [
+                    { label: 'Low Severity', data: lowData, backgroundColor: 'rgba(255, 235, 59, 0.5)' },
+                    { label: 'Medium Severity', data: mediumData, backgroundColor: 'rgba(255, 170, 59, 0.5)' },
+                    { label: 'High Severity', data: highData, backgroundColor: 'rgba(244, 67, 54, 0.5)' }
+                ]
+            },
+            options: { responsive: true, scales: { x: { stacked: true }, y: { stacked: true } } }
+        });
+    }
+
+    // Chart 3: Crime by time of day (from `chart3.js`)
+    async function renderTimeOfDayChart() {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch('/api/chartData?includeHour=true', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+
+        const chartData = data.map(item => ({
+            x: item.hour,
+            y: item.category,
+            count: item.count
+        }));
+
+        const ctx = document.getElementById('timeOfDayChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'scatter',
+            data: { datasets: [{ label: 'Crime by Time of Day', data: chartData, backgroundColor: 'rgba(255, 0, 0, 0.6)' }] },
+            options: {
+                responsive: true,
+                scales: {
+                    x: { type: 'linear', min: 0, max: 23, title: { display: true, text: 'Hour' } },
+                    y: { type: 'category', labels: ['Theft', 'Assault', 'Robbery', 'Burglary', 'Vandalism', 'Human Trafficking', 'Drugs', 'Wilful Murder'], title: { display: true, text: 'Crime Type' } }
+                }
+            }
+        });
+    }
+
+    // Chart 4: Crime trends by severity (from `chart4.js`)
+    async function renderCrimeTrendsChart() {
+        const token = localStorage.getItem('authToken');
+        const year = new Date().getFullYear();
+        const response = await fetch(`/api/chartData?year=${year}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+    
+        const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        const labels = months.map((month, i) => `${year}-${String(i + 1).padStart(2, '0')}`);
+        const severities = ['low', 'medium', 'high'];
+    
+        // Create datasets for each severity level
+        const datasets = severities.map(severity => ({
+            label: severity.charAt(0).toUpperCase() + severity.slice(1),
+            data: labels.map(label => 
+                data.filter(d => d.severity === severity && `${d.year}-${String(d.month).padStart(2, '0')}` === label)
+                    .reduce((sum, item) => sum + item.count, 0)
+            ),
+            backgroundColor: { 'low': '#ffb700', 'medium': '#ff9100', 'high': '#ff0000' }[severity],
+            stack: 'severity'
+        }));
+    
+        // Calculate total crimes for each month and add as a line dataset
+        const totalCrimesData = labels.map(label => 
+            data.filter(d => `${d.year}-${String(d.month).padStart(2, '0')}` === label)
+                .reduce((sum, item) => sum + item.count, 0)
+        );
+    
+        datasets.push({
+            label: 'Total Crimes',
+            data: totalCrimesData,
+            type: 'line',  // Add this dataset as a line
+            borderColor: '#000000',  // Black color for total crimes line
+            borderWidth: 2,
+            fill: false,
+            pointRadius: 3
+        });
+    
+        const ctx = document.getElementById('crimeTrendsChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: { labels: months, datasets },
+            options: {
+                responsive: true,
+                scales: {
+                    x: { stacked: true },
+                    y: { stacked: true, beginAtZero: true }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                if (context.dataset.label === 'Total Crimes') {
+                                    return `Total Crimes: ${context.raw}`;
+                                }
+                                return `${context.dataset.label}: ${context.raw}`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function showTemporaryPopup(message) {
+        const popup = document.createElement('div');
+        popup.className = 'temporary-popup';
+        popup.innerText = message;
+        document.body.appendChild(popup);
+
+        setTimeout(() => {
+            popup.style.opacity = '0'; 
+            setTimeout(() => popup.remove(), 500); 
+        }, 2000);
+    }
+
+    // Modified togglePatrolMode function
+    function togglePatrolMode(socket) {
+        const patrolModeButton = document.getElementById('patrol-mode-button');
+
+        if (!isPatrolModeActive) {
+            // Activate Patrol Mode
+            isPatrolModeActive = true;
+            patrolModeButton.textContent = 'Deactivate Patrol Mode';
+            showTemporaryPopup('Patrol Mode Activated');
+            socket.emit('patrolModeOn'); // Emit event
+        } else {
+            // Deactivate Patrol Mode
+            isPatrolModeActive = false;
+            patrolModeButton.textContent = 'Activate Patrol Mode';
+            showTemporaryPopup('Patrol Mode Deactivated');
+            socket.emit('patrolModeOff'); // Emit event
+        }
+    }
+
+    // Event binding for patrol mode button
+    const patrolModeButton = document.getElementById('patrol-mode-button');
+    if (patrolModeButton) {
+        patrolModeButton.addEventListener('click', () => {
+            if (socket) {
+                togglePatrolMode(socket); // Toggle Patrol Mode on/off
+            } else {
+                console.error('Socket is not initialized.');
+            }
+        });
+    } else {
+        console.error('Patrol mode button not found.');
+    }
+
 });
 
 
@@ -837,66 +1134,118 @@ function addReportToMap(report, map) {
 // Function to create custom popup content
 function createPopupContent({ category, severity, description, createdAt, filePath, fileType, coordinates }) {
     const popupContent = document.createElement('div');
-    popupContent.className = 'report-popup'; // Apply the custom CSS class
+    popupContent.className = 'report-popup';
 
-     // Stop click events from propagating and closing the popup
-     popupContent.addEventListener('click', (e) => {
-        e.stopPropagation();
-    });
-    
-    // Create and append the category element
+    // Category Header with Severity Line
     const categoryElement = document.createElement('h3');
+    categoryElement.className = 'category-header';
     categoryElement.textContent = category;
-    popupContent.appendChild(categoryElement);
 
-    // Create and append the description element
+    // Line with severity color
+    const categoryLine = document.createElement('div');
+    categoryLine.className = 'category-header-line';
+
+    let severityColor;
+    switch (severity.toLowerCase()) {
+        case 'high':
+            severityColor = '#ff0000';
+            break;
+        case 'medium':
+            severityColor = '#ff9100';
+            break;
+        case 'low':
+            severityColor = '#ffb700';
+            break;
+        default:
+            severityColor = 'gray';
+    }
+    categoryLine.style.backgroundColor = severityColor;
+
+    popupContent.appendChild(categoryElement);
+    popupContent.appendChild(categoryLine);
+
+    // Description and Reported Time
     const descriptionElement = document.createElement('p');
+    descriptionElement.style.fontSize = '12px';
     descriptionElement.innerHTML = `<strong>Description:</strong> ${description}`;
     popupContent.appendChild(descriptionElement);
 
-    // Create and append the reportedAt element
     const reportedAtElement = document.createElement('p');
+    reportedAtElement.style.fontSize = '12px';
     reportedAtElement.innerHTML = `<strong>Reported At:</strong> ${createdAt}`;
     popupContent.appendChild(reportedAtElement);
 
-    // Create and append the severity element
+    // Severity Information
     const severityElement = document.createElement('p');
-    severityElement.innerHTML = `<strong>Severity:</strong> ${severity}`;
+    severityElement.style.fontSize = '12px';
+    severityElement.innerHTML = `<strong>Severity:</strong> ${severity.toUpperCase()}`;
     popupContent.appendChild(severityElement);
 
-    // Create a container for the buttons
-    const buttonContainer = document.createElement('div');
-    buttonContainer.className = 'button-container';
-    buttonContainer.style.display = 'flex'; // Ensure buttons are aligned in a row
-    buttonContainer.style.justifyContent = 'space-between'; // Distribute space evenly
+    // ETA Display
+    const etaDisplay = document.createElement('p');
+    etaDisplay.id = 'eta-display';
+    etaDisplay.style.marginBottom = '5px';
+    //etaDisplay.textContent = 'ETA: Calculating...'; // Placeholder text
+    popupContent.appendChild(etaDisplay);
 
-    if (filePath) {
-        // Create and append the attachment button
-        const attachmentButton = document.createElement('button');
-        attachmentButton.classList.add('view-attachment-btn');
-        attachmentButton.textContent = 'View Attachment';
-        attachmentButton.style.flex = '1'; // Make the button take up equal space
-        attachmentButton.onclick = () => {
-            showAttachmentInContainer(filePath, fileType);
-        };
-        buttonContainer.appendChild(attachmentButton);
+    // Media preview for images/videos
+    if (filePath && (fileType.startsWith('image') || fileType.startsWith('video'))) {
+        const token = localStorage.getItem('authToken');
+    
+        fetch(filePath, {
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+        .then(response => {
+            if (!response.ok) throw new Error(`Failed to fetch media: ${response.statusText}`);
+            return response.blob();
+        })
+        .then(blob => {
+            const mediaContainer = document.createElement('div');
+            mediaContainer.className = 'popup-attachment-container';
+    
+            let mediaElement;
+            if (fileType.startsWith('image')) {
+                mediaElement = document.createElement('img');
+                mediaElement.src = URL.createObjectURL(blob);
+                mediaElement.alt = 'Crime Image';
+                mediaElement.className = 'popup-attachment-media';
+            } else if (fileType.startsWith('video')) {
+                mediaElement = document.createElement('video');
+                mediaElement.src = URL.createObjectURL(blob);
+                mediaElement.controls = true;
+                mediaElement.className = 'popup-attachment-media';
+            }
+    
+            if (mediaElement) {
+                mediaElement.title = 'Click to expand';
+                mediaElement.style.cursor = 'pointer';
+                mediaElement.onclick = () => {
+                    showAttachmentInContainer(filePath, fileType);
+                };
+    
+                mediaContainer.appendChild(mediaElement);
+                popupContent.appendChild(mediaContainer);
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching preview:', error);
+        });
     }
 
-    // Create an element for the ETA
-    const etaElement = document.createElement('div');
-    etaElement.id = 'eta-display';
-    etaElement.textContent = 'ETA: Calculating...';
-    etaElement.style.marginBottom = '5px'; // Add some spacing between the ETA and the button
+    // Auto-Direct Button
+    const buttonContainer = document.createElement('div');
+    buttonContainer.className = 'button-container';
+    buttonContainer.style.display = 'flex';
+    buttonContainer.style.justifyContent = 'space-between';
 
-    // Create and append the auto-direct button
     const autoDirectButton = document.createElement('button');
-    autoDirectButton.id = 'auto-direct-button'; // Ensure the button has an ID
-    autoDirectButton.classList.add('auto-direct-btn');
-    autoDirectButton.textContent = isAutoDirecting ? 'Cancel Auto-Direct' : 'Auto-Direct';
-    autoDirectButton.style.flex = '1'; // Make the button take up equal space
+    autoDirectButton.id = 'auto-direct-button';
+    autoDirectButton.className = 'eta-btn';
+    autoDirectButton.textContent = 'Auto-Direct';
+    autoDirectButton.style.flex = '1';
     autoDirectButton.onclick = (event) => {
-        event.stopPropagation();  // Prevent the popup from closing
-    
+        event.stopPropagation();
         if (isAutoDirecting) {
             cancelAutoDirect(map);
             autoDirectButton.textContent = 'Auto-Direct';
@@ -906,25 +1255,13 @@ function createPopupContent({ category, severity, description, createdAt, filePa
         }
     };
 
-    // Create and append the ETA and Auto-Direct button inside a vertical container
-    const etaButtonContainer = document.createElement('div');
-    etaButtonContainer.style.display = 'flex';
-    etaButtonContainer.style.flexDirection = 'column';
-    etaButtonContainer.style.alignItems = 'center'; // Center the content horizontally
-
-    // Append ETA to this container
-    etaButtonContainer.appendChild(etaElement);
-
-    // Append the Auto-Direct button to this container
-    etaButtonContainer.appendChild(autoDirectButton);
-
-    // Append the combined container to the buttonContainer
-    buttonContainer.appendChild(etaButtonContainer);
-
+    buttonContainer.appendChild(autoDirectButton);
     popupContent.appendChild(buttonContainer);
 
     return popupContent;
 }
+
+
 
 // Function to toggle the Directions control
 function toggleDirectionsControl(map) {
@@ -948,7 +1285,7 @@ function toggleDirectionsControl(map) {
 function updateETA(eta) {
     let etaElement = document.getElementById('eta-display');
     if (!etaElement) {
-        // If the element doesn't exist, create it
+        // Create ETA display if it doesn’t exist
         etaElement = document.createElement('div');
         etaElement.id = 'eta-display';
         etaElement.style.marginBottom = '5px';
@@ -960,8 +1297,6 @@ function updateETA(eta) {
             return;
         }
     }
-    
-    // Update the content of the ETA element
     etaElement.textContent = `ETA: ${eta}`;
 }
 
@@ -987,89 +1322,84 @@ function directToMarker(map, lng, lat) {
         return;
     }
 
-    // Create and set up the popup before initiating flyTo
-    const popup = new mapboxgl.Popup({
-        offset: 25,
-        closeOnClick: false,     // Prevent closing when clicking inside popup
-        closeOnMove: false,      // Prevent closing when map moves
-        closeButton: true,       // Show a close button for manual closing
-        className: 'persistent-popup' // Custom class for styling if needed
-    }).setLngLat([lng, lat])
-    .setHTML('<p>Incident Location</p>'); // Customize the popup content as needed
+    const etaDisplay = document.getElementById('eta-display');
+    if (etaDisplay) {
+        etaDisplay.textContent = 'ETA: Calculating...';
+    }
 
-    if (!isAutoDirecting) {
-        if (userLocation) {
-            const url = `https://api.mapbox.com/directions/v5/mapbox/driving-traffic/${userLocation.longitude},${userLocation.latitude};${lng},${lat}?geometries=geojson&overview=full&access_token=${mapboxgl.accessToken}`;
+    if (!isAutoDirecting && userLocation) {
+        isAutoDirecting = true;
 
-            fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    if (!data.routes || data.routes.length === 0) {
-                        console.error('No route found');
-                        return;
-                    }
+        const url = `https://api.mapbox.com/directions/v5/mapbox/driving-traffic/${userLocation.longitude},${userLocation.latitude};${lng},${lat}?geometries=geojson&overview=full&access_token=${mapboxgl.accessToken}`;
 
-                    const route = data.routes[0].geometry;
-                    const duration = data.routes[0].duration; // in seconds
-                    const eta = formatDuration(duration);
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                if (!data.routes || data.routes.length === 0) {
+                    console.error('No route found');
+                    return;
+                }
 
-                    updateETA(eta);
+                const route = data.routes[0].geometry;
+                const duration = data.routes[0].duration;
+                const eta = formatDuration(duration);
 
-                    if (map.getSource(routeLayerId)) {
-                        map.getSource(routeLayerId).setData(route);
-                    } else {
-                        map.addSource(routeLayerId, {
-                            type: 'geojson',
-                            data: route
-                        });
+                if (etaDisplay) {
+                    etaDisplay.textContent = `ETA: ${eta}`;
+                }
 
-                        map.addLayer({
-                            id: routeLayerId,
-                            type: 'line',
-                            source: routeLayerId,
-                            layout: {
-                                'line-join': 'round',
-                                'line-cap': 'round'
-                            },
-                            paint: {
-                                'line-color': '#007bff',
-                                'line-width': 4
-                            }
-                        });
-                    }
-
-                    map.flyTo({
-                        center: [lng, lat],
-                        zoom: 16,
-                        essential: true
+                if (map.getSource('routeLayerId')) {
+                    map.getSource('routeLayerId').setData(route);
+                } else {
+                    map.addSource('routeLayerId', {
+                        type: 'geojson',
+                        data: route
                     });
 
-                    // Ensure popup is visible after flyTo completes
-                    map.once('moveend', () => {
-                        popup.addTo(map);
+                    map.addLayer({
+                        id: 'routeLayerId',
+                        type: 'line',
+                        source: 'routeLayerId',
+                        layout: {
+                            'line-join': 'round',
+                            'line-cap': 'round'
+                        },
+                        paint: {
+                            'line-color': '#007bff',
+                            'line-width': 4
+                        }
                     });
+                }
 
-                    const autoDirectButton = document.getElementById('auto-direct-button');
-                    if (autoDirectButton) {
-                        autoDirectButton.textContent = 'Cancel Auto Direct';
-                    } else {
-                        console.warn('Auto Direct button not found in the DOM.');
-                    }
-
-                    isAutoDirecting = true;
-                    console.log('Auto-direct started');
-                })
-                .catch(error => {
-                    console.error('Error fetching route:', error);
+                // Fly to the target location
+                map.flyTo({
+                    center: [lng, lat],
+                    zoom: 16,
+                    essential: true
                 });
-        } else {
-            console.warn('User location is not yet available.');
-        }
+
+                // Reopen the popup after flyTo
+                setTimeout(() => {
+                    const popup = new mapboxgl.Popup({
+                        offset: 25,
+                        closeOnClick: false,
+                        closeButton: true
+                    })
+                    .setLngLat([lng, lat])
+                    .setDOMContent(document.querySelector('.report-popup'))
+                    .addTo(map);
+                }, 1000); // Adjust delay as needed for flyTo to complete
+
+                const autoDirectButton = document.getElementById('auto-direct-button');
+                if (autoDirectButton) {
+                    autoDirectButton.textContent = 'Cancel Auto-Direct';
+                }
+            })
+            .catch(error => console.error('Error fetching route:', error));
     } else {
         cancelAutoDirect(map);
     }
 }
-
 
 // Function to format duration (in seconds) into a readable format
 function formatDuration(seconds) {
@@ -1086,53 +1416,37 @@ function formatDuration(seconds) {
 
 
 function clearETA() {
-    const etaElement = document.getElementById('eta-display');
-    if (etaElement) {
-        etaElement.textContent = ''; // Clear the text content
+    const etaDisplay = document.getElementById('eta-display');
+    if (etaDisplay) {
+        etaDisplay.textContent = ''; // Clear ETA text content
     }
 }
 
 function cancelAutoDirect(map) {
-    console.log('Executing cancelAutoDirect...'); // Debug log
+    console.log('Cancelling Auto-Direct...'); // Debug log
 
-    // Remove the route layer from the map
-    if (map.getLayer(routeLayerId)) {
-        map.removeLayer(routeLayerId);
-        map.removeSource(routeLayerId);
+    if (map.getLayer('routeLayerId')) {
+        map.removeLayer('routeLayerId');
+        map.removeSource('routeLayerId');
         console.log('Route layer removed.');
-    } else {
-        console.warn("Route layer not found on the map.");
     }
 
     // Clear the ETA display
-    clearETA();
+    const etaDisplay = document.getElementById('eta-display');
+    if (etaDisplay) {
+        etaDisplay.textContent = '';
+    }
 
-    // Reset button text to "Auto Direct"
+    // Reset button text to "Auto-Direct"
     const autoDirectButton = document.getElementById('auto-direct-button');
     if (autoDirectButton) {
-        autoDirectButton.textContent = 'Auto Direct';
-    } else {
-        console.warn("Auto Direct button not found.");
+        autoDirectButton.textContent = 'Auto-Direct';
     }
 
-    // Reset auto-direct state
-    isAutoDirecting = false;  
-    console.log('isAutoDirecting set to false.');
-
-    // Remove directions control if it exists
-    if (directionsControl) {
-        map.removeControl(directionsControl);
-        directionsControl = null;
-        console.log('Directions control removed.');
-    } else {
-        console.log('Directions control was not active.');
-    }
-
-    // Stop tracking user location for auto-direct
-    navigator.geolocation.clearWatch(userLocationWatcherId);
-    console.log('User location watch cleared.');
+    // Reset the Auto-Direct state
+    isAutoDirecting = false;
+    console.log('Auto-Direct mode turned off.');
 }
-
 let userLocationWatcherId;
 
 // tracking user for auto-direct
@@ -1165,7 +1479,6 @@ userLocationWatcherId = navigator.geolocation.watchPosition(
 
 // For when user clicks show attachment
 function showAttachmentInContainer(filePath, fileType) {
-
     const token = localStorage.getItem('authToken');
     if (!token) {
         console.error('No auth token found.');
@@ -1197,13 +1510,13 @@ function showAttachmentInContainer(filePath, fileType) {
         closeButton.innerHTML = '&times;';
         closeButton.onclick = () => modal.remove();
 
-        if (fileType === 'image') {
+        if (fileType.startsWith('image')) {
             const image = document.createElement('img');
             image.src = URL.createObjectURL(blob);
             image.alt = "Attachment Image";
             image.className = 'attachment-image';
             modalContent.appendChild(image);
-        } else if (fileType === 'video') {
+        } else if (fileType.startsWith('video')) {
             const video = document.createElement('video');
             video.src = URL.createObjectURL(blob);
             video.controls = true;
@@ -1784,15 +2097,16 @@ if (toggleFilterTab) {
 
         if (filterContainer.classList.contains('show')) {
             filterContainer.classList.remove('show');
-            this.style.bottom = '0px';
-            toggleArrow.style.transform = 'rotate(0deg)';
+
         } else {
             filterContainer.classList.add('show');
-            this.style.bottom = '153px'; // Adjust the value based on the height of the filter container
-            toggleArrow.style.transform = 'rotate(180deg)';
+            
         }
     });
 }
+
+
+
 
 // User and filter stuff
 document.addEventListener('DOMContentLoaded', function () {
@@ -2066,29 +2380,33 @@ function initializeReportNotifications(map, socket) {
 function createReportItem(report) {
     const reportDiv = document.createElement('div');
     reportDiv.classList.add('report-item');
-    reportDiv.setAttribute('data-report-id', report.id); // Add data attribute for easy reference
-    
+    reportDiv.setAttribute('data-report-id', report.id);
+
     // Category
     const category = document.createElement('div');
     category.classList.add('report-category');
-    category.textContent = `Category: ${report.category}`;
+    category.innerHTML = `<strong>Category:</strong> ${report.category}`;
     reportDiv.appendChild(category);
+
+    reportDiv.appendChild(document.createElement('br'));
 
     // Severity
     const severity = document.createElement('div');
     severity.classList.add('report-severity', report.severity.toLowerCase());
-    severity.textContent = `Severity: ${report.severity}`;
+    severity.innerHTML = `<strong>Severity:</strong> ${report.severity.toUpperCase()}`;
     reportDiv.appendChild(severity);
 
     // Description
     const description = document.createElement('div');
-    description.textContent = `Description: ${report.description}`;
+    description.innerHTML = `<strong>Description:</strong> ${report.description}`;
     reportDiv.appendChild(description);
+
+    reportDiv.appendChild(document.createElement('br'));
 
     // Time
     const time = document.createElement('div');
     const reportTime = new Date(report.created_at).toLocaleString();
-    time.textContent = `Time: ${reportTime}`;
+    time.innerHTML = `<strong>Time:</strong> ${reportTime}`;
     reportDiv.appendChild(time);
 
     // Button Container
@@ -2102,8 +2420,6 @@ function createReportItem(report) {
     showPinBtn.setAttribute('aria-label', 'Show Incident Pin on Map');
     showPinBtn.addEventListener('click', () => {
         flyToReportPin(map, report.lng, report.lat);
-        // Optional: Close the panel after clicking
-        // reportNotificationsPanel.classList.remove('open');
     });
     buttonContainer.appendChild(showPinBtn);
 
@@ -2113,29 +2429,23 @@ function createReportItem(report) {
     // If the report is of HIGH severity and not acknowledged, add the "Acknowledge" button
     if (report.severity.toLowerCase() === 'high' && !isAcknowledged) {
         const acknowledgeBtn = document.createElement('button');
-        acknowledgeBtn.classList.add('acknowledge-btn', 'pulse'); // 'pulse' class for animation
+        acknowledgeBtn.classList.add('acknowledge-btn', 'pulse');
         acknowledgeBtn.textContent = 'Acknowledge';
         acknowledgeBtn.setAttribute('aria-label', 'Acknowledge High Severity Report');
 
-        // Event Listener for Acknowledge Button
         acknowledgeBtn.addEventListener('click', () => {
             acknowledgeReport(report.id, acknowledgeBtn);
         });
 
         buttonContainer.appendChild(acknowledgeBtn);
-
-        // Report is unacknowledged
         report.acknowledged = false;
-
-        // Manage the alert sound based on this report
         manageAlertSound();
     } else if (report.severity.toLowerCase() === 'high' && isAcknowledged) {
-        // If acknowledged, show an 'Acknowledged' label/button
         const acknowledgedLabel = document.createElement('button');
-        acknowledgedLabel.classList.add('acknowledge-btn', 'acknowledged'); // 'acknowledged' class for styles
+        acknowledgedLabel.classList.add('acknowledge-btn', 'acknowledged');
         acknowledgedLabel.textContent = 'Acknowledged';
         acknowledgedLabel.setAttribute('aria-label', 'Acknowledged Report');
-        acknowledgedLabel.disabled = true; // Disable the button
+        acknowledgedLabel.disabled = true;
         buttonContainer.appendChild(acknowledgedLabel);
     }
 
@@ -2280,33 +2590,13 @@ let isPatrolModeActive = false;
 let assignedCrime = null; // Store the crime assigned to the officer
 let patrolModeListener = null; // Store the listener reference
 
-// Toggle Patrol Mode function
-
-function togglePatrolMode(socket) {
-    const patrolModeButton = document.getElementById('patrol-mode-button');
-
-    if (!isPatrolModeActive) {
-        // Activate Patrol Mode
-        alert('Patrol Mode Activated');
-        isPatrolModeActive = true;
-        patrolModeButton.textContent = 'Deactivate Patrol Mode';
-    } else {
-        // Deactivate Patrol Mode
-        alert('Patrol Mode Deactivated');
-        isPatrolModeActive = false;
-        patrolModeButton.textContent = 'Activate Patrol Mode';
-        stopPatrolMode(socket);
-    }
-}
-
-
 // Simplify stopPatrolMode since we don't need to remove listeners anymore
 function stopPatrolMode(socket) {
     stopAlertSound();
+    // Any additional cleanup if required
 }
 
-
-// Function to handle media display in patrol mode notifications
+// Utility function to handle media display in patrol mode notifications
 function showPatrolModeMedia(filePath, fileType) {
     const token = localStorage.getItem('authToken');
     if (!token) {
@@ -2349,36 +2639,7 @@ function showPatrolModeMedia(filePath, fileType) {
     });
 }
 
-function showCrimeNotification(report) {
-    // First calculate ETA, then show the modal with the result
-    if (!userLocation) {
-        showNotificationWithETA(report, "Location unavailable");
-        return;
-    }
-
-    const url = `https://api.mapbox.com/directions/v5/mapbox/driving-traffic/${userLocation.longitude},${userLocation.latitude};${report.lng},${report.lat}?geometries=geojson&overview=full&access_token=${mapboxgl.accessToken}`;
-
-    fetch(url)
-        .then(response => {
-            if (!response.ok) throw new Error('Network response was not ok');
-            return response.json();
-        })
-        .then(data => {
-            if (data.routes && data.routes.length > 0) {
-                const duration = data.routes[0].duration;
-                const eta = formatDuration(duration);
-                showNotificationWithETA(report, eta);
-            } else {
-                throw new Error("No routes found");
-            }
-        })
-        .catch(error => {
-            console.error("Error calculating ETA:", error);
-            showNotificationWithETA(report, "Error calculating ETA");
-        });
-}
-
-
+// Function to show crime notification with ETA
 function showNotificationWithETA(report, eta) {
     const modal = document.createElement('div');
     modal.className = 'crimeModalCustom';
@@ -2402,7 +2663,6 @@ function showNotificationWithETA(report, eta) {
 
     document.body.appendChild(modal);
 
-    // Load media if available
     if (report.file_path) {
         showPatrolModeMedia(report.file_path, report.file_type)
             .then(mediaHtml => {
@@ -2418,7 +2678,6 @@ function showNotificationWithETA(report, eta) {
         }
     }
 
-    // Add event listeners
     const acknowledgeBtn = modal.querySelector('.acknowledge-btn');
     const respondBtn = modal.querySelector('.respond-btn');
 
@@ -2448,6 +2707,35 @@ function showNotificationWithETA(report, eta) {
     }
 }
 
+function showCrimeNotification(report) {
+    // First calculate ETA, then show the modal with the result
+    if (!userLocation) {
+        showNotificationWithETA(report, "Location unavailable");
+        return;
+    }
+
+    const url = `https://api.mapbox.com/directions/v5/mapbox/driving-traffic/${userLocation.longitude},${userLocation.latitude};${report.lng},${report.lat}?geometries=geojson&overview=full&access_token=${mapboxgl.accessToken}`;
+
+    fetch(url)
+        .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.json();
+        })
+        .then(data => {
+            if (data.routes && data.routes.length > 0) {
+                const duration = data.routes[0].duration;
+                const eta = formatDuration(duration);
+                showNotificationWithETA(report, eta);
+            } else {
+                throw new Error("No routes found");
+            }
+        })
+        .catch(error => {
+            console.error("Error calculating ETA:", error);
+            showNotificationWithETA(report, "Error calculating ETA");
+        });
+}
+
 function initiateAutoDirect(report) {
     if (!report || !report.lng || !report.lat) {
         console.error('Invalid report data for auto-direct.');
@@ -2463,6 +2751,7 @@ function initiateAutoDirect(report) {
     // Optionally, notify the officer that auto-direct is active
     alert(`Auto-Direct to Report ID: ${report.id} is now active.`);
 }
+
 
 
 function calculateETA(destinationLng, destinationLat) {

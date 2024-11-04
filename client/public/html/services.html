@@ -11,11 +11,34 @@
 <body>
   <div class="page-content"> <!-- Add wrapper to control visibility -->
     <div id="header">
-      <img src="/img/logoFW.png" alt="Logo" id="logo">
       <div id="nav-buttons">
-        <a href="/html/main.html" class="active-link">Home</a>
+          <div id="user-info" class="user-dropdown">
+              <img src="/img/free-user-icon-3296-thumb.png" alt="User Icon" id="user-icon">
+              <span id="user-name">Username</span>
+              <div id="user-menu" class="user-menu-dropdown">
+                <a href="/html/userpage.html">View Profile</a>
+                <a href="#" id="signout-link">Sign Out</a>
+              </div>
+          </div>
+          <a href="/public/index.html">Home</a>
+          <a href="/html/services.html" id="view-services">Dashboard</a>
+          <a href="/html/main.html" id="view-services">Map</a>
       </div>
-    </div>
+  
+      <!-- New wrapper for language and logo -->
+      <div id="right-header">
+          <div id="language-dropdown" class="dropdown">
+              <div class="dropdown-container">
+                  <a href="#" id="Language" class="dropbtn">Language/لغة</a>
+                  <div class="dropdown-content">
+                      <a href="#" id="EnglishLanguage">English</a>
+                      <a href="#" id="ArabicLanguage">عربي</a>
+                  </div>
+              </div>
+          </div>
+          <img src="/img/logoFW.png" alt="FalconWatch Logo" id="logo">
+      </div>
+  </div>
 
     <div class="container">
       <h1>FalconWatch Services</h1>

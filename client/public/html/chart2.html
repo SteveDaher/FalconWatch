@@ -22,14 +22,31 @@
     <div class="page-content"> <!-- Add this wrapper to control visibility -->
         <!-- Header section with user info, logo, and navigation -->
         <div id="header">
-            <div id="user-info">
-                <span id="user-name"></span> <!-- Placeholder for displaying the user's name -->
-            </div>
-            <img src="/img/logoFW.png" alt="FalconWatch Logo" id="logo"> <!-- Logo image with alt text -->
             <div id="nav-buttons">
-                <a href="/client/public/html/main.html" class="active-link">Home</a> <!-- Link to home page -->
-                <a href="/client/public/html/services.html" id="view-services">View Services</a> <!-- Link to services page -->
-                <a href="/client/public/html/login.html" id="sign-out" class="sign-out-btn">Sign Out</a> <!-- Sign out button -->
+                <div id="user-info" class="user-dropdown">
+                    <img src="/img/free-user-icon-3296-thumb.png" alt="User Icon" id="user-icon">
+                    <span id="user-name">Username</span>
+                    <div id="user-menu" class="user-menu-dropdown">
+                        <a href="/html/userpage.html">View Profile</a>
+                        <a href="#" id="signout-link">Sign Out</a>
+                    </div>
+                </div>
+                <a href="/public/index.html">Home</a>
+                <a href="/html/services.html" id="view-services">Dashboard</a>
+            </div>
+        
+            <!-- New wrapper for language and logo -->
+            <div id="right-header">
+                <div id="language-dropdown" class="dropdown">
+                    <div class="dropdown-container">
+                        <a href="#" id="Language" class="dropbtn">Language/لغة</a>
+                        <div class="dropdown-content">
+                            <a href="#" id="EnglishLanguage">English</a>
+                            <a href="#" id="ArabicLanguage">عربي</a>
+                        </div>
+                    </div>
+                </div>
+                <img src="/img/logoFW.png" alt="FalconWatch Logo" id="logo">
             </div>
         </div>
 

@@ -71,7 +71,7 @@ body {
 
 /* Button Styles: Styling for menu buttons */
 .menu-button {
-  background: linear-gradient(160deg, #378f7b 0%, #378f7b 100%); /* Gradient background */
+  background: #028758; /* Gradient background */
   color: #fff; /* White text color */
   border: none; /* Remove border */
   padding: 0.9rem 3rem; /* Button padding */
@@ -81,11 +81,13 @@ body {
   cursor: pointer; /* Pointer cursor on hover */
   border-radius: 50px; /* Rounded button */
   margin: 0.1rem; /* Small margin */
+  transition: background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transitions for background, transform, and shadow */
 }
 
 .menu-button:hover {
-  background: linear-gradient(160deg, #45a049 0%, #45a049 100%); /* Change background on hover */
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3); /* Add shadow effect on hover */
+  background: #028758; /* Change background on hover */
+  transform: scale(1.05); /* Slight scale on hover */
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3); /* Increase shadow on hover */
 }
 
 /* Headings: Styling for h2 elements */

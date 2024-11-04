@@ -13,17 +13,34 @@
   <div class="body">
     <!-- Header with logo and navigation buttons -->
     <div id="header">
-      <div class="logo-container">
-        <img src="/img/logoFW.png" alt="Logo" class="heading-logo2">
-      </div>
       <div id="nav-buttons">
         <!-- Button for police users to create a new update -->
-        <div id="create-update-section" class="nav-button" style="display: none;">
-          <button id="create-update-btn" class="btn">Create Update</button>
-        </div>
-        <a href="/html/main.html" class="active-link">Home</a>
-        <a href="/html/login.html" id="sign-out" class="sign-out-btn">Sign Out</a>
+        <div id="user-info" class="user-dropdown">
+          <img src="/img/free-user-icon-3296-thumb.png" alt="User Icon" id="user-icon">
+          <span id="user-name">Username</span>
+          
+          
+          <div id="user-menu" class="user-menu-dropdown">
+              <a href="/html/userpage.html">View Profile</a>
+              <a href="#" id="signout-link">Sign Out</a>
+          </div>
       </div>
+        <a href="/public/index.html">Home</a>
+        <a href="/html/services.html" id="view-services">Dashboard</a>
+
+      </div>
+      <div id="language-dropdown" class="dropdown">
+        <div class="dropdown-container">
+            <a href="#" id="Language" class="dropbtn">Language/لغة</a>
+            <div class="dropdown-content">
+                <a href="#" id="EnglishLanguage">English</a>
+                <a href="#" id="ArabicLanguage">عربي</a>
+            </div>
+        </div>
+    </div> 
+    <div class="logo-container">
+      <img src="/img/logoFW.png" alt="Logo" class="heading-logo2">
+    </div>
     </div>
 
     <!-- Main container for changelog -->
@@ -32,7 +49,9 @@
         <h1 class="insights-heading">FalconWatch <span class="fancy-text">Changelog</span></h1>
         <img src="/img/logoFW.png" alt="Logo" class="heading-logo1">
       </div>
-      <div class="divider"></div>
+      <div id="create-update-section" class="nav-button" style="display: none;">
+        <button id="create-update-btn" class="btn">Create Update</button>
+      </div>
 
       <!-- Display changelog updates -->
       <div id="changelog-updates"></div>

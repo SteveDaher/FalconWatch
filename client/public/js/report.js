@@ -32,6 +32,25 @@
                 reportMap.setStyle('mapbox://styles/mapbox/' + layerId);
             });
         }
+
+        document.getElementById('signout-link').addEventListener('click', () => {
+            localStorage.removeItem('authToken'); // Clear the authentication token
+            localStorage.removeItem('role');      // Clear any stored user role
+            window.location.href = '/html/login.html'; // Redirect to the login page
+        });        
+
+        // Fetch user info and update the displayed username
+        fetch('/api/user-info', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            const userNameElement = document.getElementById('user-name');
+            userNameElement.textContent = data.name || "Guest"; // Update with fetched name or default to 'Guest'
+        })
+        .catch(error => console.error('Error fetching user info:', error));
     
         // Fullscreen control
         document.getElementById('fullscreen-btn').addEventListener('click', function() {
@@ -87,6 +106,7 @@
 
         // Update the hidden input with the coordinates
         document.getElementById('crime-coordinates').value = `${coordinates.lng}, ${coordinates.lat}`;
+
     });
 
         // Initialize Socket.IO
@@ -133,7 +153,7 @@
         .then(response => response.json())
         .then(data => {
             if (data.message === 'Report submitted successfully.') {
-                alert('Report submitted successfully!');
+                document.getElementById('success-popup').classList.remove('hidden');
             } else {
                 alert(`Error: ${data.message}`);
             }
@@ -143,4 +163,63 @@
             alert('An error occurred while submitting the report.');
         });
     });
+
+    document.getElementById('popup-ok-btn').addEventListener('click', function() {
+        window.location.href = '/html/index.html';
+    });
+
+});
+
+////////////////////////////////////////////////////////////////////////////////////////
+
+document.getElementById('crime-report-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+
+    // Append additional data to FormData
+    formData.append('coordinates', document.getElementById('crime-coordinates').value);
+    formData.append('category', document.getElementById('crime-category').value);
+    formData.append('description', document.getElementById('crime-description').value);
+
+    // Send the form data to the server via Fetch API
+    fetch('/api/reports', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.message === 'Report submitted successfully.') {
+            // Store the Incident ID in localStorage
+            localStorage.setItem('lastIncidentId', data.incidentId);
+
+            // Show the success popup
+            document.getElementById('success-popup').classList.remove('hidden');
+        } else {
+            alert(`Error: ${data.message}`);
+        }
+    })
+    .catch(error => {
+        console.error('Error submitting report:', error);
+        alert('An error occurred while submitting the report.');
+    });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Other initialization code here...
+
+    // When the success popup is shown, retrieve and display the Incident ID
+    const lastIncidentId = localStorage.getItem('lastIncidentId');
+    if (lastIncidentId) {
+        // Insert the Incident ID into the popup above the success message
+        const popupContent = document.querySelector('#success-popup .popup-content');
+        const incidentIdElement = document.createElement('p');
+        incidentIdElement.textContent = `Incident ID: ${lastIncidentId}`;
+        popupContent.insertBefore(incidentIdElement, popupContent.querySelector('p'));
+
+        // Clear the Incident ID from localStorage if needed
+        localStorage.removeItem('lastIncidentId');
+    }
 });

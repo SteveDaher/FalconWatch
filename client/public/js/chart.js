@@ -33,10 +33,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Now that the user is authorized, show the page content
         const pageContent = document.querySelector('body');
+      
 
         // Explicitly set the display property to make sure it's visible
         pageContent.style.display = 'block'; // Ensure page content is displayed
-
+        pageContent.style.visibility = 'visible'; // Just in case visibility is set to hidden
+        pageContent.style.opacity = '1'; // Handle any opacity transitions if used
 
         console.log("Page content is now visible.");
 
@@ -67,6 +69,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error('Error during execution:', error);
         alert('Failed to load chart data. Please try again.');
     }
+
+    fetch('/api/user-info', {
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        const userNameElement = document.getElementById('user-name');
+        userNameElement.textContent = data.name || "Guest"; // Update with fetched name or default to 'Guest'
+    })
+    .catch(error => console.error('Error fetching user info:', error));
+
+    document.getElementById('signout-link').addEventListener('click', () => {
+        localStorage.removeItem('authToken'); // Clear the authentication token
+        localStorage.removeItem('role');      // Clear any stored user role
+        window.location.href = '/html/login.html'; // Redirect to the login page
+    });
+    
 });
 
 /**

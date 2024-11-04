@@ -60,6 +60,25 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('yearFilter').addEventListener('change', async () => {
     await fetchCrimeData(token); // Fetch new data when a different year is selected
   });
+
+  fetch('/api/user-info', {
+    headers: {
+        'Authorization': `Bearer ${token}`
+    }
+})
+.then(response => response.json())
+.then(data => {
+    const userNameElement = document.getElementById('user-name');
+    userNameElement.textContent = data.name || "Guest"; // Update with fetched name or default to 'Guest'
+})
+.catch(error => console.error('Error fetching user info:', error));
+
+document.getElementById('signout-link').addEventListener('click', () => {
+  localStorage.removeItem('authToken'); // Clear the authentication token
+  localStorage.removeItem('role');      // Clear any stored user role
+  window.location.href = '/html/login.html'; // Redirect to the login page
+});
+
 });
 
 

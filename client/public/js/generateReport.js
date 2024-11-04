@@ -46,6 +46,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         alert('An error occurred during initialization.');
         window.location.href = '/html/main.html'; // Redirect to the main page if there's an error
     }
+
+    fetch('/api/user-info', {
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        const userNameElement = document.getElementById('user-name');
+        userNameElement.textContent = data.name || "Guest"; // Update with fetched name or default to 'Guest'
+    })
+    .catch(error => console.error('Error fetching user info:', error));
+
+    document.getElementById('signout-link').addEventListener('click', () => {
+        localStorage.removeItem('authToken'); // Clear the authentication token
+        localStorage.removeItem('role');      // Clear any stored user role
+        window.location.href = '/html/login.html'; // Redirect to the login page
+    });
+
+    fetchCrimeSummaryDetails();
 });
 
 // Helper function to adjust time and ensure correct timezone (UTC+4 for Dubai)
@@ -59,6 +79,133 @@ function convertToDubaiTime(date) {
 
     return dubaiDate;
 }
+
+async function fetchCrimeSummaryDetails() {
+    try {
+        const response = await fetch('/api/chartData?type=crime-summary', {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            }
+        });
+
+        const data = await response.json();
+
+        if (!data || data.length === 0) {
+            document.querySelector(".crime-summary").textContent = "No data available for this week.";
+            return;
+        }
+
+        // Initialize counts and severity weights
+        let totalReports = 0;
+        let lowSeverity = 0, mediumSeverity = 0, highSeverity = 0;
+        let severityIndex = 0;
+
+        data.forEach(item => {
+            totalReports += item.count;
+            if (item.severity === 'low') {
+                lowSeverity += item.count;
+                severityIndex += item.count * 1; // Low severity weight
+            }
+            if (item.severity === 'medium') {
+                mediumSeverity += item.count;
+                severityIndex += item.count * 2; // Medium severity weight
+            }
+            if (item.severity === 'high') {
+                highSeverity += item.count;
+                severityIndex += item.count * 3; // High severity weight
+            }
+        });
+
+        // Calculate the average severity index (index) based on total reports
+        const averageSeverityIndex = (totalReports > 0) ? (severityIndex / totalReports).toFixed(2) : 0;
+
+        // Crime rate as a ratio of high-severity crimes to total crimes
+        const highSeverityRate = totalReports > 0 ? ((highSeverity / totalReports) * 100).toFixed(2) : 0;
+
+        // Set a basic trend analysis based on high severity rate and total reports
+        const trend = highSeverityRate > 50
+            ? "There is a predominance of high-severity incidents."
+            : "Most incidents are of low to medium severity.";
+
+        // Create a paragraph summary
+        const summaryHTML = `
+            <p>This week's crime index is <strong>${averageSeverityIndex}</strong>, with a high severity rate of <strong>${highSeverityRate}%</strong>. 
+            There were <strong>${totalReports}</strong> reported incidents, categorized into 
+            <strong>${lowSeverity}</strong> low-severity, <strong>${mediumSeverity}</strong> medium-severity, 
+            and <strong>${highSeverity}</strong> high-severity cases. ${trend}</p>
+        `;
+        
+        document.querySelector(".crime-summary").innerHTML = summaryHTML;
+
+        // Create a chart to visualize the severity breakdown
+        createSeverityChart(lowSeverity, mediumSeverity, highSeverity);
+
+    } catch (error) {
+        console.error('Error fetching weekly crime summary:', error);
+        document.querySelector(".crime-summary").textContent = "Unable to fetch the summary.";
+    }
+}
+
+// Function to create a bar chart using D3.js
+function createSeverityChart(low, medium, high) {
+    // Set up chart dimensions and data
+    const data = [
+        { severity: 'Low', count: low },
+        { severity: 'Medium', count: medium },
+        { severity: 'High', count: high }
+    ];
+
+    const width = 400;
+    const height = 200;
+    const margin = { top: 20, right: 30, bottom: 30, left: 50 };
+
+    // Clear any existing SVG in the chart container
+    d3.select("#severityChart").selectAll("*").remove();
+
+    // Create an SVG container
+    const svg = d3.select("#severityChart")
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    // Define the X and Y scales
+    const x = d3.scaleBand()
+        .domain(data.map(d => d.severity))
+        .range([0, width])
+        .padding(0.3);
+
+    const y = d3.scaleLinear()
+        .domain([0, d3.max(data, d => d.count)])
+        .nice()
+        .range([height, 0]);
+
+    // Create the X-axis
+    svg.append("g")
+        .attr("transform", `translate(0,${height})`)
+        .call(d3.axisBottom(x));
+
+    // Create the Y-axis
+    svg.append("g")
+        .call(d3.axisLeft(y));
+
+    // Create the bars
+    svg.selectAll(".bar")
+        .data(data)
+        .enter()
+        .append("rect")
+        .attr("class", "bar")
+        .attr("x", d => x(d.severity))
+        .attr("y", d => y(d.count))
+        .attr("width", x.bandwidth())
+        .attr("height", d => height - y(d.count))
+        .attr("fill", d => d.severity === 'High' ? "#ff0000" : d.severity === 'Medium' ? "#ff9100" : "#ffb700");
+}
+
+// Initialize the function on page load
+document.addEventListener('DOMContentLoaded', fetchCrimeSummaryDetails);
+
 
 
 async function generateCrimeChart() {

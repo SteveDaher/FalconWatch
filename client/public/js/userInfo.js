@@ -31,6 +31,13 @@ document.addEventListener("DOMContentLoaded", function() {
             if (data.role === 'police') {
                 loginLink.textContent = "Dashboard";
                 loginLink.href = "/html/services.html";
+            } else {
+                loginLink.textContent = "Sign Out";
+                loginLink.href = "#";  // Prevents redirection
+                loginLink.addEventListener("click", () => {
+                    localStorage.clear();  // Clear all user data
+                    window.location.href = "/client/index.html";  // Redirect to login page
+                });
             }
         } else {
             welcomeMessage.textContent = "Welcome, Guest";

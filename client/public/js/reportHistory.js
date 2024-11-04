@@ -69,6 +69,24 @@ document.addEventListener('DOMContentLoaded', async function() {
         console.error('Error during user verification:', error);
         window.location.href = '/html/login.html';
     }
+
+    fetch('/api/user-info', {
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        const userNameElement = document.getElementById('user-name');
+        userNameElement.textContent = data.name || "Guest"; // Update with fetched name or default to 'Guest'
+    })
+    .catch(error => console.error('Error fetching user info:', error));
+
+    document.getElementById('signout-link').addEventListener('click', () => {
+        localStorage.removeItem('authToken'); // Clear the authentication token
+        localStorage.removeItem('role');      // Clear any stored user role
+        window.location.href = '/html/login.html'; // Redirect to the login page
+    });
 });
 
 
@@ -197,8 +215,8 @@ async function renderCrimeTable(reports, language = 'en') {
         <td>${description}</td>
         <td>${formatDate(report.date)}</td>
         <td>${report.locationName || `${lng}, ${lat}`}</td>
-        <td><a href="/html/main.html?lng=${lng}&lat=${lat}" class="view-pin-btn">${showPin}</a></td>
-        <td><button class="delete-report-btn" data-report-id="${report.incidentId}">${deleteText}</button></td> <!-- Delete button -->
+        <td><a href="/html/main.html?lng=${lng}&lat=${lat}" class="action-btn show-pin-btn">${showPin}</a></td>
+        <td><button class="action-btn delete-btn" data-report-id="${report.incidentId}">${deleteText}</button></td>
         `;
 
         // Append the row to the table body
@@ -206,7 +224,7 @@ async function renderCrimeTable(reports, language = 'en') {
     }
 
     // Attach event listeners to all delete buttons
-    document.querySelectorAll('.delete-report-btn').forEach(button => {
+    document.querySelectorAll('.delete-btn').forEach(button => {
         button.addEventListener('click', async (event) => {
             const reportId = event.target.getAttribute('data-report-id');
             await deleteReport(reportId);
@@ -215,33 +233,74 @@ async function renderCrimeTable(reports, language = 'en') {
 }
 
 // Function to delete a report by its ID
-async function deleteReport(reportId) {
-    const confirmation = confirm('Are you sure you want to delete this report?');
-    if (!confirmation) return;
-
-    try {
-        const token = localStorage.getItem('authToken');
-        const response = await fetch(`/api/reports/${reportId}`, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (response.ok) {
-            alert('Report deleted successfully.');
-            // Reload the table after deleting the report
-            fetchCrimeReports(currentPage, i18next.language);
-        } else {
-            const errorData = await response.json();
-            alert(`Error deleting report: ${errorData.message}`);
-        }
-    } catch (error) {
-        console.error('Error deleting report:', error);
-        alert('An error occurred while deleting the report.');
-    }
+function showPopup(message, isSuccess = true) {
+    const popup = document.createElement('div');
+    popup.className = isSuccess ? 'popup success-popup' : 'popup error-popup';
+    popup.innerHTML = `
+        <p>${message}</p>
+        <button onclick="closePopup()">Close</button>
+    `;
+    document.body.appendChild(popup);
 }
+
+function closePopup() {
+    const popup = document.querySelector('.popup');
+    if (popup) popup.remove();
+}
+
+function showConfirmation(message, onConfirm, onCancel) {
+    const container = document.getElementById('popup-container');
+    container.innerHTML = `
+        <div class="popup confirmation-popup">
+            <p>${message}</p>
+            <button id="confirm-btn">OK</button>
+            <button id="cancel-btn">Cancel</button>
+        </div>
+    `;
+    container.style.display = 'block';
+
+    document.getElementById('confirm-btn').onclick = () => {
+        container.style.display = 'none';
+        container.innerHTML = '';
+        if (onConfirm) onConfirm();
+    };
+
+    document.getElementById('cancel-btn').onclick = () => {
+        container.style.display = 'none';
+        container.innerHTML = '';
+        if (onCancel) onCancel();
+    };
+}
+
+async function deleteReport(reportId) {
+    showConfirmation(
+        'Are you sure you want to delete this report?',
+        async () => {
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(`/api/reports/${reportId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+    
+                if (response.ok) {
+                    showPopup('Report deleted successfully.', true);
+                    fetchCrimeReports(currentPage, i18next.language);
+                } else {
+                    const errorData = await response.json();
+                    showPopup(`Error deleting report: ${errorData.message}`, false);
+                }
+            } catch (error) {
+                console.error('Error deleting report:', error);
+                showPopup('An error occurred while deleting the report.', false);
+            }
+        }
+    );    
+}
+
 
 
 
@@ -474,3 +533,51 @@ async function translateTextWithRetry(text, targetLanguage, retries = 3, delay =
     console.error('Translation failed after multiple retries.');
     return text;  // Return the original text after all retries have failed
 }
+
+socket.emit('authenticate', { token });
+
+    socket.on('authenticated', (data) => {
+
+        if (data.success) {
+            const { id: userId, name, role } = data.user; // Ensure 'role' is part of the data.user object
+
+            // Update the user name on the page
+            const userNameElement = document.getElementById('user-name');
+            if (userNameElement) {
+                userNameElement.textContent = name;
+            } else {
+                console.error('User name element not found on the page.');
+            }
+
+            if (role === 'police') {
+                // Now that the user is authorized, show the page content
+                pageContent.style.display = 'block';
+
+                // Fetch the Mapbox token first, then initialize the map
+                fetchMapboxToken()
+                    .then(mapboxToken => {
+                        map = initializeMap(mapboxToken); // Initialize map after token is fetched
+                        setupMapStyleSwitcher(map);
+                        setupLanguageControls(map);
+                        trackUserLocation(userId, name, map, socket);
+                        fetchReportsAndAddToMap(map, socket);
+                        listenForPoliceLocations(userId, map, socket);
+                        listenForNewReports(map, socket);
+                        handleShowPinFromURL(map);
+                        initializeReportNotifications(map, socket);
+                        initializeSortingControls();
+                        reapplySavedFilters();
+                    })
+                    .catch(error => {
+                        console.error('Error fetching Mapbox token:', error);
+                        window.location.href = '/html/login.html';
+                    });
+            } else {
+                console.error('Access denied: User role is not police.');
+                window.location.href = '/html/login.html';
+            }
+        } else {
+            console.error('Authentication failed:', data.message || 'Unknown error');
+            window.location.href = '/html/login.html';
+        }
+    });

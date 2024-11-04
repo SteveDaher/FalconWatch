@@ -78,6 +78,25 @@ document.addEventListener('DOMContentLoaded', async () => {
             updateTotalCrimes(0); // Reset total crimes to 0
         }
     });
+    
+    fetch('/api/user-info', {
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        const userNameElement = document.getElementById('user-name');
+        userNameElement.textContent = data.name || "Guest"; // Update with fetched name or default to 'Guest'
+    })
+    .catch(error => console.error('Error fetching user info:', error));
+
+    document.getElementById('signout-link').addEventListener('click', () => {
+        localStorage.removeItem('authToken'); // Clear the authentication token
+        localStorage.removeItem('role');      // Clear any stored user role
+        window.location.href = '/html/login.html'; // Redirect to the login page
+    });
+    
 });
 
 // Global variable to store the chart instance
