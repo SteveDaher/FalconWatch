@@ -1,11 +1,19 @@
     //Path: client/js/report.js
     document.addEventListener('DOMContentLoaded', function() {
         const token = localStorage.getItem('authToken');  // Retrieve the token from localStorage
+        const userRole = localStorage.getItem('role');
     
         // Redirect to login page if no token is found
         if (!token) {
             window.location.replace("/html/login.html");
             return; // Stop further script execution
+        }
+
+        if (userRole !== 'police') {
+            const dashboardLink = document.getElementById('view-services');
+            if (dashboardLink) {
+                dashboardLink.style.display = 'none';
+            }
         }
     
         // Only if a valid token exists, continue with the rest of the script
@@ -32,25 +40,6 @@
                 reportMap.setStyle('mapbox://styles/mapbox/' + layerId);
             });
         }
-
-        document.getElementById('signout-link').addEventListener('click', () => {
-            localStorage.removeItem('authToken'); // Clear the authentication token
-            localStorage.removeItem('role');      // Clear any stored user role
-            window.location.href = '/html/login.html'; // Redirect to the login page
-        });        
-
-        // Fetch user info and update the displayed username
-        fetch('/api/user-info', {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            const userNameElement = document.getElementById('user-name');
-            userNameElement.textContent = data.name || "Guest"; // Update with fetched name or default to 'Guest'
-        })
-        .catch(error => console.error('Error fetching user info:', error));
     
         // Fullscreen control
         document.getElementById('fullscreen-btn').addEventListener('click', function() {
@@ -106,7 +95,6 @@
 
         // Update the hidden input with the coordinates
         document.getElementById('crime-coordinates').value = `${coordinates.lng}, ${coordinates.lat}`;
-
     });
 
         // Initialize Socket.IO
@@ -129,7 +117,13 @@
         .catch(error => {
             console.error('Error fetching user info:', error);
         });
-    
+
+        document.getElementById('signout-link').addEventListener('click', () => {
+            localStorage.removeItem('authToken'); // Clear the authentication token
+            localStorage.removeItem('role');      // Clear any stored user role
+            window.location.href = '/html/login.html'; // Redirect to the login page
+        });
+
      // Form submission logic
      document.getElementById('crime-report-form').addEventListener('submit', function(e) {
         e.preventDefault();
@@ -153,7 +147,7 @@
         .then(response => response.json())
         .then(data => {
             if (data.message === 'Report submitted successfully.') {
-                document.getElementById('success-popup').classList.remove('hidden');
+                window.location.href = 'success.html';
             } else {
                 alert(`Error: ${data.message}`);
             }
@@ -164,62 +158,41 @@
         });
     });
 
-    document.getElementById('popup-ok-btn').addEventListener('click', function() {
-        window.location.href = '/html/index.html';
-    });
-
-});
-
-////////////////////////////////////////////////////////////////////////////////////////
-
-document.getElementById('crime-report-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const formData = new FormData(this);
-
-    // Append additional data to FormData
-    formData.append('coordinates', document.getElementById('crime-coordinates').value);
-    formData.append('category', document.getElementById('crime-category').value);
-    formData.append('description', document.getElementById('crime-description').value);
-
-    // Send the form data to the server via Fetch API
-    fetch('/api/reports', {
-        method: 'POST',
-        body: formData,
+    // Fetch user info and update the displayed username
+    fetch('/api/user-info', {
         headers: {
             'Authorization': `Bearer ${token}`
         }
     })
     .then(response => response.json())
     .then(data => {
-        if (data.message === 'Report submitted successfully.') {
-            // Store the Incident ID in localStorage
-            localStorage.setItem('lastIncidentId', data.incidentId);
-
-            // Show the success popup
-            document.getElementById('success-popup').classList.remove('hidden');
-        } else {
-            alert(`Error: ${data.message}`);
-        }
+        const userNameElement = document.getElementById('user-name');
+        userNameElement.textContent = data.name || "Guest"; // Update with fetched name or default to 'Guest'
     })
-    .catch(error => {
-        console.error('Error submitting report:', error);
-        alert('An error occurred while submitting the report.');
+    .catch(error => console.error('Error fetching user info:', error));
+
+    document.getElementById('EnglishLanguage').addEventListener('click', function(event) {
+        event.preventDefault();
+        switchLanguage('en'); // Custom function to switch language to English
     });
-});
-
-document.addEventListener('DOMContentLoaded', function() {
-    // Other initialization code here...
-
-    // When the success popup is shown, retrieve and display the Incident ID
-    const lastIncidentId = localStorage.getItem('lastIncidentId');
-    if (lastIncidentId) {
-        // Insert the Incident ID into the popup above the success message
-        const popupContent = document.querySelector('#success-popup .popup-content');
-        const incidentIdElement = document.createElement('p');
-        incidentIdElement.textContent = `Incident ID: ${lastIncidentId}`;
-        popupContent.insertBefore(incidentIdElement, popupContent.querySelector('p'));
-
-        // Clear the Incident ID from localStorage if needed
-        localStorage.removeItem('lastIncidentId');
+    
+    document.getElementById('ArabicLanguage').addEventListener('click', function(event) {
+        event.preventDefault();
+        switchLanguage('ar'); // Custom function to switch language to Arabic
+    });
+    
+    function switchLanguage(language) {
+        if (language === 'en') {
+            // Apply English text to relevant parts of the page
+            document.querySelector('title').textContent = "Report a Crime";
+            document.querySelector('.titlepart h1').textContent = "Report";
+            document.querySelector('.titlepart p').textContent = "Together we can keep this city a safe place for everyone! Help us by reporting any violations you witnessed.";
+        } else if (language === 'ar') {
+            // Apply Arabic text to relevant parts of the page
+            document.querySelector('title').textContent = "الإبلاغ عن جريمة";
+            document.querySelector('.titlepart h1').textContent = "تقديم بلاغ";
+            document.querySelector('.titlepart p').textContent = "معًا نستطيع أن نحافظ على هذه المدينة مكانًا آمنًا للجميع! ساعدنا بالإبلاغ عن أي مخالفات قد شهدتها";
+        }
     }
+
 });

@@ -551,3 +551,80 @@ label {
   background-color: #F44336; 
   color: #ffffff;
 }
+
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.search-bar input[type="text"] {
+  width: 100%;
+  padding: 10px 15px;
+  border-radius: 20px;
+  border: 1px solid #2b966f;
+  font-size: 14px;
+  color: #333;
+  background-color: #f7faf7;
+  transition: border-color 0.3s ease;
+}
+
+/* Focus effect on search input */
+.search-bar input[type="text"]:focus {
+  outline: none;
+  border-color: #31b283;
+}
+
+.search-bar button {
+  padding: 10px 20px;
+  background-color: #005f3c;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: bold;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.search-bar button span {
+  margin-left: 15px;
+}
+
+.search-bar button:hover {
+  background-color: #008f5a;
+}
+
+.role-select {
+  padding: 8px 12px;
+  font-size: 14px;
+  color: #2b966f;
+  background-color: #f7faf7;
+  border: 1px solid #2b966f;
+  border-radius: 6px;
+  appearance: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+  background-image: url('/img/arrowDown.png'); 
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 10px;
+  padding-right: 25px; 
+}
+
+.role-select:hover {
+  background-color: #e0f0e8;
+  border-color: #006c35;
+}
+
+.role-select:focus {
+  outline: none;
+  border-color: #31b283;
+  box-shadow: 0 0 5px rgba(49, 178, 131, 0.5);
+}

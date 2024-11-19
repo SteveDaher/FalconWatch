@@ -313,8 +313,8 @@ html, body {
   bottom: 0px;
   right: 250px;
   transform: translateX(-50%) translateY(100%); /* Start hidden and centered */
-  width: 300px; /* Narrower width */
-  height: 400px; /* Set height as desired */
+  width: 500px; /* Narrower width */
+  height: 300px; /* Set height as desired */
   background-color: rgba(255, 255, 255, 1); 
   color: #000000;
   padding: 15px 20px;
@@ -334,13 +334,21 @@ html, body {
   transform: translateY(100%); /* Hide out of view */
 }
 
+.filter-toggle-checkbox {
+  display: none;
+}
+
+
+
+
+
 /* Toggle FILTER button for the filter */
 #toggle-filter-tab {
   display: block;
   position: absolute;
   bottom: 40px;
   right: 160px;
-  background-color: #2279d5;
+  background-color: #2b966f;
   padding: 6px 20px;
   border-radius: 5px;
   /*box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.2);  Soft shadow */
@@ -353,7 +361,7 @@ html, body {
 }
 
 #toggle-filter-tab:hover {
-  background-color: #418ad8; /* Lighter color on hover */
+  background-color: #3dc191; /* Lighter color on hover */
 }
 
 /* Arrow icon for the toggle button */
@@ -380,13 +388,22 @@ html, body {
 #filter-header h2 {
   font-family: Arial, sans-serif;
   font-size: 23px;
-  font-weight: bold;
+  font-weight: 900;
   color: #000000;
   margin: 0;
   margin-bottom: 10px;
   text-align: center;
   padding-bottom: 15px; /* Space between header and filters */
   border-bottom: 2px solid #ffffff; /* Optional: separator line */
+}
+
+#filter-header h2::after {
+  content: "";
+  display: block;
+  width: 80%; /* Adjust the width here */
+  height: 3px; /* Match the height of the border */
+  background-color: #2b966f; /* Border color */
+  margin: 10px auto 0; /* Center it and add some space above */
 }
 
 /* Category filters layout */
@@ -403,28 +420,30 @@ html, body {
   align-items: center;
   padding: 5px 10px;
   background-color: rgba(221, 221, 221, 0.85); /* Light background */
-  border-radius: 20px;
+  border-radius: 10px;
+  max-width: 130px;
   cursor: pointer;
   transition: background-color 0.3s ease, color 0.3s ease;
   flex: 1 1 20%; /* Flexible width */
   color: black; /* Initial text color */
-  font-weight: bold;
+  font-weight: 400;
 }
+
 
 #category-filters label input[type="checkbox"] {
   display: none; /* Hide checkbox */
 }
 
 #category-filters label:has(input[type="checkbox"]:checked) {
-  background-color: #2A7DD5; /* Dark green background */
+  background-color: #2b966f; /* Dark green background */
   color: white; /* White text color */
-  border-radius: 20px;
+  border-radius: 10px;
 }
 
 #category-filters label input[type="checkbox"]:checked + span {
-  background-color: #2A7DD5; /* Dark green background when checked */
+  background-color: #2b966f; /* Dark green background when checked */
   color: white; /* White text color */
-  border-radius: 20px;
+  border-radius: 10px;
 }
 
 
