@@ -414,7 +414,7 @@ h2 {
   display: block;
   text-align: center;
   padding: 15px 20px;
-  background-color: #17820e; /* Green background */
+  background-color: #005F3C; /* Green background */
   color: #f0f0f0; /* Light text color */
   border: none;
   border-radius: 4px; /* Rounded corners */
@@ -426,7 +426,7 @@ h2 {
 
 /* Hover Effect for Back Button */
 .back-btn:hover {
-  background-color: #2fb63a; /* Lighter green on hover */
+  background-color: #008F5A; /* Lighter green on hover */
 }
 
 /* Crime Report Section and Chart Container */
@@ -474,21 +474,20 @@ h2 {
 
 .crime-summary-chart {
   flex-shrink: 0;
-  width: 220px; /* Reduced width to align with the text */
-  height: 250px; /* Adjusted height for a balanced look */
-  padding-right: 15px; /* Reduced padding */
-  /* border-right: 2px solid #40ac0e;  Right border to separate chart from text */
+  width: 220px;
+  height: 250px;
+  padding-right: 15px;
 }
 
 .crime-summary-text {
   flex: 1;
-  font-size: 18px;
+  font-size: 22px;
   line-height: 1.6;
   max-width: 450px; /* Reduced width to align with chart size */
 }
 
 .crime-summary {
-  font-size: 18px;
+  font-size: 22px;
   color: #333;
   line-height: 1.6;
 }

@@ -122,16 +122,16 @@ function renderChart(data) {
                 {
                     label: 'Low Severity', // Dataset for low severity crimes
                     data: lowData, // Data for low severity
-                    backgroundColor: 'rgba(76, 175, 80, 0.5)', // Bar color
-                    borderColor: 'rgba(76, 175, 80, 1)', // Bar border color
+                    backgroundColor: 'rgba(255, 235, 59, 0.5)', // Bar color
+                    borderColor: 'rgba(255, 235, 59, 1)', // Bar border color
                     borderWidth: 1,
                     barThickness: 10 // Bar thickness
                 },
                 {
                     label: 'Medium Severity', // Dataset for medium severity crimes
                     data: mediumData, // Data for medium severity
-                    backgroundColor: 'rgba(255, 235, 59, 0.5)', // Bar color
-                    borderColor: 'rgba(255, 235, 59, 1)', // Bar border color
+                    backgroundColor: 'rgba(255, 170, 59, 0.5)', // Bar color
+                    borderColor: 'rgba(255, 170, 59, 1)', // Bar border color
                     borderWidth: 1,
                     barThickness: 10 // Bar thickness
                 },

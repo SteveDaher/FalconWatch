@@ -2749,7 +2749,7 @@ function initiateAutoDirect(report) {
     directToMarker(map, report.lng, report.lat);
 
     // Optionally, notify the officer that auto-direct is active
-    alert(`Auto-Direct to Report ID: ${report.id} is now active.`);
+    //alert(`Auto-Direct to Report ID: ${report.id} is now active.`);
 }
 
 

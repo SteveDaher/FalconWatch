@@ -352,17 +352,17 @@ h1::after {
 
 /* Low Severity Bar Color */
 .low {
-  background-color: #4caf50; /* Green for low severity */
+  background-color: #ffb700; /* Green for low severity */
 }
 
 /* Medium Severity Bar Color */
 .medium {
-  background-color: #ffeb3b; /* Yellow for medium severity */
+  background-color: #ff9100; /* Yellow for medium severity */
 }
 
 /* High Severity Bar Color */
 .high {
-  background-color: #f44336; /* Red for high severity */
+  background-color: #ff0000; /* Red for high severity */
 }
 
 /* Legend Styles */
@@ -378,7 +378,7 @@ h1::after {
   width: 120px;
   text-align: center;
   padding: 10px 15px;
-  background-color: #005f3c; /* Green background for the button */
+  background-color: #005F3C; /* Green background for the button */
   color: #f0f0f0; /* Light text color */
   border: none;
   border-radius: 8px; /* Rounded corners */
@@ -391,5 +391,5 @@ h1::after {
 
 /* Hover Effect for Back Button */
 .back-btn:hover {
-  background-color: #2fb63a; /* Lighter green on hover */
+  background-color: #008F5A; /* Lighter green on hover */
 }

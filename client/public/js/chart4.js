@@ -4,9 +4,9 @@ let myChart = null; // Declare a global variable for the chart instance
 
 // Colors to represent the severity of crimes
 const severityColors = {
-  'low': '#4CAF50',    // Green for low severity
-  'medium': '#FFEB3B', // Yellow for medium severity
-  'high': '#F44336'    // Red for high severity
+  'low': '#ffb700',    // Green for low severity
+  'medium': '#ff9100', // Yellow for medium severity
+  'high': '#ff0000'    // Red for high severity
 };
 
 document.addEventListener('DOMContentLoaded', async () => {

@@ -733,9 +733,9 @@ margin-bottom: 5px; /* Space between ETA and Auto-Direct button */
 /* Report marker CODE, IMPORTANT */ 
 
 .mapboxgl-popup-content {
-  background-color: #1f2937 !important; /* Match your custom background */
-  color: #ffffff !important; /* Ensure text color is white */
-  padding: 0 !important; /* Remove default padding */
+  background-color: #f8f9fa !important; /* Match your custom background */
+  color: #222222 !important; /* Ensure text color is white */
+  padding: 0px !important; /* Remove default padding */
   border-radius: 8px !important; /* Match your custom rounded corners */
   box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.5) !important; /* Custom shadow */
   width: 280px !important; /* Match your custom width */
@@ -747,7 +747,6 @@ margin-bottom: 5px; /* Space between ETA and Auto-Direct button */
   top: -9px;
   right: -22px;
 }
-/* FIXED*/ 
 
 
 .mapbox-logo{ display: none; } .mapboxgl-ctrl-logo { display: none !important; } .mapbox-improve-map { display: none; } .mapboxgl-ctrl-compass { display: none;  
@@ -1415,7 +1414,7 @@ button {
 
 .temporary-popup {
   position: fixed;
-  top: 50%;
+  top: 15%;
   left: 50%;
   transform: translate(-50%, -50%); 
   padding: 10px 20px;
